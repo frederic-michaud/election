@@ -4,11 +4,13 @@ from django.db import models
 class SujetVote(models.Model):
     nom = models.CharField(max_length=500)
     sujet_id = models.IntegerField(default=1)
+    def  __str__(self):
+        return self.nom
     #date = models.DateField()
 
 class Canton(models.Model):
-    nom = models.CharField(max_length=20)
-    nb_communes = models.IntegerField(default=1)
+    nom = models.CharField(max_length=30)
+    abreviation = models.CharField(max_length=2)
     def  __str__(self):
         return  self.nom
 
@@ -35,3 +37,7 @@ class Voix(models.Model):
     commune = models.ForeignKey(Commune, on_delete=models.CASCADE)
     nombre_oui = models.IntegerField()
     nombre_non = models.IntegerField()
+    electeurs_inscrits = models.IntegerField()
+    bulletins_rentres = models.IntegerField()
+    def __str__(self):
+        return str(self.commune) + " " + str(self.sujet_vote)

@@ -19,5 +19,5 @@ from scrutin.views import home_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("scrutin/", home_view, name="home")
+    path("", home_view, name="home")
 ]
