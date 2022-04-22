@@ -1,35 +1,8 @@
 from scrutin.models import Commune, Canton, District, Voix, SujetVote
 import pandas as pd
+import numpy as np
 
-canton_par_abrev = {"ZH": "Zürich", "BE": "Berne", "LU": "Lucerne", "UR": "Uri", "SZ": "Schwytz", "OW": "Obwald",
-                    "NW": "Nidwald", "GL": "Glaris", "ZG": "Zoug", "FR": "Fribourg", "SO": "Soleure",
-                    "BS": "Bâle-Ville", "BL": "Bâle-Campagne", "SH": "Schaffhouse",
-                    "AR": "Appenzell Rhodes-Extérieures", "AI": "Appenzell Rhodes-Intérieures", "SG": "Saint-Gall",
-                    "GR": "Grisons", "AG": "Argovie", "TG": "Thurgovie", "TI": "Tessin", "VD": "Vaud", "VS": "Valais",
-                    "NE": "Neuchâtel", "GE": "Genève", "JU": "Jura"}
 
-def import_commune(path_commune):
-    df_communes = pd.read_csv(path_commune, sep = ";")
-    for commune in df_communes.itertuples():
-        cantons = Canton.objects.filter(abreviation = commune.Canton)
-        if len(cantons) == 0:
-            canton = Canton(abreviation = commune.Canton,
-                            nom = canton_par_abrev[commune.Canton])
-        elif len(cantons) == 1:
-            canton = cantons[0]
-        else:
-            raise Exception(f'There are more than one canton named {commune.Canton}')
-        canton.save()
-        districts = District.objects.filter(nom = commune.district)
-        if len(districts) == 0:
-            district = District(nom=commune.district, numero_ofs=commune.numero_ofs, canton=canton)
-        elif len(districts) == 1:
-            district = districts[0]
-        else:
-            raise Exception(f'There are more than one district named {commune.district}')
-        district.save()
-        commune_db = Commune(nom = commune.nom, numero_ofs = commune.numero_ofs, canton = canton, district = district)
-        commune_db.save()
 
 def import_votation(path_votation):
     df_full = pd.read_csv(path_votation, sep = ";")
@@ -178,6 +151,4 @@ def add_foreigner(commune_voix, sujet_vote):
     voix.save()
 
 def run():
-    import_commune("../data/communes/Communes_actuelles.csv")
     import_votation("../data/donnee_federale_v3.txt")
-    #print(df_communes.head())
