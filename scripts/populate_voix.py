@@ -2,14 +2,19 @@ from scrutin.models import Commune, Canton, District, Voix, SujetVote
 import pandas as pd
 import numpy as np
 
-
+fusions = {"Galmiz": "Murten", "Gempenach": "Murten", "Clavaleyres": "Murten",
+           "Bözen": "Böztal", "Effingen": "Böztal", "Elfingen": "Böztal", "Hornussen": "Böztal",
+           "Melano": "Val Mara", "Maroggia": "Val Mara", "Rovio": "Val Mara",
+           "Wislikofen": "Zurzach", "Baldingen": "Zurzach", "Böbikon": "Zurzach", "Kaiserstuhl": "Zurzach",
+           "Rümikon": "Zurzach", "Rietheim": "Zurzach", "Rekingen (AG)": "Zurzach", "Bad Zurzach": "Zurzach",
+           "Essertes": "Oron",
+           "Blonay": "Blonay - Saint-Légier", "Saint-Légier-La Chiésaz": "Blonay - Saint-Légier"
+           }
 
 def import_votation(path_votation):
     df_full = pd.read_csv(path_votation, sep = ";")
     df_full.fillna(method='ffill', inplace=True)
     def is_commune(nom_commune):
-        #    if type(nom_commune) == float:
-        #        return False
         if nom_commune[0:6] != "......":
             return False
         if nom_commune in ['......Blatten', '......Jaberg', '......Rüti bei Lyssach']:
@@ -55,14 +60,6 @@ def import_votation(path_votation):
             raise Exception(f'There are more than one canton named {commune.Canton}')
         sujet_vote.save()
         communes = Commune.objects.filter(nom = commune_voix.commune)
-        fusions = {"Galmiz":"Murten", "Gempenach":"Murten", "Clavaleyres":"Murten",
-                   "Bözen":"Böztal", "Effingen":"Böztal", "Elfingen":"Böztal", "Hornussen":"Böztal",
-                   "Melano":"Val Mara", "Maroggia":"Val Mara", "Rovio":"Val Mara",
-                   "Wislikofen":"Zurzach","Baldingen":"Zurzach","Böbikon":"Zurzach","Kaiserstuhl":"Zurzach","Rümikon":"Zurzach","Rietheim":"Zurzach","Rekingen (AG)":"Zurzach","Bad Zurzach":"Zurzach",
-                   "Essertes":"Oron",
-                   "Blonay":"Blonay - Saint-Légier", "Saint-Légier-La Chiésaz":"Blonay - Saint-Légier"
-                   }
-
         if len(communes) == 0:
             if "Ausland" in commune_voix.commune or "étranger" in commune_voix.commune or "estero" in commune_voix.commune:
                 add_foreigner(commune_voix, sujet_vote)
@@ -83,45 +80,35 @@ def import_votation(path_votation):
                     bulletins_rentres = commune_voix.Bulletins_rentres
                     )
         voix.save()
+    add_fusion(commune_fusionnee_a_ajouter)
+
+def add_fusion(commune_fusionnee_a_ajouter):
     for commune_name, commune_voix in commune_fusionnee_a_ajouter:
-        print(commune_name)
-        print(commune_voix)
-        communes = Commune.objects.filter(nom = commune_name)
-        sujet_votes = SujetVote.objects.filter(nom = commune_voix.sujet)
-        if len(communes) != 1 or len(sujet_votes) != 1:
-            raise Exception('problem when looking for commune or subject')
-        voixs = Voix.objects.filter(commune = communes[0], sujet_vote = sujet_votes[0])
+        commune = Commune.get_unique_commune_by_name(commune_name)
+        sujet_vote = SujetVote.get_unique_sujet_vote(commune_voix.sujet)
+        voixs = Voix.objects.filter(commune = commune, sujet_vote = sujet_vote)
         if len(voixs) == 0:
-            voix = Voix(commune=communes[0],
-                        sujet_vote=sujet_votes[0],
+            voix = Voix(commune=commune,
+                        sujet_vote=sujet_vote,
                         nombre_oui=0,
                         nombre_non=0,
                         electeurs_inscrits=0,
-                        bulletins_rentres=0
-                        )
+                        bulletins_rentres=0)
         elif len(voixs) == 1:
             voix = voixs[0]
         else:
-            raise Exception('problem when looking for a voixs')
+            raise Exception(f'problem when looking for a voixs with {commune} and {sujet_vote}')
         voix.nombre_oui += commune_voix.Oui
         voix.nombre_non += commune_voix.Non
         voix.electeurs_inscrits += commune_voix.Electeurs_inscrits
         voix.bulletins_rentres += commune_voix.Bulletins_rentres
         voix.save()
 
-
-
 def add_foreigner(commune_voix, sujet_vote):
     def get_canton_from_foreign(name):
         return name[:2]
     canton_abrev = get_canton_from_foreign(commune_voix.commune)
-    cantons = Canton.objects.filter(abreviation=canton_abrev)
-    if len(cantons) == 0:
-        raise Exception(f'There are no canton abreviated {canton_abrev}')
-    elif len(cantons) == 1:
-        canton = cantons[0]
-    else:
-        raise Exception(f'There are more than one canton named {canton_abrev}')
+    canton = Canton.get_unique_canton_by_abreviation(canton_abrev)
     canton.save()
     name_district = f'{canton_abrev}-étranger'
     districts = District.objects.filter(nom=name_district)
@@ -151,4 +138,5 @@ def add_foreigner(commune_voix, sujet_vote):
     voix.save()
 
 def run():
+    SujetVote.objects.all().delete()
     import_votation("../data/donnee_federale_v3.txt")
