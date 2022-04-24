@@ -8,7 +8,8 @@ fusions = {"Galmiz": "Murten", "Gempenach": "Murten", "Clavaleyres": "Murten",
            "Wislikofen": "Zurzach", "Baldingen": "Zurzach", "Böbikon": "Zurzach", "Kaiserstuhl": "Zurzach",
            "Rümikon": "Zurzach", "Rietheim": "Zurzach", "Rekingen (AG)": "Zurzach", "Bad Zurzach": "Zurzach",
            "Essertes": "Oron",
-           "Blonay": "Blonay - Saint-Légier", "Saint-Légier-La Chiésaz": "Blonay - Saint-Légier"
+           "Blonay": "Blonay - Saint-Légier", "Saint-Légier-La Chiésaz": "Blonay - Saint-Légier",
+           "Rüti bei Lyssach":"Hindelbank","Jaberg":"Kirchdorf (BE)"
            }
 
 def import_votation(path_votation):
@@ -16,8 +17,6 @@ def import_votation(path_votation):
     df_full.fillna(method='ffill', inplace=True)
     def is_commune(nom_commune):
         if nom_commune[0:6] != "......":
-            return False
-        if nom_commune in ['......Blatten', '......Jaberg', '......Rüti bei Lyssach']:
             return False
         return True
     def has_electeur(inscrit):
@@ -51,6 +50,10 @@ def import_votation(path_votation):
     df_commune['Oui en %'] = df_commune['Oui en %'].apply(clean_percentage)
     commune_fusionnee_a_ajouter = []
     for commune_voix in df_commune.itertuples():
+        if commune_voix.commune in list(fusions.keys()):
+            commune_fusionnee_a_ajouter.append((fusions[commune_voix.commune], commune_voix))
+            continue
+
         sujet_votes = SujetVote.objects.filter(sujet_id=commune_voix.sujet_id)
         if len(sujet_votes) == 0:
             sujet_vote = SujetVote(id=commune_voix.sujet_id, nom = commune_voix.sujet)
@@ -63,9 +66,6 @@ def import_votation(path_votation):
         if len(communes) == 0:
             if "Ausland" in commune_voix.commune or "étranger" in commune_voix.commune or "estero" in commune_voix.commune:
                 add_foreigner(commune_voix, sujet_vote)
-                continue
-            if commune_voix.commune in list(fusions.keys()):
-                commune_fusionnee_a_ajouter.append((fusions[commune_voix.commune], commune_voix))
                 continue
             raise Exception(f'commune not found: {commune_voix.commune}')
         elif len(communes) > 1:
