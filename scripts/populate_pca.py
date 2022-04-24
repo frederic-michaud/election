@@ -1,34 +1,17 @@
-from scrutin.models import Commune, Canton, District, Voix, SujetVote
+from scrutin.models import ScrutinAPI
 from pca.models import PCAResult
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
-import scipy.cluster.hierarchy as hier
-import sys
-sys.setrecursionlimit(5000)
-print(sys.getrecursionlimit())
-#ci-dessous ajouté par Laurence en test
-from sklearn.cluster import AgglomerativeClustering
-#import scipy.sklearn.cluster
-#from scipy.sklearn.cluster import AgglomerativeClustering
-def get_percentage(voix):
-    return voix.nombre_oui/(voix.nombre_oui + voix.nombre_non)
+
+#import numpy as np
+#import matplotlib.pyplot as plt
+#import scipy.cluster.hierarchy as hier
+#import sys
+#sys.setrecursionlimit(5000)
 
 def compute_pca():
-    valid_communes = []
-    percentage_oui_all_commune = []
-    for commune in Commune.objects.all():
-        voix = Voix.objects.filter(commune=commune)
-        if len(voix) != 55:
-            Warning(f"{commune} has only {len(voix)} and will be dropped from the PCA")
-            continue
-        valid_communes.append(commune)
-        voixs = Voix.objects.filter(commune=commune).order_by('sujet_vote')
-        percentage_oui = [get_percentage(voix) for voix in voixs]
-        percentage_oui_all_commune.append(percentage_oui)
-    X_reduced = PCA(n_components=2).fit_transform(percentage_oui_all_commune)
-    return valid_communes, X_reduced
+    (sujets, communes), X = ScrutinAPI.getVotationMatrixWithMetaInfo()
+    X_reduced = PCA(n_components=2).fit_transform(X)
+    return communes, X_reduced
 
 def run():
     valid_communes, X = compute_pca()

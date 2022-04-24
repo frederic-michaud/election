@@ -1,5 +1,5 @@
 from django.db import models
-from scrutin.models import Commune, Canton, District, Voix, SujetVote
+from scrutin.models import Commune
 
 
 class PCAResult(models.Model):

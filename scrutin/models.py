@@ -72,3 +72,22 @@ class Voix(models.Model):
     bulletins_rentres = models.IntegerField()
     def __str__(self):
         return str(self.commune) + " " + str(self.sujet_vote)
+
+def get_percentage(voix):
+    return voix.nombre_oui/(voix.nombre_oui + voix.nombre_non)
+
+class ScrutinAPI:
+    def getVotationMatrixWithMetaInfo():
+        valid_communes = []
+        percentage_oui_all_commune = []
+        for commune in Commune.objects.all():
+            voix = Voix.objects.filter(commune=commune)
+            if len(voix) != 55:
+                Warning(f"{commune} has only {len(voix)} and will be dropped from the PCA")
+                continue
+            valid_communes.append(commune)
+            voixs = Voix.objects.filter(commune=commune).order_by('sujet_vote')
+            percentage_oui = [get_percentage(voix) for voix in voixs]
+            percentage_oui_all_commune.append(percentage_oui)
+        sujets = [voix.sujet_vote.nom for voix in voixs]
+        return (sujets, valid_communes), percentage_oui_all_commune
