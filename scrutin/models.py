@@ -4,9 +4,9 @@ from django.db import models
 class SujetVote(models.Model):
     nom = models.CharField(max_length=500)
     sujet_id = models.IntegerField(default=1)
+    date = models.DateField()
     def  __str__(self):
         return self.nom
-    #date = models.DateField()
     def get_unique_sujet_vote(nom):
         sujet_votes = SujetVote.objects.filter(nom=nom)
         if len(sujet_votes) == 0:
@@ -50,6 +50,8 @@ class Commune(models.Model):
     nom = models.CharField(max_length=50)
     numero_ofs = models.IntegerField(default=0)
     est_valide = models.BooleanField(default=True)
+    langue = models.CharField(max_length=20,null=True)
+    degre_urbanisation = models.CharField(max_length=50,null=True)
     district = models.ForeignKey(District, on_delete=models.CASCADE, default=0)
     canton = models.ForeignKey(Canton, on_delete=models.CASCADE, default=0)
     def  __str__(self):
@@ -61,6 +63,14 @@ class Commune(models.Model):
             raise Exception(f'There is no commune named {nom}')
         if len(communes) > 1:
             raise Exception(f'There are more than one commune named {nom}')
+        return communes[0]
+
+    def get_unique_commune_by_ofs(numero_ofs):
+        communes = Commune.objects.filter(numero_ofs=numero_ofs)
+        if len(communes) == 0:
+            raise Exception(f'There is no commune with numero ofs {numero_ofs}')
+        if len(communes) > 1:
+            raise Exception(f'There are more than one commune with numero ofs {numero_ofs}')
         return communes[0]
 
 class Voix(models.Model):
