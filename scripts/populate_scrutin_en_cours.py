@@ -27,7 +27,6 @@ def import_votation(path_votation):
                     print(f'Commune not found: {data_commune["geoLevelnummer"]}: {data_commune["geoLevelname"]}')
                 if (commune.nom in ['Rüti bei Lyssach', 'Jaberg']):
                     continue
-                print(commune)
                 nb_electeur = commune.get_last_nb_electeur()
                 result = data_commune['resultat']
                 if result["jaStimmenInProzent"] is not None:

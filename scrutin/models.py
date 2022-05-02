@@ -77,8 +77,7 @@ class Commune(models.Model):
         voix = Voix.objects.filter(commune = self)
         list(voix).sort(key = lambda obj: obj.sujet_vote.date)
         return voix[0].electeurs_inscrits
-#from scrutin.models import ScrutinEnCours, Commune, SujetVote
-#Commune.get_unique_commune_by_name('Lausanne').get_last_nb_electeur()
+
 
 class Voix(models.Model):
     sujet_vote = models.ForeignKey(SujetVote, default=1, on_delete=models.CASCADE)
