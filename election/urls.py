@@ -16,8 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from scrutin.views import home_view
-
+from pca.views import pca_view
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("", home_view, name="home")
+    path("", home_view, name="home"),
+    path("pca/", pca_view, name="PCA")
 ]

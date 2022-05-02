@@ -39,9 +39,15 @@ def import_votation(path_votation):
         return percent
     def clean_oui_non(oui_non_string):
         return int(oui_non_string[:-3])
+    def get_date(sujet):
+        return sujet[0:10]
+    def clean_sujet(sujet):
+        return sujet[11:]
     df_commune = df_full[df_full['commune'].apply(is_commune)]
     df_commune = df_commune[df_commune['Electeurs_inscrits'].apply(has_electeur)]
     df_commune['commune'] = df_commune['commune'].apply(clean_commune_name)
+    df_commune['Date'] = df_commune['sujet'].apply(get_date)
+    df_commune['sujet'] = df_commune['sujet'].apply(clean_sujet)
     df_commune['Oui'] = df_commune['Oui'].apply(clean_oui_non)
     df_commune['Non'] = df_commune['Non'].apply(clean_oui_non)
     df_commune['Bulletins_rentres'] = df_commune['Bulletins_rentres'].apply(clean_oui_non)
@@ -56,7 +62,7 @@ def import_votation(path_votation):
 
         sujet_votes = SujetVote.objects.filter(sujet_id=commune_voix.sujet_id)
         if len(sujet_votes) == 0:
-            sujet_vote = SujetVote(id=commune_voix.sujet_id, nom = commune_voix.sujet)
+            sujet_vote = SujetVote(id=commune_voix.sujet_id, nom = commune_voix.sujet, date = commune_voix.Date)
         elif len(sujet_votes) == 1:
             sujet_vote = sujet_votes[0]
         else:
