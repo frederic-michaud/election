@@ -1,0 +1,124 @@
+/*
+Référence utilisée pour apprendre les flexbox en général:
+https://css-tricks.com/snippets/css/a-guide-to-flexbox/
+
+Référence recopiée pour le menu de navigation:
+https://codepen.io/team/css-tricks/pen/YqaKYR
+
+Référence pour la structure globale de la page (sans la partie "aside 2"):
+https://codepen.io/chriscoyier/pen/vWEMWw*/
+
+h1
+{
+  color: tomato;
+}
+
+/* ---- Structure globale des pages (flex) ---- */
+
+.wrapper
+{
+  display: flex;
+  flex-flow: row wrap;
+  text-align: center;
+}
+
+.wrapper > * {
+  padding: 10px;
+  flex: 1 100%;
+}
+
+/*dans l'exemple mais pas sûre que ça serve dans le cas présent */
+@media all and (min-width: 600px) {
+  .title { flex: 1 0 0; }
+}
+
+@media all and (min-width: 800px) {
+  .main   { flex: 3 0px; }
+  .title  { order: 1; }
+  .main   { order: 2; }
+  .explanation  { order: 3; }
+  .footer { order: 4; }
+}
+
+/* ---- fin Structure globale des pages */
+
+.main
+{
+  background-color: tomato;
+}
+.title
+{
+  background-color: gold;
+}
+.explanation
+{
+  background-color: plum;
+}
+.footer
+{
+  background-color: lightgreen;
+}
+/* ---- En-tête (sous-partie du flex général du Wrapper, lui-même flex) ---- */
+header
+{
+display: flex;
+justify-content: space-between;
+align-items: stretch;
+min-height: 100px;
+background-color: deepskyblue;
+}
+
+/* logo */
+#logo
+{
+  height:80px;
+  margin: 10px;
+}
+
+/* Menu de navigation */
+.navigation
+{
+  display: flex;
+  justify-content: flex-end;
+  flex-flow: row wrap;
+  list-style: none;
+  margin: 0;
+}
+
+.navigation a {
+  text-decoration: none;
+  display: block;
+  padding: 1em;
+  color: white;
+}
+
+.navigation a:hover {
+  background: #1565C0;
+}
+
+
+
+/* comportement menu navigation pour tablettes; à ajuster si besoin */
+
+@media all and (max-width: 800px) {
+  .navigation {
+    /*justify-content: space-around;*/
+  }
+}
+
+/* comportement menu navigation pour smartphones */
+
+@media all and (max-width: 600px) {
+  .navigation {
+    flex-flow: column wrap;
+    padding: 0;
+    background-color: deepskyblue;
+  }
+  .navigation a {
+    text-align: center;
+    padding: 10px;
+  }
+}
+
+
+/* ---- fin partie En-tête ---- */

@@ -2,12 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="style.css" />
     <title>Le Super Site des Votations</title>
 </head>
 <body>
-<h1>Un titre commun pour toutes les vues</h1>
-
-{% block content %}
-{% endblock %}
+  <div class="wrapper">
+    <header>
+      <img id="logo" src="images/logo.png" alt="logo"></img>
+      <nav class="container">
+        <ul class ="navigation">
+          <li><a href="#">Home</a></li>
+          <li><a href="#">Cartes</a></li>
+          <li><a href="#">Méthode</a></li>
+          <li><a href="#">A propos</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </nav>
+    </header>
+    <div class="title"><h1>Un titre commun pour toutes les vues</h1>
+    </div>
+    <article class="main">
+    {% block content %}
+    {% endblock %}
+    </article>
+    <article class="explanation">
+    {% block explanation %}
+    {% endblock %}
+    </article>
+    <footer class="footer">Copyleft Frédéric Michaud & Laurence Chave - 2022
+    </footer>
+</div>
 </body>
 </html>
