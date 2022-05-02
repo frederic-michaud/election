@@ -101,6 +101,10 @@ class ScrutinEnCours(models.Model):
     comptabilise = models.BooleanField(default=False)
     def __str__(self):
         return str(self.commune) + " " + str(self.sujet_vote)
+    def get_pourcentage_oui(self):
+        return nombre_oui/(nombre_oui + nombre_non)
+    def get_participation(self):
+        return self.bulletins_rentres/self.electeurs_inscrits
 
 
 def get_percentage(voix):
