@@ -102,9 +102,9 @@ class ScrutinEnCours(models.Model):
     def __str__(self):
         return str(self.commune) + " " + str(self.sujet_vote)
     def get_pourcentage_oui(self):
-        return nombre_oui/(nombre_oui + nombre_non)
-    def get_participation(self):
-        return self.bulletins_rentres/self.electeurs_inscrits
+        return self.nombre_oui/(self.nombre_oui + self.nombre_non)
+    def get_real_participation(self):
+        return (self.nombre_oui + self.nombre_non)/self.electeurs_inscrits
 
 
 def get_percentage(voix):
