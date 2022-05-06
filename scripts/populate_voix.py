@@ -12,6 +12,12 @@ fusions = {"Galmiz": "Murten", "Gempenach": "Murten", "Clavaleyres": "Murten",
            "Rüti bei Lyssach":"Hindelbank","Jaberg":"Kirchdorf (BE)"
            }
 
+n_ofs_distric_etrange = {"ZH-étranger": 9010, "LU-étranger": 9030, "UR-étranger": 9040, "BS-étranger": 9120,
+                         "AI-étranger": 9160, "SG-étranger": 9170, "AG-étranger": 9190, "TG-étranger": 9200,
+                         "FR-étranger": 9100, "VD-étranger": 9220, "VS-étranger": 9230,
+                         "GE-étranger": 9250}
+
+
 def import_votation(path_votation):
     df_full = pd.read_csv(path_votation, sep = ";")
     df_full.fillna(method='ffill', inplace=True)
@@ -119,7 +125,7 @@ def add_foreigner(commune_voix, sujet_vote):
     name_district = f'{canton_abrev}-étranger'
     districts = District.objects.filter(nom=name_district)
     if len(districts) == 0:
-        district = District(nom=name_district, numero_ofs=0, canton=canton)
+        district = District(nom=name_district, numero_ofs=n_ofs_distric_etrange[name_district], canton=canton)
     elif len(districts) == 1:
         district = districts[0]
     else:
@@ -128,7 +134,7 @@ def add_foreigner(commune_voix, sujet_vote):
     name_commune = name_district
     communes = Commune.objects.filter(nom=name_commune)
     if len(communes) == 0:
-        commune = Commune(nom=name_commune, numero_ofs=0, district = district, canton=canton)
+        commune = Commune(nom=name_commune, numero_ofs=n_ofs_distric_etrange[name_district], district = district, canton=canton)
     elif len(districts) == 1:
         commune = communes[0]
     else:

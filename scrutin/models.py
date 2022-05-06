@@ -73,6 +73,12 @@ class Commune(models.Model):
             raise Exception(f'There are more than one commune with numero ofs {numero_ofs}')
         return communes[0]
 
+    def get_last_nb_electeur(self):
+        voix = Voix.objects.filter(commune = self)
+        list(voix).sort(key = lambda obj: obj.sujet_vote.date)
+        return voix[0].electeurs_inscrits
+
+
 class Voix(models.Model):
     sujet_vote = models.ForeignKey(SujetVote, default=1, on_delete=models.CASCADE)
     commune = models.ForeignKey(Commune, on_delete=models.CASCADE)
@@ -82,6 +88,24 @@ class Voix(models.Model):
     bulletins_rentres = models.IntegerField()
     def __str__(self):
         return str(self.commune) + " " + str(self.sujet_vote)
+
+
+class ScrutinEnCours(models.Model):
+    sujet_vote = models.ForeignKey(SujetVote, on_delete=models.CASCADE)
+    commune = models.ForeignKey(Commune, on_delete=models.CASCADE)
+    nombre_oui = models.IntegerField(null=True)
+    nombre_non = models.IntegerField(null=True)
+    electeurs_inscrits = models.IntegerField(null=True)
+    bulletins_rentres = models.IntegerField(null=True)
+    electeur_election_precedente = models.IntegerField()
+    comptabilise = models.BooleanField(default=False)
+    def __str__(self):
+        return str(self.commune) + " " + str(self.sujet_vote)
+    def get_pourcentage_oui(self):
+        return self.nombre_oui/(self.nombre_oui + self.nombre_non)
+    def get_real_participation(self):
+        return (self.nombre_oui + self.nombre_non)/self.electeurs_inscrits
+
 
 def get_percentage(voix):
     return voix.nombre_oui/(voix.nombre_oui + voix.nombre_non)
@@ -101,3 +125,15 @@ class ScrutinAPI:
             percentage_oui_all_commune.append(percentage_oui)
         sujets = [voix.sujet_vote.nom for voix in voixs]
         return (sujets, valid_communes), percentage_oui_all_commune
+
+    def get_nb_inscrit():
+        nb_inscrit_all_commune = []
+        for commune in Commune.objects.all():
+            voix = Voix.objects.filter(commune=commune)
+            if len(voix) != 55:
+                Warning(f"{commune} has only {len(voix)} and will be dropped from the result")
+                continue
+            voixs = Voix.objects.filter(commune=commune).order_by('sujet_vote')
+            nb_inscrit_all_commune.append((commune.nom, [(voix.electeurs_inscrits, voix.sujet_vote.date) for voix in voixs]))
+        return nb_inscrit_all_commune
+

@@ -10,14 +10,20 @@ from sklearn.decomposition import PCA
 
 def compute_pca():
     (sujets, communes), X = ScrutinAPI.getVotationMatrixWithMetaInfo()
-    X_reduced = PCA(n_components=2).fit_transform(X)
+    X_reduced = PCA(n_components=6).fit_transform(X)
     return communes, X_reduced
 
 def run():
     valid_communes, X = compute_pca()
     entries = []
-    for commune, (x1, x2) in zip(valid_communes, X):
-        entries.append(PCAResult(commune = commune, coordinate_1 = x1, coordinate_2 = x2))
+    for commune, (x1, x2, x3, x4, x5, x6) in zip(valid_communes, X):
+        entries.append(PCAResult(commune = commune,
+                                 coordinate_1 = x1,
+                                 coordinate_2 = x2,
+                                 coordinate_3 = x3,
+                                 coordinate_4 = x4,
+                                 coordinate_5 = x5,
+                                 coordinate_6 = x6))
     PCAResult.objects.bulk_create(entries)
 
 
