@@ -8,10 +8,6 @@ https://codepen.io/team/css-tricks/pen/YqaKYR
 Référence pour la structure globale de la page (sans la partie "aside 2"):
 https://codepen.io/chriscoyier/pen/vWEMWw*/
 
-h1
-{
-  color: tomato;
-}
 
 /* ---- Structure globale des pages (flex) ---- */
 
@@ -42,22 +38,7 @@ h1
 
 /* ---- fin Structure globale des pages */
 
-.main
-{
-  background-color: tomato;
-}
-.title
-{
-  background-color: gold;
-}
-.explanation
-{
-  background-color: plum;
-}
-.footer
-{
-  background-color: lightgreen;
-}
+
 /* ---- En-tête (sous-partie du flex général du Wrapper, lui-même flex) ---- */
 header
 {
@@ -65,7 +46,6 @@ display: flex;
 justify-content: space-between;
 align-items: stretch;
 min-height: 100px;
-background-color: deepskyblue;
 }
 
 /* logo */
@@ -89,11 +69,15 @@ background-color: deepskyblue;
   text-decoration: none;
   display: block;
   padding: 1em;
-  color: white;
+  color: CornflowerBlue;
+  font-family: Garamond, serif;
+  font-size: 1.2em;
+  font-variant: small-caps;
 }
 
 .navigation a:hover {
-  background: #1565C0;
+  background: CornflowerBlue;
+  color: white;
 }
 
 
@@ -112,7 +96,6 @@ background-color: deepskyblue;
   .navigation {
     flex-flow: column wrap;
     padding: 0;
-    background-color: deepskyblue;
   }
   .navigation a {
     text-align: center;
@@ -122,3 +105,31 @@ background-color: deepskyblue;
 
 
 /* ---- fin partie En-tête ---- */
+
+/* ---- partie principale page ----*/
+.title h1
+{
+  color: CornflowerBlue;
+  font-family: Garamond, serif;
+  font-weight: normal;
+  margin: 2% 0px 0px 0px;
+}
+
+.title h2
+{
+  color: DimGrey;
+  font-family: "Courier New", monospace ;
+  font-weight: normal;
+  margin:0
+}
+
+.main
+{
+
+}
+.footer
+{
+  color: CornflowerBlue;
+  font-family: Garamond, serif;
+  text-align: right;
+}
