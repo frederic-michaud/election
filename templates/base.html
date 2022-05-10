@@ -13,24 +13,27 @@
       <img id="logo" src="{% static 'images/logo.png' %}" alt="logo"></img>
       <nav class="container">
         <ul class ="navigation">
-          <li><a href="#">Home</a></li>
-          <li><a href="#">Cartes</a></li>
-          <li><a href="#">Méthode</a></li>
-          <li><a href="#">A propos</a></li>
-          <li><a href="#">Contact</a></li>
+          <li><a href="/">Home</a></li>
+          <li><a href="cartes">Cartes</a></li>
+          <li><a href="methode">Méthode</a></li>
+          <li><a href="contact">Contact</a></li>
         </ul>
       </nav>
     </header>
+
     <div class="title"><h1>Projections de votations </h1><h2>& autres analyses de politique helvétique</h2>
     </div>
-    <article class="main">
+
+    <div class="main">
     {% block content %}
     {% endblock %}
-    </article>
+    </div>
+
     <article class="explanation">
     {% block explanation %}
     {% endblock %}
     </article>
+
     <footer class="footer">Copyleft Frédéric Michaud & Laurence Chave - 2022
     </footer>
 </div>

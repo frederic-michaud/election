@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "scrutin",
     "pca",
-    "django_extensions"
+    "django_extensions",
+    "page_statique"
 ]
 
 MIDDLEWARE = [
