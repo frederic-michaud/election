@@ -29,8 +29,16 @@ def import_votation(path_votation):
                     continue
                 nb_electeur = commune.get_last_nb_electeur()
                 result = data_commune['resultat']
-                if result["jaStimmenInProzent"] is not None:
-                    scrutin = ScrutinEnCours(commune = commune)
+                if result["jaStimmenAbsolut"] is not None:
+                    scrutin = ScrutinEnCours(commune = commune,
+                                             electeur_election_precedente = nb_electeur,
+                                             sujet_vote = sujet,
+                                             nombre_oui = result["jaStimmenAbsolut"],
+                                             nombre_non = result["neinStimmenAbsolut"],
+                                             electeurs_inscrits=result["anzahlStimmberechtigte"],
+                                             bulletins_rentres=result["eingelegteStimmzettel"],
+                                             comptabilise = True
+                                             )
                 else:
                     scrutin = ScrutinEnCours(commune = commune,
                                              electeur_election_precedente = nb_electeur,
@@ -39,4 +47,5 @@ def import_votation(path_votation):
 
 def run():
     ScrutinEnCours.objects.all().delete()
-    import_votation("../data/prochaine_election.json")
+    import_votation("../data/sd-t-17-02-20220515-eidgAbstimmung_1.json")
+    #import_votation("json_fake.json")
