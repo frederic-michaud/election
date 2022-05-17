@@ -106,6 +106,12 @@ class ScrutinEnCours(models.Model):
     def get_real_participation(self):
         return (self.nombre_oui + self.nombre_non)/self.electeurs_inscrits
 
+class Extrapolation(models.Model):
+    sujet_vote = models.ForeignKey(SujetVote, on_delete=models.CASCADE)
+    pourcentage_oui_connu = models.FloatField()
+    pourcentage_oui_extrapole = models.FloatField()
+    avance = models.FloatField()
+    moment_creation = models.DateTimeField(auto_now_add=True)
 
 def get_percentage(voix):
     return voix.nombre_oui/(voix.nombre_oui + voix.nombre_non)
