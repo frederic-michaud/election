@@ -123,9 +123,18 @@ min-height: 100px;
   margin:0
 }
 
-.main
+.main h2
 {
-
+  color: DimGrey;
+  font-family: "Courier New", monospace ;
+  font-weight: normal;
+  font-size: 1em;
+  max-width: 70%;
+  margin: auto;
+}
+.main p
+{
+  color: red;
 }
 .footer
 {
