@@ -11,7 +11,11 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
 import os
+
+# Load file with config from env
+load_dotenv("../.env")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +25,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '_b4a^_ki#6ar3xhs9d9=1de%vht*tz*u&ger178_+#=ldo(3#('
+with open('/etc/secret_key.txt') as f:
+    SECRET_KEY = f.read().strip()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = ["0.0.0.0"]
+debug = os.environ.get('debug')
+
+if debug == "True":
+    debug = True
+elif debug == "False":
+    debug = False
+else:
+    raise Exception("Please set the env variable 'debug' to 'true' or 'false'. Current value is {debug}")
+
+DEBUG = debug
+
+
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -78,17 +94,20 @@ WSGI_APPLICATION = 'election.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+
+db_user = os.environ.get('db_user')
+db_password = os.environ.get('db_password')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'votation',
-        'USER': 'laurence',
-        'PASSWORD': 'lau2006',
+        'USER': db_user,
+        'PASSWORD': db_password,
         'HOST': 'localhost',
         'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
