@@ -17,7 +17,7 @@ def home_view(requete, *args, **kwargs):
     currents = []
     sujets_name = []
     progression = 0
-    locale.setlocale(locale.LC_ALL, 'fr_FR')
+    #locale.setlocale(locale.LC_ALL, 'fr_FR')
     date_plus_recente = last_sujet.date.strftime("%d %b %Y")
     for sujet in sujets:
         extras = Extrapolation.objects.filter(sujet_vote = sujet).order_by("moment_creation")
