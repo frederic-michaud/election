@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     "scrutin",
     "pca",
     "django_extensions",
-    "page_statique"
+    "page_statique",
+    "carte"
 ]
 
 MIDDLEWARE = [
