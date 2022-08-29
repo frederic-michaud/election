@@ -22,7 +22,7 @@ from carte.views import carte_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", home_view, name="home"),
-    path("carte/", carte_view, name="carte"),
-    path("pca/", pca_view, name="PCA"),
+    path("cartes", carte_view, name="cartes"),
+    path("pca", pca_view, name="PCA"),
     path("<str>", static_view)
 ]
