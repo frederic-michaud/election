@@ -30,6 +30,7 @@ def get_extrapolation(sujet):
     data_for_interpolating_pourcentage_oui = []
     data_for_interpolating_participation = []
     nbre_votant_approximated = []
+    commune_without_result = []
     for voix in ScrutinEnCours.objects.filter(sujet_vote = sujet).order_by("commune"):
         pca = PCAResult.objects.filter(commune=voix.commune)
         if (len(pca) != 1):
@@ -43,6 +44,7 @@ def get_extrapolation(sujet):
         else:
             data_to_interpolate.append(pca.get_component(nb_component))
             nbre_votant_approximated.append(voix.electeur_election_precedente)
+            commune_without_result.append(voix)
     if len(data_for_interpolating_participation) < 7:
         return 0.5, 0.5
 
@@ -58,4 +60,4 @@ def get_extrapolation(sujet):
     extrapolation = nbre_oui_final/(nbre_oui_final + nbre_non_final)
     current = know_result_oui/(know_result_oui + know_result_non)
     avance = (know_result_oui + know_result_non)/(nbre_oui_final + nbre_non_final)
-    return current, extrapolation, avance
+    return current, extrapolation, avance, commune_without_result, extrapolated_pourcentage_oui, extrapolated_participation
