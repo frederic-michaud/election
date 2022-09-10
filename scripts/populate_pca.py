@@ -14,6 +14,7 @@ def compute_pca():
     return communes, X_reduced
 
 def run():
+    PCAResult.objects.all().delete()
     valid_communes, X = compute_pca()
     entries = []
     for commune, (x1, x2, x3, x4, x5, x6) in zip(valid_communes, X):
