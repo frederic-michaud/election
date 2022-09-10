@@ -13,13 +13,12 @@ def get_result(commune, sujet):
 
 
 def run():
-    path_votation = "../data/prochaine_election.json"
+    path_votation = "../data/votation_septembre_2022.json"
     sujets = SujetVote.objects.order_by("date")
     with open(path_votation, 'r') as f:
         data = json.load(f)
     for index_sujet, sujet_vote_json in enumerate(data['schweiz']['vorlagen']):
         sujet = sujets[index_sujet]
-        print(sujet)
         for data_canton in sujet_vote_json['kantone']:
             for data_commune in data_canton['gemeinden']:
                 try:
