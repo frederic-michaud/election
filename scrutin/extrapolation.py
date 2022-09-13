@@ -46,7 +46,7 @@ def get_extrapolation(sujet):
             nbre_votant_approximated.append(voix.electeur_election_precedente)
             commune_without_result.append(voix)
     if len(data_for_interpolating_participation) < 7:
-        return 0.5, 0.5
+        return 0.5, 0.5, 0, [], [], []
 
     nbre_votant_approximated = np.array(nbre_votant_approximated)
     params_pourcentage_oui = get_linear_parameter(data_for_interpolating_pourcentage_oui)
