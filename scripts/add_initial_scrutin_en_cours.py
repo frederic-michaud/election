@@ -27,25 +27,11 @@ def import_votation(path_votation):
                     print(f'Commune not found: {data_commune["geoLevelnummer"]}: {data_commune["geoLevelname"]}')
                 if (commune.nom in ['Rüti bei Lyssach', 'Jaberg']):
                     continue
-                nb_electeur = commune.get_last_nb_electeur()
-                result = data_commune['resultat']
-                if result["jaStimmenAbsolut"] is not None:
-                    scrutin = ScrutinEnCours(commune = commune,
-                                             electeur_election_precedente = nb_electeur,
-                                             sujet_vote = sujet,
-                                             nombre_oui = result["jaStimmenAbsolut"],
-                                             nombre_non = result["neinStimmenAbsolut"],
-                                             electeurs_inscrits=result["anzahlStimmberechtigte"],
-                                             bulletins_rentres=result["eingelegteStimmzettel"],
-                                             comptabilise = True
-                                             )
-                else:
-                    scrutin = ScrutinEnCours(commune = commune,
-                                             electeur_election_precedente = nb_electeur,
-                                             sujet_vote = sujet)
+                scrutin = ScrutinEnCours(commune=commune,
+                                         electeur_election_precedente=commune.nb_voix,
+                                         sujet_vote=sujet)
                 scrutin.save()
 
 def run():
     ScrutinEnCours.objects.all().delete()
-    import_votation("../data/sd-t-17-02-20220515-eidgAbstimmung_1.json")
-    #import_votation("json_fake.json")
+    import_votation("../data/votation_septembre_2022_1.json")

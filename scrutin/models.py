@@ -54,6 +54,7 @@ class Commune(models.Model):
     degre_urbanisation = models.CharField(max_length=50,null=True)
     district = models.ForeignKey(District, on_delete=models.CASCADE, default=0)
     canton = models.ForeignKey(Canton, on_delete=models.CASCADE, default=0)
+    nb_voix = models.IntegerField(default=0)
     def  __str__(self):
         return  self.nom
 
@@ -73,10 +74,18 @@ class Commune(models.Model):
             raise Exception(f'There are more than one commune with numero ofs {numero_ofs}')
         return communes[0]
 
-    def get_last_nb_electeur(self):
+    def set_voix(self):
+        self.nb_voix = self.get_last_nb_electeur_slow()
+        self.save()
+
+    def get_last_nb_electeur_slow(self):
         voix = Voix.objects.filter(commune = self)
         list(voix).sort(key = lambda obj: obj.sujet_vote.date)
-        return voix[0].electeurs_inscrits
+        if len(voix) > 0 :
+            return voix[0].electeurs_inscrits
+        import warnings
+        warnings.warn(f"Nb electeur not found for {self}")
+        return 0
 
 
 class Voix(models.Model):
