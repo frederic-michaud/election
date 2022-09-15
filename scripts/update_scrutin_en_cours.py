@@ -61,6 +61,7 @@ def import_votation(path_votation, commune_to_import):
                                          )
                 scrutin.save()
 
-def run():
-    commune_to_import = get_new_commune("../data/votation_septembre_2022_1.json", "json_fake.json")
-    import_votation("json_fake.json", commune_to_import)
+def run(*args):
+    #commune_to_import = get_new_commune("../data/votation_septembre_2022_1.json", "json_fake.json")
+    commune_to_import = get_new_commune(args[0], args[1])
+    import_votation(args[1], commune_to_import)
