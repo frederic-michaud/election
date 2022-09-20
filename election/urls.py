@@ -18,9 +18,11 @@ from django.urls import path
 from scrutin.views import home_view
 from pca.views import pca_view
 from page_statique.views import static_view
+from carte.views import carte_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", home_view, name="home"),
-    path("pca/", pca_view, name="PCA"),
+    path("cartes", carte_view, name="cartes"),
+    path("pca", pca_view, name="PCA"),
     path("<str>", static_view)
 ]
