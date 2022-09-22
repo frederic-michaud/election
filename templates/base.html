@@ -2,39 +2,67 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'scrutin/style.css' %}" />
     <title>Politiques.ch</title>
     <script src="https://cdn.plot.ly/plotly-2.11.1.min.js"></script>
+    <script>
+    /* Toggle between adding and removing the "responsive" class to topnav when the user clicks on the icon */
+    function myFunction() {
+      var x = document.getElementById("Topnav");
+      if (x.className === "navigation") {
+        x.className += " responsive";
+      } else {
+        x.className = "navigation";
+      }
+    }
+    </script>
 </head>
 <body>
-  <div class="wrapper">
+  <div id="wrapper">
     <header>
       <img id="logo" src="{% static 'scrutin/logo.png' %}" alt="logo"></img>
-      <nav class="container">
+      <!-- télécharger l'icône pour le menu sur smartphone -->
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!--  <nav class="container" id="top_nav">
         <ul class ="navigation">
           <li><a href="/">Home</a></li>
           <li><a href="NA">Cartes</a></li>
           <li><a href="methode">Méthode</a></li>
           <li><a href="contact">Contact</a></li>
         </ul>
-      </nav>
+        <a href="javascript:void(0);" class="smartphone_icon" onclick="myFunction()">
+          <i class="fa fa-bars"></i>
+        </a>
+      </nav> -->
+
+      <div class="navigation" id="Topnav">
+        <a href="/">Home</a>
+        <a href="NA">Cartes</a>
+        <a href="methode">Méthodes</a>
+        <a href="contact">Contact</a>
+        <a href="javascript:void(0);" class="icon" onclick="myFunction()">
+          <i class="fa fa-bars"></i>
+        </a>
+      </div>
     </header>
 
-    <div class="title"><h1>Projections de votations </h1><h2>& autres analyses de politique helvétique</h2>
+    <div id="title"><h1>Projections de votations </h1><h2>& autres analyses de politique helvétique</h2>
     </div>
 
-    <div class="main">
+    <div id="main">
     {% block content %}
     {% endblock %}
     </div>
 
-    <article class="explanation">
+    <article id="explanation">
     {% block explanation %}
     {% endblock %}
     </article>
 
-    <footer class="footer">Copyleft Frédéric Michaud & Laurence Chave - 2022
+    <footer id="footer">Copyleft Frédéric Michaud & Laurence Chave - 2022
     </footer>
 </div>
 </body>
