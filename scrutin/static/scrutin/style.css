@@ -2,38 +2,38 @@
 Référence utilisée pour apprendre les flexbox en général:
 https://css-tricks.com/snippets/css/a-guide-to-flexbox/
 
-Référence recopiée pour le menu de navigation:
-https://codepen.io/team/css-tricks/pen/YqaKYR
-
 Référence pour la structure globale de la page (sans la partie "aside 2"):
-https://codepen.io/chriscoyier/pen/vWEMWw*/
+https://codepen.io/chriscoyier/pen/vWEMWw
 
+Référence pour le menu responsive:
+https://www.w3schools.com/howto/howto_js_topnav_responsive.asp
+*/
 
 /* ---- Structure globale des pages (flex) ---- */
 
-.wrapper
+#wrapper
 {
   display: flex;
   flex-flow: row wrap;
   text-align: center;
 }
 
-.wrapper > * {
+#wrapper > * {
   padding: 10px;
   flex: 1 100%;
 }
 
 /*dans l'exemple mais pas sûre que ça serve dans le cas présent */
 @media all and (min-width: 600px) {
-  .title { flex: 1 0 0; }
+  #title { flex: 1 0 0; }
 }
 
 @media all and (min-width: 800px) {
-  .main   { flex: 3 0px; }
-  .title  { order: 1; }
-  .main   { order: 2; }
-  .explanation  { order: 3; }
-  .footer { order: 4; }
+  #main   { flex: 3 0px; }
+  #title  { order: 1; }
+  #main   { order: 2; }
+  #explanation  { order: 3; }
+  #footer { order: 4; }
 }
 
 /* ---- fin Structure globale des pages */
@@ -56,18 +56,8 @@ min-height: 100px;
 }
 
 /* Menu de navigation */
-.navigation
-{
-  display: flex;
-  justify-content: flex-end;
-  flex-flow: row wrap;
-  list-style: none;
-  margin: 0;
-}
-
 .navigation a {
   text-decoration: none;
-  display: block;
   padding: 1em;
   color: CornflowerBlue;
   font-family: Garamond, serif;
@@ -80,26 +70,41 @@ min-height: 100px;
   color: white;
 }
 
-
+.navigation .icon {
+  display: none;
+}
 
 /* comportement menu navigation pour tablettes; à ajuster si besoin */
 
 @media all and (max-width: 800px) {
   .navigation {
-    /*justify-content: space-around;*/
+    justify-content: space-around;
   }
 }
 
-/* comportement menu navigation pour smartphones */
+/* comportement menu navigation pour smartphones (menu hamburger) */
 
-@media all and (max-width: 600px) {
-  .navigation {
-    flex-flow: column wrap;
-    padding: 0;
+@media screen and (max-width: 600px) {
+  .navigation a {display: none;}
+  .navigation a.icon {
+    float: right;
+    display: block;
   }
-  .navigation a {
-    text-align: center;
-    padding: 10px;
+}
+
+/* The "responsive" class is added to the topnav with JavaScript when the user clicks on the icon.
+This class makes the topnav look good on small screens (display the links vertically instead of horizontally) */
+@media screen and (max-width: 600px) {
+  .navigation.responsive {position: relative;}
+  .navigation.responsive a.icon {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  .navigation.responsive a {
+    float: none;
+    display: block;
+    text-align: left;
   }
 }
 
@@ -107,7 +112,7 @@ min-height: 100px;
 /* ---- fin partie En-tête ---- */
 
 /* ---- partie principale page ----*/
-.title h1
+#title h1
 {
   color: CornflowerBlue;
   font-family: Garamond, serif;
@@ -115,7 +120,7 @@ min-height: 100px;
   margin: 2% 0px 0px 0px;
 }
 
-.title h2
+#title h2
 {
   color: DimGrey;
   font-family: "Courier New", monospace ;
@@ -123,7 +128,7 @@ min-height: 100px;
   margin:0
 }
 
-.main h2
+#main h2
 {
   color: DimGrey;
   font-family: "Courier New", monospace ;
@@ -132,11 +137,11 @@ min-height: 100px;
   max-width: 70%;
   margin: auto;
 }
-.main p
+#main p
 {
   color: red;
 }
-.footer
+#footer
 {
   color: CornflowerBlue;
   font-family: Garamond, serif;
