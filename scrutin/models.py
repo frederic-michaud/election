@@ -152,3 +152,6 @@ class ScrutinAPI:
             nb_inscrit_all_commune.append((commune.nom, [(voix.electeurs_inscrits, voix.sujet_vote.date) for voix in voixs]))
         return nb_inscrit_all_commune
 
+    def get_percentage_oui_all_commune(sujet_id):
+        scrutin_en_cours = ScrutinEnCours.objects.filter(sujet_vote_id = sujet_id)
+        return {scrutin.commune_id: scrutin.get_pourcentage_oui() for scrutin in scrutin_en_cours}
