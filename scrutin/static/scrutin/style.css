@@ -23,14 +23,14 @@ https://www.w3schools.com/howto/howto_js_topnav_responsive.asp
   flex: 1 100%;
 }
 
-/*dans l'exemple mais pas sûre que ça serve dans le cas présent */
+/*dans l'exemple mais pas sûre que ça serve dans le cas présent
 @media all and (min-width: 600px) {
   #title { flex: 1 0 0; }
-}
+}*/
 
 @media all and (min-width: 800px) {
   #main   { flex: 3 0px; }
-  #title  { order: 1; }
+  /*#title  { order: 1; }*/
   #main   { order: 2; }
   #explanation  { order: 3; }
   #footer { order: 4; }
@@ -44,7 +44,7 @@ header
 {
 display: flex;
 justify-content: space-between;
-align-items: stretch;
+align-items: flex-end;
 min-height: 100px;
 }
 
@@ -112,6 +112,7 @@ This class makes the topnav look good on small screens (display the links vertic
 /* ---- fin partie En-tête ---- */
 
 /* ---- partie principale page ----*/
+
 #title h1
 {
   color: CornflowerBlue;

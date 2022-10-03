@@ -23,20 +23,12 @@
   <div id="wrapper">
     <header>
       <img id="logo" src="{% static 'scrutin/logo.png' %}" alt="logo"></img>
+
+      <div id="title"><h1>Projections de votations </h1><h2>& autres analyses de politique helvétique</h2>
+      </div>
+      
       <!-- télécharger l'icône pour le menu sur smartphone -->
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
-    <!--  <nav class="container" id="top_nav">
-        <ul class ="navigation">
-          <li><a href="/">Home</a></li>
-          <li><a href="NA">Cartes</a></li>
-          <li><a href="methode">Méthode</a></li>
-          <li><a href="contact">Contact</a></li>
-        </ul>
-        <a href="javascript:void(0);" class="smartphone_icon" onclick="myFunction()">
-          <i class="fa fa-bars"></i>
-        </a>
-      </nav> -->
 
       <div class="navigation" id="Topnav">
         <a href="/">Home</a>
@@ -49,8 +41,7 @@
       </div>
     </header>
 
-    <div id="title"><h1>Projections de votations </h1><h2>& autres analyses de politique helvétique</h2>
-    </div>
+
 
     <div id="main">
     {% block content %}
