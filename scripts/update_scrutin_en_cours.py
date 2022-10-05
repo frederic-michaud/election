@@ -11,20 +11,22 @@ def get_new_commune(path_previous, path_current):
     with open(path_current, 'r') as f:
         data_new = json.load(f)
     commune_known_previous = []
-    first_object = data_old['schweiz']['vorlagen'][0]
-    for data_canton in first_object['kantone']:
-        for data_commune in data_canton['gemeinden']:
-            if data_commune['resultat']["jaStimmenAbsolut"] is not None:
-                commune_known_previous.append(data_commune['geoLevelnummer'])
-    commune_known_current = []
-    first_object = data_new['schweiz']['vorlagen'][0]
-    for data_canton in first_object['kantone']:
-        for data_commune in data_canton['gemeinden']:
-            if data_commune['resultat']["jaStimmenAbsolut"] is not None:
-                commune_known_current.append(data_commune['geoLevelnummer'])
-    new_commune = set(commune_known_current) - set(commune_known_previous)
-    return new_commune
-
+    all_new_commune = []
+    for index_sujet in range(2):
+        first_object = data_old['schweiz']['vorlagen'][index_sujet]
+        for data_canton in first_object['kantone']:
+            for data_commune in data_canton['gemeinden']:
+                if data_commune['resultat']["jaStimmenAbsolut"] is not None:
+                    commune_known_previous.append(data_commune['geoLevelnummer'])
+        commune_known_current = []
+        first_object = data_new['schweiz']['vorlagen'][index_sujet]
+        for data_canton in first_object['kantone']:
+            for data_commune in data_canton['gemeinden']:
+                if data_commune['resultat']["jaStimmenAbsolut"] is not None:
+                    commune_known_current.append(data_commune['geoLevelnummer'])
+        new_commune = set(commune_known_current) - set(commune_known_previous)
+        all_new_commune.append(new_commune)    
+    return all_new_commune[0].intersection(all_new_commune[1])
 def import_votation(path_votation, commune_to_import):
     with open(path_votation, 'r') as f:
         data = json.load(f)
@@ -64,4 +66,5 @@ def import_votation(path_votation, commune_to_import):
 def run(*args):
     #commune_to_import = get_new_commune("../data/votation_septembre_2022_1.json", "json_fake.json")
     commune_to_import = get_new_commune(args[0], args[1])
+    print(commune_to_import)
     import_votation(args[1], commune_to_import)

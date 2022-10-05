@@ -34,4 +34,4 @@ def import_votation(path_votation):
 
 def run():
     ScrutinEnCours.objects.all().delete()
-    import_votation("../data/votation_septembre_2022_1.json")
+    import_votation("../data/votation_septembre_2022_0.json")
