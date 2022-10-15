@@ -15,7 +15,7 @@ https://www.w3schools.com/howto/howto_js_topnav_responsive.asp
 {
   display: flex;
   flex-flow: row wrap;
-  text-align: center;
+
 }
 
 #wrapper > * {
@@ -44,18 +44,46 @@ header
 {
 display: flex;
 justify-content: space-between;
-align-items: flex-end;
-min-height: 100px;
+align-items: flex-start;
+max-height: 80px;
 }
 
 /* logo */
 #logo
 {
-  height:80px;
-  margin: 10px;
+  height: 80px;
+  float:left;
+  margin-right: 15px;
+
 }
 
+/* titre */
+#title
+{
+  height:80px;
+  text-align: left;
+  font-size: 0.7em;
+}
+
+#title h1
+{
+  color: CornflowerBlue;
+  font-family: Garamond, serif;
+  font-weight: normal;
+  margin: 0px;
+}
+
+#title h2
+{
+  color: DimGrey;
+  font-family: "Courier New", monospace ;
+  font-weight: normal;
+  margin:0
+}
 /* Menu de navigation */
+.navitation {
+  text-align: center;
+}
 .navigation a {
   text-decoration: none;
   padding: 1em;
@@ -108,42 +136,34 @@ This class makes the topnav look good on small screens (display the links vertic
   }
 }
 
-
 /* ---- fin partie En-tête ---- */
 
 /* ---- partie principale page ----*/
-
-#title h1
-{
-  color: CornflowerBlue;
-  font-family: Garamond, serif;
-  font-weight: normal;
-  margin: 2% 0px 0px 0px;
+#main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
-
-#title h2
-{
-  color: DimGrey;
-  font-family: "Courier New", monospace ;
-  font-weight: normal;
-  margin:0
-}
-
-#main h2
-{
+#main h2 {
   color: DimGrey;
   font-family: "Courier New", monospace ;
   font-weight: normal;
   font-size: 1em;
-  max-width: 70%;
-  margin: auto;
 }
-#main p
-{
+
+#main p {
   color: red;
 }
-#footer
-{
+
+.gauche {
+max-width: 25%;
+padding-top: 40px;
+}
+.graphique {
+  flex-grow: 2;
+}
+
+#footer {
   color: CornflowerBlue;
   font-family: Garamond, serif;
   text-align: right;
