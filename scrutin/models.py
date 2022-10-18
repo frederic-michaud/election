@@ -48,7 +48,7 @@ class District(models.Model):
 
 class Commune(models.Model):
     nom = models.CharField(max_length=50)
-    numero_ofs = models.IntegerField(default=0)
+    numero_ofs = models.IntegerField(default=0, db_index=True)
     est_valide = models.BooleanField(default=True)
     langue = models.CharField(max_length=20,null=True)
     degre_urbanisation = models.CharField(max_length=50,null=True)
@@ -155,5 +155,5 @@ class ScrutinAPI:
         return nb_inscrit_all_commune
 
     def get_percentage_oui_all_commune(sujet_id):
-        scrutin_en_cours = ScrutinEnCours.objects.filter(sujet_vote_id = sujet_id)
+        scrutin_en_cours = ScrutinEnCours.objects.filter(sujet_vote_id = sujet_id).select_related('commune')
         return {scrutin.commune.numero_ofs: scrutin.get_pourcentage_oui() for scrutin in scrutin_en_cours}
