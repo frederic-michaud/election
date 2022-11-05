@@ -4,7 +4,7 @@ import pandas as pd
 import plotly
 import plotly.express as px
 import locale
-
+import carte.API as carte_api
 
 def clean_name(name):
         if len(name.split('(')) > 1:
@@ -45,4 +45,9 @@ def home_view(requete, *args, **kwargs):
                                    text="formated_value"),
                             include_plotlyjs=False,
                             output_type='div')
-    return render(requete, "home.html", {"plot" : graph_projections, "avance": f"{100*progression:.1f}%", "date": date_plus_recente})
+    all_plots = [graph_projections,
+                 carte_api.generate_carte_plot(6),
+                 carte_api.generate_carte_plot(7),
+                 carte_api.generate_carte_plot(8)]
+
+    return render(requete, "home.html", {"plot" : all_plots, "avance": f"{100*progression:.1f}%", "date": date_plus_recente})
