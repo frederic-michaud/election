@@ -5,14 +5,22 @@ import plotly
 import plotly.express as px
 import locale
 import carte.API as carte_api
+import pickle
+
 
 def clean_name(name):
         if len(name.split('(')) > 1:
             return name.split('(')[1].split(')')[0]
         return "AVS-TVA"
 
-
+use_cache = False
+cache_file = 'cache.pickle'
 def home_view(requete, *args, **kwargs):
+    if use_cache:
+        dbfile = open(cache_file, 'rb')
+        dict_object = pickle.load(dbfile)
+        dbfile.close()
+        return render(requete, "home.html", dict_object)
     last_sujet = SujetVote.objects.latest('date')
     sujets = SujetVote.objects.filter(date = last_sujet.date)
     extrapolations = []
@@ -49,5 +57,9 @@ def home_view(requete, *args, **kwargs):
     all_maps = [carte_api.generate_carte_plot(6),
                 carte_api.generate_carte_plot(7),
                 carte_api.generate_carte_plot(8)]
+    dict_object = {"histo" : histo,"maps" : all_maps, "avance": f"{100*progression:.1f}%", "date": date_plus_recente}
 
-    return render(requete, "home.html", {"histo" : histo,"maps" : all_maps, "avance": f"{100*progression:.1f}%", "date": date_plus_recente})
+    dbfile = open(cache_file, 'ab')
+    pickle.dump(dict_object, dbfile)
+    dbfile.close()
+    return render(requete, "home.html", dict_object)
