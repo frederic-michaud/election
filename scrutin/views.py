@@ -36,7 +36,7 @@ def home_view(requete, *args, **kwargs):
     ddf = df.melt(id_vars= ['sujet'], value_vars=['Déja dépouillés','Extrapolés'], var_name="pourcentage de oui")
     ddf['formated_value'] = ddf['value'].apply(lambda x: f"{100*x:.1f}%")
     print(ddf)
-    graph_projections = plotly.offline.plot(px.bar(ddf, x="sujet",
+    histo = plotly.offline.plot(px.bar(ddf, x="sujet",
                                    y = 'value',
                                    color="pourcentage de oui",
                                    barmode="group",
@@ -45,9 +45,9 @@ def home_view(requete, *args, **kwargs):
                                    text="formated_value"),
                             include_plotlyjs=False,
                             output_type='div')
-    all_plots = [graph_projections,
-                 carte_api.generate_carte_plot(6),
-                 carte_api.generate_carte_plot(7),
-                 carte_api.generate_carte_plot(8)]
 
-    return render(requete, "home.html", {"plot" : all_plots, "avance": f"{100*progression:.1f}%", "date": date_plus_recente})
+    all_maps = [carte_api.generate_carte_plot(6),
+                carte_api.generate_carte_plot(7),
+                carte_api.generate_carte_plot(8)]
+
+    return render(requete, "home.html", {"histo" : histo,"maps" : all_maps, "avance": f"{100*progression:.1f}%", "date": date_plus_recente})
