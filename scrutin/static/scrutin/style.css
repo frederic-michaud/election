@@ -157,8 +157,10 @@ This class makes the topnav look good on small screens (display the links vertic
 /* ---- partie principale page ----*/
 #main {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   align-items: flex-start;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 #main h2 {
   color: DimGrey;
@@ -167,16 +169,20 @@ This class makes the topnav look good on small screens (display the links vertic
   font-size: 1em;
 }
 
-#main p {
-  color: red;
+.gauche {
+  padding-top: 40px;
+  max-width: 300px;
 }
 
-.gauche {
-max-width: 25%;
-padding-top: 40px;
+#histo {
+  max-width: 100%;
+  height: auto;
 }
-.graphique {
-  flex-grow: 2;
+
+.map {
+  padding: 0px;
+  max-width: 600px;
+  height: auto;
 }
 
 #footer {
