@@ -9,6 +9,138 @@
 - **Hébergement** : VPS Infomaniak, comme avant (Docker Compose envisagé).
 - **Périmètre à terme** : intégrer les élections (méthode reports de voix du repo
   `extrapolation_politique`) en plus des votations — en phase finale.
+- **Organisation** : deux personnes, deux voies parallèles, deux clones (Partie 0).
+
+---
+
+## Partie 0 — Organisation du travail à deux
+
+### Les deux voies
+
+| | **Voie M — Moteur** | **Voie I — Interface** |
+|---|---|---|
+| Domaine | maths, backend, infra | design, frontend, données |
+| Contenu | extrapolation, ACP, modèles, pipeline, Docker, CI | charte graphique, templates, figures Plotly, sources de données |
+| Préfixe de branche | `moteur/…` | `interface/…` |
+
+La **réflexion sur l'évolution se fait en commun** : décisions d'architecture,
+forme du contrat (ci-dessous), méthode statistique, priorités. Seule la
+*réalisation* est répartie.
+
+### Répartition des fichiers
+
+| Chemin | Voie |
+|---|---|
+| `scrutin/extrapolation.py`, `scrutin/donnees.py`, `pca/` | **M** |
+| `scrutin/models.py`, migrations, management commands | **M** |
+| `election/settings.py`, `Dockerfile`, `compose.yaml`, CI | **M** |
+| `carte/donnees.py` | **M** |
+| `templates/`, `*/static/` (CSS, JS, logo) | **I** |
+| `scrutin/charte.py`, `scrutin/graphiques.py`, `carte/figure.py` | **I** |
+| `maquette/` | **I** |
+| `*/views.py` | **commun** — doit rester minuscule (voir couture) |
+| `fixtures/*.json` | **commun** — c'est le contrat, on l'édite ensemble |
+| `CLAUDE.md`, `PLAN_MODERNISATION.md` | **commun** |
+
+**Règle** : on ne modifie pas la zone de l'autre sans le lui demander. Si la
+voie I a besoin d'un champ supplémentaire, elle le demande à la voie M *et on
+met à jour le contrat ensemble* — on ne va pas le chercher soi-même dans l'ORM.
+
+### La couture : un contrat « vue » entre données et présentation
+
+C'est **le prérequis au travail parallèle** (à faire en commun, en premier).
+Aujourd'hui `scrutin/views.py` mélange requêtes ORM et construction Plotly :
+c'est exactement la zone que les deux personnes voudraient éditer en même temps.
+
+On la coupe en deux, avec au milieu un dictionnaire simple, sérialisable en JSON :
+
+```
+scrutin/donnees.py     [M]  construire_vue_accueil(date) -> dict   (aucun Plotly)
+scrutin/graphiques.py  [I]  histogramme(vue) -> div HTML           (aucun ORM)
+carte/donnees.py       [M]  resultats_par_commune(sujet) -> dict
+carte/figure.py        [I]  carte(donnees) -> div HTML
+scrutin/views.py    [commun] assemble les deux, ~15 lignes, rarement touché
+```
+
+Forme du contrat (à figer ensemble, puis versionnée dans `fixtures/`) :
+
+```json
+{
+  "date": "2026-09-27",
+  "avance": 0.42,
+  "sujets": [
+    {"id": 6, "nom": "AVS 21", "oui_connu": 0.512, "oui_extrapole": 0.507,
+     "ic_bas": 0.494, "ic_haut": 0.520,
+     "communes": {"1": 0.61, "2": 0.48}}
+  ]
+}
+```
+
+**Le contrat est un fichier `fixtures/vue_accueil.json` versionné.** Un test de
+la voie M vérifie que `construire_vue_accueil()` produit exactement ces clés :
+si le backend change de forme sans mettre à jour la fixture, la CI casse. C'est
+le garde-fou anti-dérive entre les deux voies.
+
+### Maquetter avant que l'infra soit prête
+
+Quatre niveaux, du plus léger au plus complet. **La voie I vit aux niveaux 0–2 et
+n'a jamais besoin de Postgres, ni de scikit-learn, ni des 55 votations
+historiques.**
+
+| Niveau | Ce qu'il faut | Pour quoi |
+|---|---|---|
+| **0 — HTML statique** | un navigateur | Explorer la charte, les couleurs, la mise en page. Un `maquette/index.html` autonome avec des `<div>` Plotly figés. Itération en secondes, partageable par simple fichier. |
+| **1 — Django + fixture** | `django`, `plotly` | Vrais templates, vraies figures générées en Python, **zéro base de données** : `MODE_FIXTURE=1 python manage.py runserver` lit `fixtures/vue_accueil.json` au lieu de l'ORM. Mode de travail principal de la voie I. |
+| **2 — SQLite + données de démo** | + `manage.py loaddata demo` | Chemin ORM réel sur ~20 communes et 3 sujets. Sert à vérifier que le vrai `donnees.py` remplit bien le contrat. |
+| **3 — Pile complète** | Postgres, pipeline, scipy/sklearn | Monde de la voie M : vraies extrapolations, dry run du jour J. |
+
+Mise en œuvre du niveau 1 (petite, à faire tôt) :
+```python
+# scrutin/views.py
+def home_view(requete):
+    if settings.MODE_FIXTURE:
+        vue = json.loads(Path("fixtures/vue_accueil.json").read_text())
+    else:
+        vue = donnees.construire_vue_accueil()
+    return render(requete, "home.html", graphiques.tout(vue))
+```
+
+- [ ] **[2]** Figer la forme du contrat et écrire `fixtures/vue_accueil.json`
+      (à la main, ou généré depuis les données de septembre 2022 si on les
+      retrouve — une vraie soirée fait une bien meilleure maquette).
+- [ ] **[2]** Ajouter `MODE_FIXTURE` dans les settings + la bascule dans les vues.
+- [ ] **[M]** Test de conformité `donnees.py` ↔ fixture.
+- [ ] **[I]** `maquette/index.html` de niveau 0 pour l'exploration graphique.
+
+### Dépendances séparées
+
+Le site web n'a pas besoin de la pile scientifique : `scipy` et `scikit-learn`
+ne servent qu'au calcul (`extrapolation.py`, `populate_pca.py`). Séparer permet
+à la voie I d'installer trois paquets au lieu de dix.
+
+- [ ] **[M]** `requirements/web.txt` (django, plotly, geojson, psycopg) et
+      `requirements/calcul.txt` (numpy, scipy, scikit-learn, pandas).
+- [ ] **[I]** Bonus : `views.py` n'utilise pandas que pour construire un
+      DataFrame passé à `px.bar` — on peut passer des listes directement et
+      sortir pandas du chemin web.
+
+### Rythme et intégration
+
+- Chacun son clone, chacun sa branche, **petites PR relues par l'autre** (c'est
+  le principal moment de transfert de connaissance entre les deux voies).
+- Rebaser souvent sur `master` : les deux voies touchent peu les mêmes fichiers,
+  mais `views.py` et les fixtures sont partagés.
+- Les anciennes branches nominatives `Frederic` / `Laurence` sont abandonnées au
+  profit des préfixes `moteur/` et `interface/` — le sujet compte plus que l'auteur.
+
+### Les trois premières séances
+
+1. **Ensemble** : figer le contrat + écrire la fixture + poser `MODE_FIXTURE`.
+   Après ça, les deux voies sont découplées.
+2. **Voie M** : A1–A3 (le repo démarre). **Voie I** : maquette niveau 0, charte CSS.
+3. **Voie M** : A4–A5 (bugs, tests). **Voie I** : `charte.py`, histogramme, carte.
+
+---
 
 ## Partie 1 — État des lieux (résumé)
 
@@ -46,7 +178,10 @@ Objectif de sortie de phase : **un clone frais + `docker compose up` (ou 5 comma
 documentées) donne un site qui tourne en local avec des données de test.** Rien de
 nouveau fonctionnellement.
 
-### A1. Reproductibilité du repo
+*Phase très majoritairement **[M]**. Pendant ce temps la voie I travaille la
+Partie 7 en mode fixture — c'est tout l'intérêt de la couture du jalon 0.*
+
+### A1. Reproductibilité du repo **[M]**
 - [ ] `requirements.txt` (ou `pyproject.toml`) avec versions épinglées :
       `django`, `django-extensions`, `python-dotenv`, `psycopg[binary]`, `pandas`,
       `numpy`, `scipy`, `scikit-learn`, `plotly`, `geojson`.
@@ -55,7 +190,7 @@ nouveau fonctionnellement.
 - [ ] Supprimer `data/switzerland2.geojson` (6 Mo, référencé nulle part).
 - [ ] README développeur : mise en route pas à pas, ordre du pipeline de données.
 
-### A2. Configuration saine (`settings.py`)
+### A2. Configuration saine (`settings.py`) **[M]**
 - [ ] `SECRET_KEY` depuis variable d'environnement, avec valeur de dev par défaut
       si `DEBUG=True` (fini `/etc/secret_key.txt`).
 - [ ] `DEBUG` : `False` par défaut, activable par env ; supprimer le parsing fragile
@@ -65,12 +200,12 @@ nouveau fonctionnellement.
       **SQLite par défaut en dev** — supprime la dépendance Postgres pour bosser.
 - [ ] `ALLOWED_HOSTS` depuis env (pas `["*"]` en prod).
 
-### A3. Migrations versionnées
+### A3. Migrations versionnées **[M]**
 - [ ] `makemigrations scrutin pca carte` et committer les fichiers.
 - [ ] Vérifier que le schéma généré correspond à la base de prod historique
       (si un dump existe encore) ; sinon assumer le schéma neuf comme référence.
 
-### A4. Corriger les bugs latents (liste fermée, issue de la lecture du code)
+### A4. Corriger les bugs latents (liste fermée, issue de la lecture du code) **[M]**
 - [ ] `scrutin/views.py` : cache pickle ouvert en `'ab'` → soit le supprimer
       (recommandé : la prod est statique, le cache est inutile), soit `'wb'` + vraie
       invalidation.
@@ -86,7 +221,7 @@ nouveau fonctionnellement.
 - [ ] `populate_voix.add_foreigner` : `elif len(districts) == 1` teste la mauvaise
       variable (devrait être `len(communes)`) — copier-coller.
 
-### A5. Tests + CI
+### A5. Tests + CI **[M]**
 - [ ] `pytest` + `pytest-django`.
 - [ ] Tests unitaires de `scrutin/extrapolation.py` sur données synthétiques
       (le cœur mathématique — le plus rentable à tester, aucun accès réseau).
@@ -96,7 +231,7 @@ nouveau fonctionnellement.
       (le documenter comme tel).
 - [ ] GitHub Actions : `ruff` (lint + format) + tests sur chaque PR.
 
-### A6. Données
+### A6. Données — **[I]** sourcing, **[M]** intégration
 - [ ] Rapatrier dans le repo (ou dans un `download_data` documenté) les petits
       fichiers sources : liste des communes, méta-info (langue, urbanisation).
 - [ ] Documenter la provenance de `donnee_federale_v3.txt` (55 votations
@@ -112,7 +247,7 @@ nouveau fonctionnellement.
 Objectif de sortie de phase : **le site peut couvrir n'importe quelle votation
 future sans toucher au code** — seulement la config et les données.
 
-### B1. Mise à jour de la stack
+### B1. Mise à jour de la stack **[M]**
 - [ ] Python 3.12+, Django **5.2 LTS**. Le code est simple, la migration 3.1 → 5.2
       devrait être douce. Points d'attention connus :
       - `psycopg2` → `psycopg` v3 (changer `ENGINE` si besoin) ;
@@ -125,7 +260,7 @@ future sans toucher au code** — seulement la config et les données.
       (`python manage.py import_votations …`). Supprime la dépendance à
       django-extensions et donne argparse, `--help`, tests faciles.
 
-### B2. Dé-harcoder « septembre 2022 »
+### B2. Dé-harcoder « septembre 2022 » **[M]**
 - [ ] Sujets affichés (cartes 6/7/8 en dur dans `scrutin/views.py`, 6 dans
       `carte/views.py`) → dériver dynamiquement : « les sujets de la dernière date
       de votation », déjà la logique de `home_view` pour l'histogramme.
@@ -139,7 +274,7 @@ future sans toucher au code** — seulement la config et les données.
 - [ ] URL du JSON fédéral paramétrée (elle change à chaque scrutin :
       `sd-t-17-02-<date>-eidgAbstimmung.json`).
 
-### B3. Qualité du pipeline
+### B3. Qualité du pipeline **[M]**
 - [ ] `ScrutinAPI.getVotationMatrixWithMetaInfo` et `get_nb_inscrit` : boucle
       1 requête/commune → une seule requête `select_related` + regroupement en
       mémoire (même optimisation déjà faite pour les cartes, commit d8d43b8).
@@ -154,7 +289,7 @@ future sans toucher au code** — seulement la config et les données.
       préalable aux cartes réel/estimé de la phase D.
 - [ ] Journalisation (`logging`) au lieu de `print`.
 
-### B4. Données historiques pérennes
+### B4. Données historiques pérennes — **[I]** sources, **[M]** code
 - [ ] Script de (re)construction de la matrice historique depuis les données
       ouvertes de la Confédération (opendata.swiss / BFS), pour ne plus dépendre
       du fichier `donnee_federale_v3.txt` au format exotique.
@@ -162,7 +297,7 @@ future sans toucher au code** — seulement la config et les données.
       du jour J rejoignent `Voix` → l'ACP se bonifie toute seule). En faire une
       management command : `manage.py archiver_scrutin`.
 
-### B5. Communes dans le temps — fusions et mutations (voir Partie 6)
+### B5. Communes dans le temps — fusions et mutations (voir Partie 6) **[2]**
 Chantier structurant de la phase B : remplacer les cinq rustines actuelles
 (dict `fusions`, exclusions nominatives, OFS « étranger » inventés, filtre
 « 55 exact », triple système de clés) par un **référentiel de communes historisé**
@@ -177,14 +312,14 @@ mutations d'un coup.
 Objectif de sortie de phase : **un dimanche de votation se lance avec une seule
 commande, et le site survit à un pic de trafic.**
 
-### C1. Conteneurisation
+### C1. Conteneurisation **[M]**
 - [ ] Docker Compose : `web` (gunicorn), `db` (Postgres + volume), `proxy`
       (Caddy ou nginx, HTTPS automatique). Réutiliser les patterns éprouvés de
       `quantinemo-frontend/infra` (même hébergeur, même gabarit de VPS).
 - [ ] Secrets par `.env` non versionné + `.env.example` ; sauvegardes `pg_dump`
       quotidiennes (l'historique `Voix` est précieux).
 
-### C2. Remplacer la boucle `wget --recursive`
+### C2. Remplacer la boucle `wget --recursive` **[M]**
 Le principe statique est bon ; l'implémentation est fragile. Deux options :
 
 - **Option 1 (recommandée) — micro-cache nginx devant Django** : `proxy_cache`
@@ -201,7 +336,7 @@ Dans les deux cas :
       avec logs et reprise sur erreur — plus de `while true` dans un terminal SSH.
 - [ ] Chemins, URL du scrutin et cadence en config, plus rien en dur.
 
-### C3. Répétition générale
+### C3. Répétition générale **[2]**
 - [ ] Procédure écrite de « dry run » avec `create_fake_json_input` : simuler une
       soirée complète sur le VPS **avant** chaque vraie votation.
 - [ ] Checklist jour J (mettre à jour l'URL du JSON, vérifier l'ACP, lancer le
@@ -211,7 +346,7 @@ Dans les deux cas :
 
 ## Partie 5 — Phase D : Produit (après A–C)
 
-### D1. Votations — améliorations visibles
+### D1. Votations — améliorations visibles — **[I]** rendu, **[M]** stats
 - [ ] Cartes distinguant **réel vs estimé** (les données le permettront après B3) :
       opacité/hachures ou bascule, légende explicite.
 - [ ] **Incertitude de la projection** : IC par bootstrap sur les communes
@@ -225,7 +360,7 @@ Dans les deux cas :
 - [ ] Validation rétrospective : rejouer les votations passées et publier l'erreur
       de projection en fonction de l'avance du dépouillement.
 
-### D2. Élections (intégration d'`extrapolation_politique`)
+### D2. Élections (intégration d'`extrapolation_politique`) **[2]**
 Généraliser du binaire oui/non au multi-candidats :
 - [ ] Modèles : `Scrutin` (votation OU élection), `Candidat`,
       `ResultatCandidat(commune, candidat, voix)` — `Voix` actuel devient le cas
@@ -244,24 +379,45 @@ Généraliser du binaire oui/non au multi-candidats :
 
 ## Roadmap récapitulative
 
-| Phase | Contenu | Effort estimé | Jalon |
-|---|---|---|---|
-| **A** | Assainir : reproductibilité, config, migrations, bugs, tests, CI | 2–4 jours | Clone frais → site local fonctionnel |
-| **B** | Moderniser : Django 5.2, dé-harcoder, pipeline idempotent | 3–5 jours | Couvrir une votation sans toucher au code |
-| **C** | Déployer : Compose, micro-cache/export, timer systemd | 2–3 jours | Dry run complet sur le VPS |
-| **D1** | Produit votations : réel/estimé, IC, convergence | itératif | Première vraie votation couverte |
-| **D2** | Élections : modèles généralisés, méthode reports | itératif | Une élection cantonale couverte |
+| Jalon | Voie M — Moteur | Voie I — Interface |
+|---|---|---|
+| **0. Découplage** *(à deux, en premier)* | contrat de vue + `MODE_FIXTURE` | contrat de vue + `MODE_FIXTURE` |
+| **1. Le repo démarre** | A1–A3 : requirements, settings, migrations | P7 : maquette niveau 0, charte CSS |
+| **2. Base saine** | A4–A5 : bugs, tests, CI | P7 : `charte.py`, histogramme, carte |
+| **3. Prêt pour un scrutin** | B1–B4 : Django 5.2, dé-harcodage, pipeline | P7 : chiffre héro, a11y, hygiène |
+| **4. Communes historisées** | Partie 6 : modèle + résolution | Partie 6 : sources OFS, contrôle qualité |
+| **5. En production** | C1–C2 : Compose, cache, timer systemd | C3 : contrôle visuel du dry run |
+| **6. Produit** | D1 : IC bootstrap, données de convergence | D1 : réel/estimé, courbe, page Méthodes |
+| **7. Élections** | D2 : modèles généralisés, méthode reports | D2 : UI multi-candidats |
+
+Effort indicatif côté M : A ≈ 2–4 j, B ≈ 3–5 j, C ≈ 2–3 j. Côté I, la Partie 7
+est largement parallélisable et peut démarrer dès le jalon 0.
+
+**Chemin critique : le jalon 0.** Tant que le contrat n'est pas posé, les deux
+voies se disputent `views.py` ; une fois posé, elles ne se croisent presque plus
+jusqu'au jalon 5.
 
 **Cible naturelle** : être prêt (fin de C, dry run inclus) pour la **prochaine
 votation fédérale** — vérifier la date sur admin.ch et compter ~2 semaines de marge
 pour la répétition générale.
 
-**Ordre des premières actions concrètes** (Phase A) :
-1. `requirements.txt` + `.gitignore` + venv qui s'installe.
+**Ordre des premières actions concrètes**
+
+*À deux, d'abord* — figer le contrat de vue, écrire `fixtures/vue_accueil.json`,
+poser `MODE_FIXTURE`. Sans ça, pas de parallélisme.
+
+*Puis voie M* :
+1. `requirements/` + `.gitignore` + venv qui s'installe.
 2. `settings.py` assaini (env vars, SQLite en dev) — le repo démarre enfin.
 3. `makemigrations` + commit des migrations.
-4. Corrections des 4 bugs latents (petites PR séparées).
+4. Corrections des bugs latents (petites PR séparées).
 5. Tests de `extrapolation.py` + CI.
+
+*Puis voie I* :
+1. `maquette/index.html` : explorer palette, typo, mise en page sans Django.
+2. Charte en variables CSS + fonte unique + contrastes corrigés.
+3. `charte.py` (template Plotly partagé), puis histogramme (ligne des 50 %),
+   puis carte (divergente ancrée à 50 %).
 
 ---
 
@@ -327,7 +483,7 @@ class Mutation:
 - **GeoJSON** : millésime swisstopo assorti à la date du scrutin, date stockée
   en config.
 
-### Ordre d'implémentation
+### Ordre d'implémentation **[2]**
 1. Import eCH-0071 → `CommuneVersion` + `Mutation` (management command).
 2. Ré-appariement de l'historique `Voix` sur les versions (par OFS + date —
    supprime le matching par nom).
@@ -343,7 +499,7 @@ class Mutation:
 Chantier **indépendant des phases A–C** : peut démarrer tôt, aucune dépendance
 au backend. Alimente D1.
 
-### État des lieux — HTML/CSS
+### État des lieux — HTML/CSS **[I]**
 - `lang="en"` sur un site francophone ; `<link>` Font Awesome dans le `<body>`
   (HTML invalide) — et FA 4.7 (2016) chargé pour **une** icône ☰.
 - Lien mort `href="NA"` (Cartes) ; pas de favicon ni meta description ;
@@ -358,7 +514,7 @@ au backend. Alimente D1.
   d'apprentissage flexbox.
 - Aucune variable CSS → pas de charte tenable dans le temps.
 
-### État des lieux — graphiques Plotly
+### État des lieux — graphiques Plotly **[I]**
 - **Couleurs par défaut de plotly.express** (#636efa/#EF553B), jamais choisies.
 - Histogramme : **pas de ligne de référence à 50 %** — le seuil de majorité,
   l'information n°1 d'une votation ; un label sur chaque barre (bruit) ;
@@ -369,7 +525,7 @@ au backend. Alimente D1.
 - Bon point à préserver : `white-bg` sans tuiles externes → compatible avec le
   mirroir statique, aucune dépendance à un serveur de cartes.
 
-### Refonte proposée
+### Refonte proposée **[I]**
 1. **Mini-charte en variables CSS** (`--surface`, `--encre-1/2`, `--bleu-450`…,
    valeurs de la palette validée ci-dessous) ; **une seule fonte** : la sans
    système (`system-ui, …`) partout — Garamond peut survivre dans le seul
