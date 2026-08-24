@@ -154,10 +154,56 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
     (variable qui fuit) pour construire `sujets`, et appelle `Warning(…)` au lieu de
     `warnings.warn(…)` — donc l'avertissement n'est jamais émis.
 
+## Travail à deux — deux voies parallèles
+
+Le projet est repris à deux, **chacun son clone et sa branche**. La réflexion sur
+l'évolution est commune ; la réalisation est répartie en deux voies :
+
+| | **Voie M — Moteur** | **Voie I — Interface** |
+|---|---|---|
+| Domaine | maths, backend, infra | design, frontend, données |
+| Branches | `moteur/…` | `interface/…` |
+| Fichiers | `extrapolation.py`, `donnees.py`, `models.py`, `pca/`, migrations, management commands, `settings.py`, Docker, CI | `templates/`, `*/static/`, `charte.py`, `graphiques.py`, `carte/figure.py`, `maquette/` |
+
+**Règle : on ne modifie pas la zone de l'autre sans la lui demander.** Si la voie I
+a besoin d'une donnée supplémentaire, elle la demande — elle ne va pas la chercher
+elle-même dans l'ORM.
+
+### La couture données / présentation
+
+Le point de contact est un **contrat de vue** : un dict simple, sérialisable en
+JSON, produit par la voie M et consommé par la voie I.
+
+```
+donnees.py     [M]  construire_vue_accueil() -> dict   (aucun Plotly)
+graphiques.py  [I]  histogramme(vue) -> div HTML       (aucun ORM)
+views.py    [commun] assemble les deux — doit rester minuscule
+```
+
+La référence versionnée du contrat est **`fixtures/vue_accueil.json`**, édité en
+commun. Un test vérifie que `donnees.py` produit bien ces clés : le backend ne peut
+pas changer de forme sans casser la CI. C'est le garde-fou anti-dérive.
+
+### Maquetter sans l'infra
+
+Quatre niveaux ; **la voie I vit aux niveaux 0–2 et n'a jamais besoin de Postgres,
+de scikit-learn ni des 55 votations historiques** :
+
+| Niveau | Il faut | Pour |
+|---|---|---|
+| 0 | un navigateur | `maquette/index.html` autonome — charte, couleurs, mise en page |
+| 1 | `django`, `plotly` | `MODE_FIXTURE=1 manage.py runserver` : vrais templates et figures, zéro DB |
+| 2 | + `loaddata demo` | chemin ORM réel sur ~20 communes (SQLite) |
+| 3 | Postgres + pipeline | monde de la voie M : vraies extrapolations, dry run |
+
+Détail complet et découpage des tâches par voie : [`PLAN_MODERNISATION.md`](PLAN_MODERNISATION.md) Partie 0.
+
 ## Conventions
 
 Domaine et modèles en **français** (`Commune`, `SujetVote`, `Voix`, `nombre_oui`,
 `requete`), messages de commit et quelques helpers en anglais. Garder le français
 pour tout ce qui touche au métier et à l'interface.
 
-Branches : `master`, plus `Frederic` et `Laurence` (travail à deux, fusionné par PR).
+Branches : `master`, plus les préfixes `moteur/` et `interface/` (voir ci-dessus).
+Les anciennes branches nominatives `Frederic` et `Laurence` sont abandonnées — le
+sujet compte plus que l'auteur.
