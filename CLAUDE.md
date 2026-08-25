@@ -120,7 +120,8 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
 2. `settings.py` lit la clé secrète dans **`/etc/secret_key.txt`** et **plante à
    l'import** si le fichier est absent. Il charge aussi `../.env` (hors du repo) et
    **exige** que la variable `debug` y vaille exactement `"True"` ou `"False"`.
-3. **PostgreSQL requis** (base `votation`, `db_user` / `db_password` depuis `.env`).
+3. **PostgreSQL requis** (base `votation`, `db_user` / `db_password` depuis `.env`)
+   — le plan prévoit de passer à SQLite partout, voir « Travail à deux » plus bas.
 4. Ni `requirements.txt`, ni `.gitignore`, ni environnement figé. Dépendances
    implicites : `django` (≈3.1), `django-extensions`, `python-dotenv`,
    `psycopg2`, `pandas`, `numpy`, `scipy`, `scikit-learn`, `plotly`, `geojson`.
@@ -154,10 +155,79 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
     (variable qui fuit) pour construire `sujets`, et appelle `Warning(…)` au lieu de
     `warnings.warn(…)` — donc l'avertissement n'est jamais émis.
 
+## Travail à deux — deux voies parallèles
+
+Le projet est repris à deux, **chacun son clone et sa branche**. La réflexion sur
+l'évolution est commune ; la réalisation est répartie en deux voies :
+
+| | **Voie M — Moteur** | **Voie I — Interface** |
+|---|---|---|
+| Domaine | maths, backend, infra | design, frontend, données |
+| Branches | `moteur/…` | `interface/…` |
+| Fichiers | `extrapolation.py`, `donnees.py`, `models.py`, `pca/`, migrations, management commands, `settings.py`, Docker, CI | `templates/`, `*/static/`, `charte.py`, `graphiques.py`, `carte/figure.py`, `maquette/` |
+
+**Règle : on ne modifie pas la zone de l'autre sans la lui demander.** Si la voie I
+a besoin d'une donnée supplémentaire, elle la demande — elle ne va pas la chercher
+elle-même dans l'ORM.
+
+### La couture données / présentation
+
+Le point de contact est un **contrat de vue** : un dict simple, sérialisable en
+JSON, produit par la voie M et consommé par la voie I.
+
+```
+donnees.py     [M]  construire_vue_accueil() -> dict   (aucun Plotly)
+graphiques.py  [I]  histogramme(vue) -> div HTML       (aucun ORM)
+views.py    [commun] assemble les deux — doit rester minuscule
+```
+
+Ce n'est pas un fichier chargé à l'exécution : juste la forme du dict, figée par
+`tests/test_contrat.py` qui tourne sur la base fictive. Si la voie M change la forme
+sans prévenir, la CI casse. C'est le garde-fou anti-dérive, et le seul fichier
+qu'on édite à deux.
+
+### Deux jeux de données, un seul chemin de code
+
+Pas de mode maquette et pas de branche `if` dans les vues : le site tourne toujours
+de la même façon, **seule la base change**.
+
+| Jeu | Comment | Pour qui |
+|---|---|---|
+| **Fictif** | `manage.py peupler_demo` | tout le monde, au quotidien |
+| **Réel** | pipeline d'import (historique + JSON du jour J) | voie M : projections réelles, dry run, prod |
+
+`peupler_demo` construit une base **à l'échelle réelle** (~2 130 communes, tirées du
+GeoJSON déjà présent dans `data/`), avec un historique de votes fictif structuré par
+profil latent — l'ACP y trouve donc une vraie structure. Graine fixe, aucun
+téléchargement, tourne hors-ligne.
+
+**La base est SQLite partout, dev comme prod** (un seul écrivain, ~120 000 lignes,
+sauvegarde = copie du fichier). Pas de Postgres, pas de `psycopg`.
+
+### Deux agents en parallèle
+
+Les deux voies existent aussi comme **agents Claude**, définis dans
+`.claude/agents/` : `moteur` et `interface`. Chacun a la liste de ses fichiers,
+ses frontières explicites, et l'interdiction de toucher la zone de l'autre.
+
+- **Un agent par voie, un clone (ou un worktree) par agent.** Deux agents dans le
+  même répertoire de travail se marcheraient dessus sur l'index git.
+- L'agent `interface` travaille sur la base fictive : `peupler_demo` puis
+  `runserver`. Ni pile scientifique, ni données réelles, ni réseau.
+- **Le contrat est le seul point de rendez-vous.** Un agent qui a besoin d'un
+  champ absent ne va pas le chercher lui-même : il le demande, et le contrat
+  (plus son test) est mis à jour des deux côtés.
+- Les tâches sont étiquetées **[M]**, **[I]** ou **[2]** dans le plan — un agent
+  ne prend que les siennes, et **[2]** signale ce qui se décide à deux.
+
+Détail complet et découpage des tâches par voie : [`PLAN_MODERNISATION.md`](PLAN_MODERNISATION.md) Partie 0.
+
 ## Conventions
 
 Domaine et modèles en **français** (`Commune`, `SujetVote`, `Voix`, `nombre_oui`,
 `requete`), messages de commit et quelques helpers en anglais. Garder le français
 pour tout ce qui touche au métier et à l'interface.
 
-Branches : `master`, plus `Frederic` et `Laurence` (travail à deux, fusionné par PR).
+Branches : `master`, plus les préfixes `moteur/` et `interface/` (voir ci-dessus).
+Les anciennes branches nominatives `Frederic` et `Laurence` sont abandonnées — le
+sujet compte plus que l'auteur.
