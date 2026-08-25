@@ -124,6 +124,24 @@ ne servent qu'au calcul (`extrapolation.py`, `populate_pca.py`). Séparer permet
       DataFrame passé à `px.bar` — on peut passer des listes directement et
       sortir pandas du chemin web.
 
+### Deux agents Claude, un par voie
+
+Les deux voies sont aussi des **agents** définis dans `.claude/agents/` :
+`moteur.md` et `interface.md`. Chacun liste ses fichiers, ses responsabilités et
+ses frontières — un agent refuse d'éditer la zone de l'autre.
+
+- **Un clone (ou un worktree git) par agent** : deux agents dans le même
+  répertoire se disputeraient l'index git.
+- L'agent `interface` tourne en `MODE_FIXTURE` — ni base de données, ni scipy,
+  ni sklearn. **Il peut donc démarrer avant que `moteur` ait fini l'infra.**
+- Le contrat (`fixtures/vue_accueil.json`) est leur seul point de rendez-vous :
+  un agent qui a besoin d'un champ absent le *demande* au lieu de contourner.
+- Les étiquettes **[M]** / **[I]** / **[2]** de ce plan disent à chaque agent ce
+  qu'il peut prendre seul et ce qui se décide à deux.
+
+Découpage identique pour deux personnes ou deux agents — c'est le même contrat
+qui protège dans les deux cas.
+
 ### Rythme et intégration
 
 - Chacun son clone, chacun sa branche, **petites PR relues par l'autre** (c'est

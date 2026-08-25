@@ -196,6 +196,22 @@ de scikit-learn ni des 55 votations historiques** :
 | 2 | + `loaddata demo` | chemin ORM réel sur ~20 communes (SQLite) |
 | 3 | Postgres + pipeline | monde de la voie M : vraies extrapolations, dry run |
 
+### Deux agents en parallèle
+
+Les deux voies existent aussi comme **agents Claude**, définis dans
+`.claude/agents/` : `moteur` et `interface`. Chacun a la liste de ses fichiers,
+ses frontières explicites, et l'interdiction de toucher la zone de l'autre.
+
+- **Un agent par voie, un clone (ou un worktree) par agent.** Deux agents dans le
+  même répertoire de travail se marcheraient dessus sur l'index git.
+- L'agent `interface` travaille en `MODE_FIXTURE` : il n'a besoin ni de base de
+  données, ni de la pile scientifique. Il peut donc démarrer avant `moteur`.
+- **Le contrat est le seul point de rendez-vous.** Un agent qui a besoin d'un
+  champ absent ne va pas le chercher lui-même : il le demande, et la fixture est
+  mise à jour des deux côtés.
+- Les tâches sont étiquetées **[M]**, **[I]** ou **[2]** dans le plan — un agent
+  ne prend que les siennes, et **[2]** signale ce qui se décide à deux.
+
 Détail complet et découpage des tâches par voie : [`PLAN_MODERNISATION.md`](PLAN_MODERNISATION.md) Partie 0.
 
 ## Conventions
