@@ -2,7 +2,7 @@ import plotly.express as px
 from scrutin.models import ScrutinAPI
 import plotly
 import geojson
-import numpy as np
+import statistics
 
 
 def generate_carte_plot(id_scrutin):
@@ -19,10 +19,16 @@ def generate_carte_plot(id_scrutin):
     dict_properties = {'name': all_cities,
                        'results': all_results,
                        'results_formated': all_results_formated}
-    array_for_color = np.array(dict_properties['results'])
-    array_for_color = array_for_color[array_for_color > 0]
-    lower_bound_color = np.percentile(array_for_color, 10)
-    upper_bound_color = np.percentile(array_for_color, 90)
+    # Bornes de l'échelle de couleur aux 1er et 9e déciles. numpy ne servait
+    # qu'à ça : `statistics` suffit, et la voie Interface n'a plus besoin de la
+    # pile scientifique pour afficher une carte.
+    valeurs_pour_couleur = [v for v in dict_properties['results'] if v > 0]
+    if len(valeurs_pour_couleur) < 2:
+        # Aucun résultat pour ce scrutin : échelle neutre plutôt qu'un plantage.
+        lower_bound_color, upper_bound_color = 0, 100
+    else:
+        deciles = statistics.quantiles(valeurs_pour_couleur, n=10)
+        lower_bound_color, upper_bound_color = deciles[0], deciles[-1]
     div_containing_plot = plotly.offline.plot(px.choropleth_mapbox(dict_properties,
                                                                    geojson=gj,
                                                                    locations='name',

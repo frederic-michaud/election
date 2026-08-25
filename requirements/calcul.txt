@@ -1,7 +1,5 @@
-# Pile scientifique : uniquement pour l'extrapolation et l'ACP.
-# Inutile pour travailler sur l'interface.
+# Pile scientifique lourde : uniquement pour l'extrapolation (scipy) et l'ACP
+# (scikit-learn). Inutile pour travailler sur l'interface.
 -r web.txt
-numpy==2.*
 scipy==1.*
 scikit-learn==1.*
-pandas==2.*
