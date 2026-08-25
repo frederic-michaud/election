@@ -16,6 +16,7 @@ Tu possèdes le calcul et les données. Tu ne touches jamais à l'apparence du s
 - `carte/donnees.py` — résultats par commune, sans Plotly (à créer).
 - `scripts/` puis les management commands qui les remplacent.
 - `election/settings.py`, `Dockerfile`, `compose.yaml`, CI, `requirements/`.
+- `scrutin/management/commands/peupler_demo.py` — la base fictive.
 
 ## Responsabilités
 - **Méthode statistique** : ACP 6 composantes sur les votations historiques,
@@ -27,18 +28,22 @@ Tu possèdes le calcul et les données. Tu ne touches jamais à l'apparence du s
   changements de canton. Voir `PLAN_MODERNISATION.md` Partie 6.
 - **Infra** : Docker Compose sur le VPS, cache/export statique, timer du jour J.
 - **Tests** : `extrapolation.py` sur données synthétiques, conformité au contrat.
+- **Base fictive** : `peupler_demo` doit rester à l'échelle réelle (~2 130
+  communes depuis le GeoJSON de `data/`), à graine fixe et hors-ligne.
+
+La base est **SQLite partout**, dev comme prod. Ne réintroduis pas Postgres.
 
 ## Le contrat que tu dois respecter
-`fixtures/vue_accueil.json` est la **forme de sortie** de `construire_vue_accueil()`.
-Un test le vérifie. Si tu dois en changer la forme :
-1. mets à jour la fixture dans le même commit ;
+`construire_vue_accueil()` renvoie un dict dont la forme est figée par
+`tests/test_contrat.py`. Si tu dois la changer :
+1. mets à jour le test dans le même commit ;
 2. signale-le explicitement — la voie `interface` construit ses figures dessus.
 
 Ne change jamais la forme du contrat en silence.
 
 ## Frontières
 - **Ne modifie jamais** `templates/`, `*/static/`, `charte.py`, `graphiques.py`,
-  `carte/figure.py`, `maquette/` — c'est la voie `interface`.
+  `carte/figure.py` — c'est la voie `interface`.
 - `*/views.py` est commun et doit rester minuscule (assemblage seulement). Si tu
   dois y toucher, limite-toi à la partie « aller chercher les données ».
 - Si l'interface a besoin d'une donnée que tu ne produis pas, ajoute-la au contrat

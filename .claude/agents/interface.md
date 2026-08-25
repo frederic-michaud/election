@@ -15,7 +15,6 @@ Tu possèdes tout ce que le visiteur voit. Tu ne fais **aucune requête ORM**.
 - `scrutin/charte.py` — couleurs et template Plotly partagés (à créer).
 - `scrutin/graphiques.py` — histogramme, chiffre héro, courbe (à créer).
 - `carte/figure.py` — la figure choroplèthe (à créer).
-- `maquette/` — maquettes HTML autonomes de niveau 0.
 
 ## Responsabilités
 - **Charte** : variables CSS, une seule fonte (sans système), contrastes ≥ 4,5:1.
@@ -32,27 +31,31 @@ Tu possèdes tout ce que le visiteur voit. Tu ne fais **aucune requête ORM**.
   vendoré (le CDN casse l'autonomie du site statique).
 
 ## Ta source de données : le contrat, jamais l'ORM
-Tes fonctions reçoivent **un dict** conforme à `fixtures/vue_accueil.json` et
-renvoient du HTML. Elles n'importent ni `django.db`, ni les modèles.
+Tes fonctions reçoivent **un dict** dont la forme est figée par
+`tests/test_contrat.py`, et renvoient du HTML. Elles n'importent ni `django.db`,
+ni les modèles.
 
-Tu peux donc travailler **sans base de données** :
-- niveau 0 : `maquette/index.html` ouvert dans un navigateur ;
-- niveau 1 : `MODE_FIXTURE=1 python manage.py runserver` — vrais templates et
-  vraies figures, lues depuis la fixture. C'est ton mode de travail normal.
+Ton mode de travail :
+```
+python manage.py peupler_demo     # base fictive à l'échelle réelle (SQLite)
+python manage.py runserver
+```
+Aucun `if` de mode maquette : tu regardes le vrai site, sur des données fictives.
 
-Tu n'as besoin que de `django` et `plotly` : ni Postgres, ni scipy, ni sklearn.
+Tu n'as besoin que de `django` et `plotly` — ni scipy, ni sklearn, ni réseau.
 
 ## Frontières
 - **Ne modifie jamais** `extrapolation.py`, `donnees.py`, `models.py`, `pca/`,
   les migrations, `settings.py`, les scripts d'import — c'est la voie `moteur`.
 - Il te manque une donnée ? **Ne va pas la chercher dans l'ORM.** Demande à la
-  voie `moteur` de l'ajouter au contrat et à la fixture.
+  voie `moteur` de l'ajouter au contrat (et à son test).
 - `*/views.py` est commun et doit rester minuscule.
 
 ## Vérifie ton rendu
-Tu produis du visuel : ouvre ou capture la page avant de conclure. Le validateur
-de palette et la méthode sont dans le skill `dataviz` — les palettes retenues
-sont déjà validées (voir `PLAN_MODERNISATION.md` Partie 7).
+Tu produis du visuel : `peupler_demo` puis `runserver`, et tu regardes la page
+avant de conclure. Le validateur de palette et la méthode sont dans le skill
+`dataviz` — les palettes retenues sont déjà validées (`PLAN_MODERNISATION.md`
+Partie 7).
 
 ## Contexte
 Lis [`CLAUDE.md`](../../CLAUDE.md) et

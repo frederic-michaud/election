@@ -7,6 +7,8 @@
 - **Architecture** : on garde Django, modernisé (Django 5.2 LTS, Python 3.12+).
 - **Priorité n°1** : assainir la base avant toute nouvelle fonctionnalité.
 - **Hébergement** : VPS Infomaniak, comme avant (Docker Compose envisagé).
+- **Base de données** : **SQLite partout**, dev comme prod. Postgres est
+  surdimensionné ici (voir Partie 0).
 - **Périmètre à terme** : intégrer les élections (méthode reports de voix du repo
   `extrapolation_politique`) en plus des votations — en phase finale.
 - **Organisation** : deux personnes, deux voies parallèles, deux clones (Partie 0).
@@ -37,9 +39,8 @@ forme du contrat (ci-dessous), méthode statistique, priorités. Seule la
 | `carte/donnees.py` | **M** |
 | `templates/`, `*/static/` (CSS, JS, logo) | **I** |
 | `scrutin/charte.py`, `scrutin/graphiques.py`, `carte/figure.py` | **I** |
-| `maquette/` | **I** |
 | `*/views.py` | **commun** — doit rester minuscule (voir couture) |
-| `fixtures/*.json` | **commun** — c'est le contrat, on l'édite ensemble |
+| `tests/test_contrat.py` | **commun** — fige la forme du contrat |
 | `CLAUDE.md`, `PLAN_MODERNISATION.md` | **commun** |
 
 **Règle** : on ne modifie pas la zone de l'autre sans le lui demander. Si la
@@ -62,55 +63,73 @@ carte/figure.py        [I]  carte(donnees) -> div HTML
 scrutin/views.py    [commun] assemble les deux, ~15 lignes, rarement touché
 ```
 
-Forme du contrat (à figer ensemble, puis versionnée dans `fixtures/`) :
+Forme du contrat, à figer ensemble :
 
-```json
+```python
 {
   "date": "2026-09-27",
   "avance": 0.42,
   "sujets": [
     {"id": 6, "nom": "AVS 21", "oui_connu": 0.512, "oui_extrapole": 0.507,
      "ic_bas": 0.494, "ic_haut": 0.520,
-     "communes": {"1": 0.61, "2": 0.48}}
-  ]
+     "communes": {1: 0.61, 2: 0.48}},   # clé = numéro OFS
+  ],
 }
 ```
 
-**Le contrat est un fichier `fixtures/vue_accueil.json` versionné.** Un test de
-la voie M vérifie que `construire_vue_accueil()` produit exactement ces clés :
-si le backend change de forme sans mettre à jour la fixture, la CI casse. C'est
-le garde-fou anti-dérive entre les deux voies.
+Ce n'est **pas un fichier chargé à l'exécution** — juste la forme du dict que
+`donnees.py` renvoie et que `graphiques.py` consomme. Elle est figée par
+`tests/test_contrat.py`, qui tourne sur la base fictive : si la voie M change la
+forme sans prévenir, la CI casse. C'est le garde-fou anti-dérive entre les deux
+voies, et le seul endroit qu'on édite à deux.
 
-### Maquetter avant que l'infra soit prête
+### Deux jeux de données, un seul chemin de code
 
-Quatre niveaux, du plus léger au plus complet. **La voie I vit aux niveaux 0–2 et
-n'a jamais besoin de Postgres, ni de scikit-learn, ni des 55 votations
-historiques.**
+Pas de mode maquette, pas de branche `if` dans les vues : **le site tourne
+toujours de la même façon**, seule la base change.
 
-| Niveau | Ce qu'il faut | Pour quoi |
+| Jeu | Comment | Pour qui |
 |---|---|---|
-| **0 — HTML statique** | un navigateur | Explorer la charte, les couleurs, la mise en page. Un `maquette/index.html` autonome avec des `<div>` Plotly figés. Itération en secondes, partageable par simple fichier. |
-| **1 — Django + fixture** | `django`, `plotly` | Vrais templates, vraies figures générées en Python, **zéro base de données** : `MODE_FIXTURE=1 python manage.py runserver` lit `fixtures/vue_accueil.json` au lieu de l'ORM. Mode de travail principal de la voie I. |
-| **2 — SQLite + données de démo** | + `manage.py loaddata demo` | Chemin ORM réel sur ~20 communes et 3 sujets. Sert à vérifier que le vrai `donnees.py` remplit bien le contrat. |
-| **3 — Pile complète** | Postgres, pipeline, scipy/sklearn | Monde de la voie M : vraies extrapolations, dry run du jour J. |
+| **Fictif** | `manage.py peupler_demo` | Tout le monde, au quotidien. Une commande depuis un clone frais → site complet et réaliste. |
+| **Réel** | pipeline d'import (historique + JSON du jour J) | Voie M : vraies projections, dry run, production. |
 
-Mise en œuvre du niveau 1 (petite, à faire tôt) :
-```python
-# scrutin/views.py
-def home_view(requete):
-    if settings.MODE_FIXTURE:
-        vue = json.loads(Path("fixtures/vue_accueil.json").read_text())
-    else:
-        vue = donnees.construire_vue_accueil()
-    return render(requete, "home.html", graphiques.tout(vue))
-```
+Les données fictives doivent être **à l'échelle réelle** — ~2 130 communes, une
+dizaine de votations d'historique, plusieurs objets le jour J. Une maquette à
+20 communes ne dit rien sur la lisibilité d'une carte ni sur la mise en page.
 
-- [ ] **[2]** Figer la forme du contrat et écrire `fixtures/vue_accueil.json`
-      (à la main, ou généré depuis les données de septembre 2022 si on les
-      retrouve — une vraie soirée fait une bien meilleure maquette).
-- [ ] **[2]** Ajouter `MODE_FIXTURE` dans les settings + la bascule dans les vues.
-- [ ] **[M]** Test de conformité `donnees.py` ↔ fixture.
-- [ ] **[I]** `maquette/index.html` de niveau 0 pour l'exploration graphique.
+**Tout est déjà dans le dépôt pour les fabriquer** : `data/K4voge_*.geojson`
+contient le nom et le numéro OFS de toutes les communes suisses. `peupler_demo`
+n'a donc besoin d'aucun téléchargement — il tourne hors-ligne.
+
+Pour que la démo exerce vraiment le pipeline (et pas juste l'affichage), les
+votes fictifs sont tirés à partir d'un profil latent par commune (un axe
+urbain/rural, un axe linguistique) plus du bruit : l'ACP y retrouve alors une
+vraie structure, et l'extrapolation a quelque chose à apprendre. Graine fixe →
+tout le monde voit exactement le même site.
+
+- [ ] **[M]** `manage.py peupler_demo` : communes depuis le GeoJSON, historique
+      et scrutin en cours fictifs, graine fixe, idempotent.
+- [ ] **[2]** Écrire `tests/test_contrat.py` : forme du dict figée, exécuté
+      sur la base fictive.
+
+**Conséquence sur le parallélisme** : la voie I ne démarre qu'une fois le
+jalon 0 franchi (A1–A3 + `peupler_demo`, ≈ 1 jour côté M) au lieu de démarrer
+immédiatement. C'est le prix de la simplicité — il est faible, et il évite un
+mode maquette qui dériverait du vrai site.
+
+### Pourquoi SQLite suffit
+
+- **Un seul écrivain** : le pipeline du jour J tourne dans un seul processus,
+  toutes les 2–5 minutes. Aucune écriture concurrente.
+- **Volume trivial** : ~2 130 communes × ~55 votations ≈ 120 000 lignes.
+- **Lectures servies par le cache/mirroir statique**, pas par la base.
+- **Sauvegarde = copier un fichier** (plus simple qu'un `pg_dump`), et le même
+  fichier se rejoue à l'identique en local pour déboguer une soirée.
+- Activer le mode **WAL** et un `timeout` raisonnable, et c'est réglé.
+
+Cela supprime d'un coup : le service `db` du Compose, `psycopg`,
+`dj-database-url`, les variables `db_user`/`db_password`, et la procédure de
+sauvegarde Postgres.
 
 ### Dépendances séparées
 
@@ -118,7 +137,7 @@ Le site web n'a pas besoin de la pile scientifique : `scipy` et `scikit-learn`
 ne servent qu'au calcul (`extrapolation.py`, `populate_pca.py`). Séparer permet
 à la voie I d'installer trois paquets au lieu de dix.
 
-- [ ] **[M]** `requirements/web.txt` (django, plotly, geojson, psycopg) et
+- [ ] **[M]** `requirements/web.txt` (django, plotly, geojson) et
       `requirements/calcul.txt` (numpy, scipy, scikit-learn, pandas).
 - [ ] **[I]** Bonus : `views.py` n'utilise pandas que pour construire un
       DataFrame passé à `px.bar` — on peut passer des listes directement et
@@ -132,10 +151,10 @@ ses frontières — un agent refuse d'éditer la zone de l'autre.
 
 - **Un clone (ou un worktree git) par agent** : deux agents dans le même
   répertoire se disputeraient l'index git.
-- L'agent `interface` tourne en `MODE_FIXTURE` — ni base de données, ni scipy,
-  ni sklearn. **Il peut donc démarrer avant que `moteur` ait fini l'infra.**
-- Le contrat (`fixtures/vue_accueil.json`) est leur seul point de rendez-vous :
-  un agent qui a besoin d'un champ absent le *demande* au lieu de contourner.
+- L'agent `interface` travaille sur la base fictive (`peupler_demo`) : ni pile
+  scientifique, ni données réelles, ni accès réseau.
+- Le **contrat de vue** est leur seul point de rendez-vous : un agent qui a
+  besoin d'un champ absent le *demande* au lieu de contourner.
 - Les étiquettes **[M]** / **[I]** / **[2]** de ce plan disent à chaque agent ce
   qu'il peut prendre seul et ce qui se décide à deux.
 
@@ -147,16 +166,19 @@ qui protège dans les deux cas.
 - Chacun son clone, chacun sa branche, **petites PR relues par l'autre** (c'est
   le principal moment de transfert de connaissance entre les deux voies).
 - Rebaser souvent sur `master` : les deux voies touchent peu les mêmes fichiers,
-  mais `views.py` et les fixtures sont partagés.
+  mais `views.py` et `tests/test_contrat.py` sont partagés.
 - Les anciennes branches nominatives `Frederic` / `Laurence` sont abandonnées au
   profit des préfixes `moteur/` et `interface/` — le sujet compte plus que l'auteur.
 
 ### Les trois premières séances
 
-1. **Ensemble** : figer le contrat + écrire la fixture + poser `MODE_FIXTURE`.
-   Après ça, les deux voies sont découplées.
-2. **Voie M** : A1–A3 (le repo démarre). **Voie I** : maquette niveau 0, charte CSS.
-3. **Voie M** : A4–A5 (bugs, tests). **Voie I** : `charte.py`, histogramme, carte.
+1. **Ensemble** : figer la forme du contrat de vue et la couture
+   `donnees.py` / `graphiques.py`.
+2. **Voie M seule** : A1–A3 + `peupler_demo` — au bout, `manage.py peupler_demo`
+   puis `runserver` donnent un site complet depuis un clone frais. C'est le
+   jalon qui débloque la voie I.
+3. **En parallèle** : voie M sur A4–A5 (bugs, tests), voie I sur la charte CSS
+   puis `charte.py`, histogramme, carte.
 
 ---
 
@@ -196,15 +218,16 @@ Objectif de sortie de phase : **un clone frais + `docker compose up` (ou 5 comma
 documentées) donne un site qui tourne en local avec des données de test.** Rien de
 nouveau fonctionnellement.
 
-*Phase très majoritairement **[M]**. Pendant ce temps la voie I travaille la
-Partie 7 en mode fixture — c'est tout l'intérêt de la couture du jalon 0.*
+*Phase très majoritairement **[M]**. Elle contient le chemin critique :
+`peupler_demo` (A1–A3 + la commande) débloque la voie I, qui enchaîne ensuite la
+Partie 7 en parallèle de A4–A5.*
 
 ### A1. Reproductibilité du repo **[M]**
-- [ ] `requirements.txt` (ou `pyproject.toml`) avec versions épinglées :
-      `django`, `django-extensions`, `python-dotenv`, `psycopg[binary]`, `pandas`,
-      `numpy`, `scipy`, `scikit-learn`, `plotly`, `geojson`.
+- [ ] `requirements/` avec versions épinglées : `web.txt` (django, plotly,
+      geojson) et `calcul.txt` (numpy, scipy, scikit-learn, pandas).
+      Plus de `psycopg` — SQLite est dans la bibliothèque standard.
 - [ ] `.gitignore` : `*.pyc`, `__pycache__/`, `static/`, `cache.pickle`, `.env`,
-      `db.sqlite3`, `politiques/` (sortie wget), `votation_matrix.csv`.
+      `*.sqlite3`, `politiques/` (sortie wget), `votation_matrix.csv`.
 - [ ] Supprimer `data/switzerland2.geojson` (6 Mo, référencé nulle part).
 - [ ] README développeur : mise en route pas à pas, ordre du pipeline de données.
 
@@ -214,8 +237,8 @@ Partie 7 en mode fixture — c'est tout l'intérêt de la couture du jalon 0.*
 - [ ] `DEBUG` : `False` par défaut, activable par env ; supprimer le parsing fragile
       `"True"/"False"` (utiliser `os.environ.get("DEBUG") == "1"` ou équivalent).
 - [ ] `.env.example` versionné, chargé depuis la racine du repo (pas `../.env`).
-- [ ] Base de données par `DATABASE_URL` (dj-database-url) : Postgres en prod,
-      **SQLite par défaut en dev** — supprime la dépendance Postgres pour bosser.
+- [ ] **SQLite partout**, chemin paramétrable par env (`DB_PATH`), mode **WAL**
+      activé. Supprimer `db_user` / `db_password` et l'`ENGINE` postgresql.
 - [ ] `ALLOWED_HOSTS` depuis env (pas `["*"]` en prod).
 
 ### A3. Migrations versionnées **[M]**
@@ -243,8 +266,8 @@ Partie 7 en mode fixture — c'est tout l'intérêt de la couture du jalon 0.*
 - [ ] `pytest` + `pytest-django`.
 - [ ] Tests unitaires de `scrutin/extrapolation.py` sur données synthétiques
       (le cœur mathématique — le plus rentable à tester, aucun accès réseau).
-- [ ] Test d'intégration du pipeline : fixtures minimales (3 communes, 3 sujets)
-      → `populate_pca` → `run_extrapolation` → une `Extrapolation` cohérente.
+- [ ] Test d'intégration du pipeline sur la base fictive : `peupler_demo`
+      → ACP → extrapolation → une `Extrapolation` cohérente.
 - [ ] `create_fake_json_input` devient l'outil officiel de répétition générale
       (le documenter comme tel).
 - [ ] GitHub Actions : `ruff` (lint + format) + tests sur chaque PR.
@@ -268,7 +291,6 @@ future sans toucher au code** — seulement la config et les données.
 ### B1. Mise à jour de la stack **[M]**
 - [ ] Python 3.12+, Django **5.2 LTS**. Le code est simple, la migration 3.1 → 5.2
       devrait être douce. Points d'attention connus :
-      - `psycopg2` → `psycopg` v3 (changer `ENGINE` si besoin) ;
       - pandas : `fillna(method='ffill')` déprécié → `.ffill()` (populate_voix) ;
       - plotly : `px.choropleth_mapbox` déprécié dans les versions récentes →
         `px.choropleth_map` (MapLibre) ; vérifier le rendu des cartes ;
@@ -331,11 +353,13 @@ Objectif de sortie de phase : **un dimanche de votation se lance avec une seule
 commande, et le site survit à un pic de trafic.**
 
 ### C1. Conteneurisation **[M]**
-- [ ] Docker Compose : `web` (gunicorn), `db` (Postgres + volume), `proxy`
-      (Caddy ou nginx, HTTPS automatique). Réutiliser les patterns éprouvés de
+- [ ] Docker Compose à **deux services** : `web` (gunicorn) et `proxy`
+      (Caddy ou nginx, HTTPS automatique). Pas de service `db` — le fichier
+      SQLite vit dans un volume monté. Réutiliser les patterns éprouvés de
       `quantinemo-frontend/infra` (même hébergeur, même gabarit de VPS).
-- [ ] Secrets par `.env` non versionné + `.env.example` ; sauvegardes `pg_dump`
-      quotidiennes (l'historique `Voix` est précieux).
+- [ ] Secrets par `.env` non versionné + `.env.example` ; sauvegarde =
+      **copie datée du fichier SQLite** (`VACUUM INTO`, sûr à chaud),
+      quotidienne — l'historique `Voix` est le bien précieux du projet.
 
 ### C2. Remplacer la boucle `wget --recursive` **[M]**
 Le principe statique est bon ; l'implémentation est fragile. Deux options :
@@ -399,9 +423,9 @@ Généraliser du binaire oui/non au multi-candidats :
 
 | Jalon | Voie M — Moteur | Voie I — Interface |
 |---|---|---|
-| **0. Découplage** *(à deux, en premier)* | contrat de vue + `MODE_FIXTURE` | contrat de vue + `MODE_FIXTURE` |
-| **1. Le repo démarre** | A1–A3 : requirements, settings, migrations | P7 : maquette niveau 0, charte CSS |
-| **2. Base saine** | A4–A5 : bugs, tests, CI | P7 : `charte.py`, histogramme, carte |
+| **0. Contrat** *(à deux, en premier)* | forme du dict + couture `donnees`/`graphiques` | idem |
+| **1. Le repo démarre** | A1–A3 + `peupler_demo` — **débloque la voie I** | (attend le jalon 1) |
+| **2. Base saine** | A4–A5 : bugs, tests, CI | P7 : charte CSS, `charte.py`, histogramme, carte |
 | **3. Prêt pour un scrutin** | B1–B4 : Django 5.2, dé-harcodage, pipeline | P7 : chiffre héro, a11y, hygiène |
 | **4. Communes historisées** | Partie 6 : modèle + résolution | Partie 6 : sources OFS, contrôle qualité |
 | **5. En production** | C1–C2 : Compose, cache, timer systemd | C3 : contrôle visuel du dry run |
@@ -411,9 +435,9 @@ Généraliser du binaire oui/non au multi-candidats :
 Effort indicatif côté M : A ≈ 2–4 j, B ≈ 3–5 j, C ≈ 2–3 j. Côté I, la Partie 7
 est largement parallélisable et peut démarrer dès le jalon 0.
 
-**Chemin critique : le jalon 0.** Tant que le contrat n'est pas posé, les deux
-voies se disputent `views.py` ; une fois posé, elles ne se croisent presque plus
-jusqu'au jalon 5.
+**Chemin critique : le jalon 1.** Tant que `peupler_demo` n'existe pas, la voie I
+n'a pas de site à regarder. C'est ≈ 1 jour de travail côté M — à faire en premier,
+avant tout le reste.
 
 **Cible naturelle** : être prêt (fin de C, dry run inclus) pour la **prochaine
 votation fédérale** — vérifier la date sur admin.ch et compter ~2 semaines de marge
@@ -421,21 +445,22 @@ pour la répétition générale.
 
 **Ordre des premières actions concrètes**
 
-*À deux, d'abord* — figer le contrat de vue, écrire `fixtures/vue_accueil.json`,
-poser `MODE_FIXTURE`. Sans ça, pas de parallélisme.
+*À deux, d'abord* — figer la forme du contrat de vue et la couture
+`donnees.py` / `graphiques.py`.
 
-*Puis voie M* :
+*Puis voie M* (c'est le chemin critique) :
 1. `requirements/` + `.gitignore` + venv qui s'installe.
-2. `settings.py` assaini (env vars, SQLite en dev) — le repo démarre enfin.
+2. `settings.py` assaini (env vars, SQLite + WAL) — le repo démarre enfin.
 3. `makemigrations` + commit des migrations.
-4. Corrections des bugs latents (petites PR séparées).
-5. Tests de `extrapolation.py` + CI.
+4. **`manage.py peupler_demo`** — à partir de là, la voie I est débloquée.
+5. Corrections des bugs latents (petites PR séparées).
+6. Tests de `extrapolation.py` + CI.
 
 *Puis voie I* :
-1. `maquette/index.html` : explorer palette, typo, mise en page sans Django.
-2. Charte en variables CSS + fonte unique + contrastes corrigés.
-3. `charte.py` (template Plotly partagé), puis histogramme (ligne des 50 %),
+1. Charte en variables CSS + fonte unique + contrastes corrigés.
+2. `charte.py` (template Plotly partagé), puis histogramme (ligne des 50 %),
    puis carte (divergente ancrée à 50 %).
+3. Chiffre héro, tableaux de valeurs, hygiène (SVG, favicon, Plotly vendoré).
 
 ---
 

@@ -120,7 +120,8 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
 2. `settings.py` lit la clé secrète dans **`/etc/secret_key.txt`** et **plante à
    l'import** si le fichier est absent. Il charge aussi `../.env` (hors du repo) et
    **exige** que la variable `debug` y vaille exactement `"True"` ou `"False"`.
-3. **PostgreSQL requis** (base `votation`, `db_user` / `db_password` depuis `.env`).
+3. **PostgreSQL requis** (base `votation`, `db_user` / `db_password` depuis `.env`)
+   — le plan prévoit de passer à SQLite partout, voir « Travail à deux » plus bas.
 4. Ni `requirements.txt`, ni `.gitignore`, ni environnement figé. Dépendances
    implicites : `django` (≈3.1), `django-extensions`, `python-dotenv`,
    `psycopg2`, `pandas`, `numpy`, `scipy`, `scikit-learn`, `plotly`, `geojson`.
@@ -180,21 +181,28 @@ graphiques.py  [I]  histogramme(vue) -> div HTML       (aucun ORM)
 views.py    [commun] assemble les deux — doit rester minuscule
 ```
 
-La référence versionnée du contrat est **`fixtures/vue_accueil.json`**, édité en
-commun. Un test vérifie que `donnees.py` produit bien ces clés : le backend ne peut
-pas changer de forme sans casser la CI. C'est le garde-fou anti-dérive.
+Ce n'est pas un fichier chargé à l'exécution : juste la forme du dict, figée par
+`tests/test_contrat.py` qui tourne sur la base fictive. Si la voie M change la forme
+sans prévenir, la CI casse. C'est le garde-fou anti-dérive, et le seul fichier
+qu'on édite à deux.
 
-### Maquetter sans l'infra
+### Deux jeux de données, un seul chemin de code
 
-Quatre niveaux ; **la voie I vit aux niveaux 0–2 et n'a jamais besoin de Postgres,
-de scikit-learn ni des 55 votations historiques** :
+Pas de mode maquette et pas de branche `if` dans les vues : le site tourne toujours
+de la même façon, **seule la base change**.
 
-| Niveau | Il faut | Pour |
+| Jeu | Comment | Pour qui |
 |---|---|---|
-| 0 | un navigateur | `maquette/index.html` autonome — charte, couleurs, mise en page |
-| 1 | `django`, `plotly` | `MODE_FIXTURE=1 manage.py runserver` : vrais templates et figures, zéro DB |
-| 2 | + `loaddata demo` | chemin ORM réel sur ~20 communes (SQLite) |
-| 3 | Postgres + pipeline | monde de la voie M : vraies extrapolations, dry run |
+| **Fictif** | `manage.py peupler_demo` | tout le monde, au quotidien |
+| **Réel** | pipeline d'import (historique + JSON du jour J) | voie M : projections réelles, dry run, prod |
+
+`peupler_demo` construit une base **à l'échelle réelle** (~2 130 communes, tirées du
+GeoJSON déjà présent dans `data/`), avec un historique de votes fictif structuré par
+profil latent — l'ACP y trouve donc une vraie structure. Graine fixe, aucun
+téléchargement, tourne hors-ligne.
+
+**La base est SQLite partout, dev comme prod** (un seul écrivain, ~120 000 lignes,
+sauvegarde = copie du fichier). Pas de Postgres, pas de `psycopg`.
 
 ### Deux agents en parallèle
 
@@ -204,11 +212,11 @@ ses frontières explicites, et l'interdiction de toucher la zone de l'autre.
 
 - **Un agent par voie, un clone (ou un worktree) par agent.** Deux agents dans le
   même répertoire de travail se marcheraient dessus sur l'index git.
-- L'agent `interface` travaille en `MODE_FIXTURE` : il n'a besoin ni de base de
-  données, ni de la pile scientifique. Il peut donc démarrer avant `moteur`.
+- L'agent `interface` travaille sur la base fictive : `peupler_demo` puis
+  `runserver`. Ni pile scientifique, ni données réelles, ni réseau.
 - **Le contrat est le seul point de rendez-vous.** Un agent qui a besoin d'un
-  champ absent ne va pas le chercher lui-même : il le demande, et la fixture est
-  mise à jour des deux côtés.
+  champ absent ne va pas le chercher lui-même : il le demande, et le contrat
+  (plus son test) est mis à jour des deux côtés.
 - Les tâches sont étiquetées **[M]**, **[I]** ou **[2]** dans le plan — un agent
   ne prend que les siennes, et **[2]** signale ce qui se décide à deux.
 
