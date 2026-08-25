@@ -14,35 +14,38 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 
-# Load file with config from env
-load_dotenv("../.env")
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-with open('/etc/secret_key.txt') as f:
-    SECRET_KEY = f.read().strip()
-
-# SECURITY WARNING: don't run with debug turned on in production!
-
-debug = os.environ.get('debug')
-
-if debug == "True":
-    debug = True
-elif debug == "False":
-    debug = False
-else:
-    raise Exception("Please set the env variable 'debug' to 'true' or 'false'. Current value is {debug}")
-
-DEBUG = debug
+# Configuration locale, non versionnée (voir .env.example).
+load_dotenv(BASE_DIR / ".env")
 
 
-ALLOWED_HOSTS = ["*"]
+def env_bool(nom, defaut=False):
+    valeur = os.environ.get(nom)
+    if valeur is None:
+        return defaut
+    return valeur.strip().lower() in {"1", "true", "yes", "oui"}
+
+
+DEBUG = env_bool("DEBUG", False)
+
+# En dev on veut un clone qui démarre sans configuration ; en production
+# l'absence de clé doit être une erreur bruyante.
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    if not DEBUG:
+        raise RuntimeError(
+            "SECRET_KEY manquant. Définissez-le dans .env ou dans "
+            "l'environnement (voir .env.example)."
+        )
+    SECRET_KEY = "django-insecure-cle-de-developpement-uniquement"
+
+ALLOWED_HOSTS = [
+    hote.strip()
+    for hote in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    if hote.strip()
+]
 
 
 # Application definition
@@ -96,17 +99,18 @@ WSGI_APPLICATION = 'election.wsgi.application'
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 
-db_user = os.environ.get('db_user')
-db_password = os.environ.get('db_password')
-
+# SQLite partout, dev comme production : un seul écrivain (le pipeline du jour
+# J), ~120 000 lignes, et les lectures sont servies par le cache/mirroir
+# statique. La sauvegarde est une copie du fichier.
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'votation',
-        'USER': db_user,
-        'PASSWORD': db_password,
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.environ.get("DB_PATH", BASE_DIR / "votation.sqlite3"),
+        'OPTIONS': {
+            # WAL : lectures concurrentes pendant que le pipeline écrit.
+            'init_command': "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;",
+            'timeout': 20,
+        },
     }
 }
 

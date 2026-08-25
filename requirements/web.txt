@@ -1,0 +1,11 @@
+# Tout ce qu'il faut pour faire tourner le site.
+# La base est SQLite (bibliothèque standard) : pas de pilote à installer.
+Django==5.2.*
+plotly==6.*
+geojson==3.*
+python-dotenv==1.*
+
+# Fournit `manage.py runscript`, utilisé par les scripts de scripts/.
+# À supprimer en phase B1, une fois les scripts convertis en management
+# commands natives.
+django-extensions==4.*
