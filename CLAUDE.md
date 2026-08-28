@@ -59,6 +59,26 @@ La distinction `Voix` / `ScrutinEnCours` est structurante : `Voix` alimente l'AC
 
 ---
 
+## Mise en route
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements/dev.txt
+cp .env.example .env            # DEBUG=1 suffit en local
+python manage.py migrate        # SQLite, aucune installation requise
+python manage.py peupler_demo   # base fictive à l'échelle réelle
+python manage.py runserver
+```
+
+`peupler_demo` fabrique 2 141 communes réelles (nom, numéro OFS, district, canton
+lus dans `data/K4voge_*.geojson`), 55 votations historiques et une soirée de
+dépouillement en cours — le tout fictif, déterministe, hors-ligne, et **sans
+scipy ni scikit-learn**. Les votes suivent un profil latent par commune
+(urbain/rural, latin/alémanique), et les petites communes dépouillent en premier :
+l'ACP y trouve une vraie structure et l'extrapolation a un vrai biais à corriger.
+
+---
+
 ## Pipeline de données
 
 Les scripts s'exécutent via **django-extensions** :
@@ -112,46 +132,26 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
 
 ## Pièges connus
 
-**Configuration / démarrage**
-1. **Aucune migration pour `scrutin` ni `pca`** — ces apps n'ont même pas de dossier
-   `migrations/` (seul `page_statique/migrations/0001_initial.py` est versionné).
-   Un clone frais ne peut pas construire sa base : il faut `makemigrations scrutin pca`
-   d'abord. Le schéma n'est donc pas sous contrôle de version.
-2. `settings.py` lit la clé secrète dans **`/etc/secret_key.txt`** et **plante à
-   l'import** si le fichier est absent. Il charge aussi `../.env` (hors du repo) et
-   **exige** que la variable `debug` y vaille exactement `"True"` ou `"False"`.
-3. **PostgreSQL requis** (base `votation`, `db_user` / `db_password` depuis `.env`)
-   — le plan prévoit de passer à SQLite partout, voir « Travail à deux » plus bas.
-4. Ni `requirements.txt`, ni `.gitignore`, ni environnement figé. Dépendances
-   implicites : `django` (≈3.1), `django-extensions`, `python-dotenv`,
-   `psycopg2`, `pandas`, `numpy`, `scipy`, `scikit-learn`, `plotly`, `geojson`.
-5. **Deux racines de données différentes.** Les scripts lisent `../data/…` (hors du
+**Données**
+1. **Deux racines de données différentes.** Les scripts lisent `../data/…` (hors du
    repo : `donnee_federale_v3.txt`, `communes/`, `votation_septembre_2022_*.json` —
    **rien de tout ça n'est versionné**), alors que `carte/API.py` lit `data/…`
    (dans le repo). Ne pas les confondre.
-6. `data/switzerland2.geojson` (6 Mo) n'est **référencé nulle part** ; seul
-   `K4voge_20220501_gf.geojson` sert, apparié sur `properties.vogeName`.
 
 **Valeurs codées en dur**
-7. `scrutin/views.py` génère les cartes des sujets **6, 7 et 8** en dur, et
-   `carte/views.py` du sujet **6** — spécifique à la votation de septembre 2022.
-8. Le `55` de `ScrutinAPI` (nombre de votations historiques attendu) est en dur à
+2. Le `55` de `ScrutinAPI` (nombre de votations historiques attendu) est en dur à
    deux endroits ; il doit être mis à jour à chaque ajout de votation, sinon toutes
    les communes sont silencieusement écartées de l'ACP.
-9. `update_scrutin_en_cours.get_new_commune` boucle sur `range(2)` : il ne compare
+3. `update_scrutin_en_cours.get_new_commune` boucle sur `range(2)` : il ne compare
    que les **deux premiers** objets de votation.
 
 **Bugs latents repérés à la lecture** (non corrigés)
-10. `scrutin/views.py` : le cache pickle ouvre `cache.pickle` en **`'ab'` (append)**
-    à chaque requête — le fichier grossit sans fin et `pickle.load` ne relit que le
-    premier objet, donc le cache est figé dès la première écriture. `use_cache` est
-    de toute façon à `False` en dur.
-11. `Commune.get_last_nb_electeur_slow` fait `list(voix).sort(…)` sur une liste
+4. `Commune.get_last_nb_electeur_slow` fait `list(voix).sort(…)` sur une liste
     jetable : le tri n'a **aucun effet**, et `voix[0]` renvoie un ordre arbitraire.
-12. `add_initial_scrutin_en_cours` / `update_scrutin_en_cours` : le `except:` autour
+5. `add_initial_scrutin_en_cours` / `update_scrutin_en_cours` : le `except:` autour
     de `get_unique_commune_by_ofs` imprime l'erreur mais **ne fait pas `continue`** —
     la boucle réutilise alors la `commune` de l'itération précédente.
-13. `ScrutinAPI.getVotationMatrixWithMetaInfo` utilise `voixs` **après** la boucle
+6. `ScrutinAPI.getVotationMatrixWithMetaInfo` utilise `voixs` **après** la boucle
     (variable qui fuit) pour construire `sujets`, et appelle `Warning(…)` au lieu de
     `warnings.warn(…)` — donc l'avertissement n'est jamais émis.
 
