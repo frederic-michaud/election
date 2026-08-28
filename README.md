@@ -16,10 +16,38 @@ pip install -r requirements/dev.txt
 
 cp .env.example .env          # DEBUG=1 suffit pour travailler en local
 python manage.py migrate
+python manage.py peupler_demo
 python manage.py runserver
 ```
 
 La base est **SQLite** (`votation.sqlite3` à la racine) — rien à installer.
+
+Par défaut, `runserver` n'écoute que sur `127.0.0.1` : le site n'est visible
+que depuis la machine qui l'exécute.
+
+### Accès depuis une autre machine
+
+Utile quand le serveur tourne sur une machine distante (VM sans navigateur,
+par exemple) et qu'on veut le consulter depuis son propre poste.
+
+1. **Écouter sur toutes les interfaces**, pas seulement `127.0.0.1` :
+   ```bash
+   python manage.py runserver 0.0.0.0:8000
+   ```
+   Choisir un port libre sur la machine (`ss -tlnp` pour vérifier) si `8000`
+   est déjà pris par autre chose.
+2. **Ajouter l'hôte à `ALLOWED_HOSTS`** dans `.env` — sinon Django rejette la
+   requête avec une erreur `DisallowedHost` dès que l'en-tête `Host:` ne
+   correspond pas à la liste :
+   ```
+   ALLOWED_HOSTS=localhost,127.0.0.1,<IP ou nom d'hôte de la machine>
+   ```
+3. Ouvrir `http://<IP ou nom d'hôte>:<port>/` depuis le navigateur du poste
+   distant.
+
+Ce mode reste un serveur de développement (`runserver`), pas un déploiement
+de production — voir [`PLAN_MODERNISATION.md`](PLAN_MODERNISATION.md) pour la
+cible (Docker Compose + proxy HTTPS).
 
 ## Jeux de dépendances
 
