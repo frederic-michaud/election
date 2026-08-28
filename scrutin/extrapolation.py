@@ -1,7 +1,9 @@
-from scrutin.models import ScrutinEnCours, Commune, SujetVote
-from pca.models import PCAResult
 import numpy as np
 import scipy.optimize
+
+from pca.models import PCAResult
+from scrutin.models import ScrutinEnCours
+
 nb_component = 6
 
 def get_percentage(component, params):
@@ -44,8 +46,8 @@ def get_extrapolation(sujet):
     for voix in ScrutinEnCours.objects.filter(sujet_vote = sujet).order_by("commune"):
         try:
             pca = PCAResult_dict[voix.commune_id]
-        except:
-            raise Exception('Commune pca not found')
+        except KeyError as absent:
+            raise Exception(f'Commune pca not found: {voix.commune}') from absent
         if voix.comptabilise:
             data_for_interpolating_pourcentage_oui.append((voix.get_pourcentage_oui(), pca.get_component(nb_component), voix.bulletins_rentres))
             data_for_interpolating_participation.append((voix.get_real_participation(), pca.get_component(nb_component), voix.bulletins_rentres))

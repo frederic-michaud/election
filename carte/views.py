@@ -1,7 +1,9 @@
 
-import carte.API as api
 from django.shortcuts import render
+
+import carte.API as api
 from scrutin.models import SujetVote
+
 
 def carte_view(requete, *args, **kwargs):
     # Le premier objet du scrutin le plus récent — l'identifiant était codé en

@@ -107,10 +107,13 @@ urbain/rural, un axe linguistique) plus du bruit : l'ACP y retrouve alors une
 vraie structure, et l'extrapolation a quelque chose à apprendre. Graine fixe →
 tout le monde voit exactement le même site.
 
-- [ ] **[M]** `manage.py peupler_demo` : communes depuis le GeoJSON, historique
+- [x] **[M]** `manage.py peupler_demo` : communes depuis le GeoJSON, historique
       et scrutin en cours fictifs, graine fixe, idempotent.
 - [ ] **[2]** Écrire `tests/test_contrat.py` : forme du dict figée, exécuté
-      sur la base fictive.
+      sur la base fictive. **Toujours à faire — c'est le jalon 0, et le seul
+      point du plan franchi hors ordre.** L'infrastructure de test existe
+      désormais (`pytest`, base fictive, CI) : il ne reste que la décision à
+      deux sur la forme du dict.
 
 **Conséquence sur le parallélisme** : la voie I ne démarre qu'une fois le
 jalon 0 franchi (A1–A3 + `peupler_demo`, ≈ 1 jour côté M) au lieu de démarrer
@@ -246,31 +249,38 @@ Partie 7 en parallèle de A4–A5.*
 - [ ] Vérifier que le schéma généré correspond à la base de prod historique
       (si un dump existe encore) ; sinon assumer le schéma neuf comme référence.
 
-### A4. Corriger les bugs latents (liste fermée, issue de la lecture du code) **[M]**
-- [ ] `scrutin/views.py` : cache pickle ouvert en `'ab'` → soit le supprimer
-      (recommandé : la prod est statique, le cache est inutile), soit `'wb'` + vraie
-      invalidation.
-- [ ] `Commune.get_last_nb_electeur_slow` : `list(voix).sort()` sans effet →
+### A4. Corriger les bugs latents (liste fermée, issue de la lecture du code) **[M]** — *fait*
+- [x] `scrutin/views.py` : cache pickle ouvert en `'ab'` → **supprimé** (la prod
+      est statique, le cache était inutile).
+- [x] `Commune.get_last_nb_electeur_slow` : `list(voix).sort()` sans effet →
       `order_by('-sujet_vote__date').first()`.
-- [ ] `add_initial_scrutin_en_cours` / `update_scrutin_en_cours` : ajouter `continue`
+- [x] `add_initial_scrutin_en_cours` / `update_scrutin_en_cours` : ajouter `continue`
       dans le `except` autour de `get_unique_commune_by_ofs` (sinon la commune de
       l'itération précédente est réutilisée silencieusement).
-- [ ] `ScrutinAPI.getVotationMatrixWithMetaInfo` : `Warning(...)` → `warnings.warn(...)` ;
+      **`create_fake_json_input` portait le même bug** — corrigé aussi.
+- [x] `ScrutinAPI.getVotationMatrixWithMetaInfo` : `Warning(...)` → `warnings.warn(...)` ;
       ne pas dépendre de la fuite de variable `voixs` après la boucle.
-- [ ] Remplacer les `except:` nus par des exceptions ciblées (`Commune.DoesNotExist`
-      une fois les helpers convertis en `objects.get(...)`).
-- [ ] `populate_voix.add_foreigner` : `elif len(districts) == 1` teste la mauvaise
+- [x] Remplacer les `except:` nus par des exceptions ciblées.
+- [x] `populate_voix.add_foreigner` : `elif len(districts) == 1` teste la mauvaise
       variable (devrait être `len(communes)`) — copier-coller.
+- [x] *Bonus, trouvé par le lint* : le message d'erreur des sujets en double dans
+      `populate_voix` référençait une variable inexistante (`commune.Canton`) —
+      il aurait planté sur un `NameError` au lieu de dire ce qui n'allait pas.
 
-### A5. Tests + CI **[M]**
-- [ ] `pytest` + `pytest-django`.
-- [ ] Tests unitaires de `scrutin/extrapolation.py` sur données synthétiques
+### A5. Tests + CI **[M]** — *fait*
+- [x] `pytest` + `pytest-django`. Configuration dans `pyproject.toml`,
+      `election/settings_test.py` pour tourner sans `.env`.
+- [x] Tests unitaires de `scrutin/extrapolation.py` sur données synthétiques
       (le cœur mathématique — le plus rentable à tester, aucun accès réseau).
-- [ ] Test d'intégration du pipeline sur la base fictive : `peupler_demo`
+- [x] Test d'intégration du pipeline sur la base fictive : `peupler_demo`
       → ACP → extrapolation → une `Extrapolation` cohérente.
-- [ ] `create_fake_json_input` devient l'outil officiel de répétition générale
-      (le documenter comme tel).
-- [ ] GitHub Actions : `ruff` (lint + format) + tests sur chaque PR.
+- [x] `create_fake_json_input` devient l'outil officiel de répétition générale
+      (documenté dans le README).
+- [x] GitHub Actions : `ruff` + tests sur chaque PR.
+- [ ] **`ruff format` reste à faire, dans une PR à part** : reformater tout le
+      dépôt d'un coup produirait un diff illisible mêlé aux corrections, et
+      écraserait `git blame`. À décider **[2]**, puisque cela touche les deux
+      zones.
 
 ### A6. Données — **[I]** sourcing, **[M]** intégration
 - [ ] Rapatrier dans le repo (ou dans un `download_data` documenté) les petits

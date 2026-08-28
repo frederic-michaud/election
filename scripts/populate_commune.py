@@ -1,6 +1,7 @@
-from scrutin.models import Commune, Canton, District, Voix, SujetVote
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+from scrutin.models import Canton, Commune, District
 
 canton_par_abrev = {"ZH": "Zürich", "BE": "Berne", "LU": "Lucerne", "UR": "Uri", "SZ": "Schwytz", "OW": "Obwald",
                     "NW": "Nidwald", "GL": "Glaris", "ZG": "Zoug", "FR": "Fribourg", "SO": "Soleure",

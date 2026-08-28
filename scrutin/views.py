@@ -1,8 +1,9 @@
-from django.shortcuts import render
-from scrutin.models import SujetVote, Extrapolation
 import plotly
 import plotly.express as px
+from django.shortcuts import render
+
 import carte.API as carte_api
+from scrutin.models import Extrapolation, SujetVote
 
 
 def clean_name(name):

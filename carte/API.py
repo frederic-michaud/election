@@ -1,8 +1,10 @@
-import plotly.express as px
-from scrutin.models import ScrutinAPI
-import plotly
-import geojson
 import statistics
+
+import geojson
+import plotly
+import plotly.express as px
+
+from scrutin.models import ScrutinAPI
 
 
 def generate_carte_plot(id_scrutin):

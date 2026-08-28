@@ -1,7 +1,8 @@
-from scrutin.models import Commune, Canton, District, Voix, SujetVote
-import pandas as pd
-import numpy as np
 import json
+
+import numpy as np
+
+from scrutin.models import Commune, SujetVote, Voix
 
 p_rejection = 0.95
 
@@ -24,12 +25,13 @@ def run():
             for data_commune in data_canton['gemeinden']:
                 try:
                     commune = Commune.get_unique_commune_by_ofs(data_commune['geoLevelnummer'])
-                except:
+                except Exception:
                     print(f'Commune not found: {data_commune["geoLevelnummer"]}: {data_commune["geoLevelname"]}')
+                    continue
                 if (commune.nom in ['Rüti bei Lyssach', 'Jaberg']):
                     continue
                 resultat_previous = get_result(commune, sujet)
-                if resultat_previous == None:
+                if resultat_previous is None:
                     continue
                 if np.random.random() > p_rejection:
                     resultat_json = data_commune['resultat']

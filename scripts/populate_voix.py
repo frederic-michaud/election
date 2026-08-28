@@ -1,6 +1,6 @@
-from scrutin.models import Commune, Canton, District, Voix, SujetVote
 import pandas as pd
-import numpy as np
+
+from scrutin.models import Canton, Commune, District, SujetVote, Voix
 
 fusions = {"Galmiz": "Murten", "Gempenach": "Murten", "Clavaleyres": "Murten",
            "Bözen": "Böztal", "Effingen": "Böztal", "Elfingen": "Böztal", "Hornussen": "Böztal",
@@ -34,13 +34,13 @@ def import_votation(path_votation):
     def clean_electeur(nb_electeur_string):
         try:
             nb_electeur = int(nb_electeur_string[:-3])
-        except:
+        except (TypeError, ValueError):
             return 0
         return nb_electeur
     def clean_percentage(percent_string):
         try:
             percent = float(percent_string.replace(',', '.'))
-        except:
+        except (AttributeError, TypeError, ValueError):
             return 0
         return percent
     def clean_oui_non(oui_non_string):
@@ -72,7 +72,7 @@ def import_votation(path_votation):
         elif len(sujet_votes) == 1:
             sujet_vote = sujet_votes[0]
         else:
-            raise Exception(f'There are more than one canton named {commune.Canton}')
+            raise Exception(f'There are more than one vote subject with id {commune_voix.sujet_id}')
         sujet_vote.save()
         communes = Commune.objects.filter(nom = commune_voix.commune)
         if len(communes) == 0:

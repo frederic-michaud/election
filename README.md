@@ -64,11 +64,46 @@ sert qu'au calcul des projections.
 
 Deux jeux, **un seul chemin de code** — seule la base change.
 
-**Fictives** (usage quotidien) : à venir, `python manage.py peupler_demo`.
-Construit une base à l'échelle réelle (~2 130 communes) sans aucun
-téléchargement.
+**Fictives** (usage quotidien) : `python manage.py peupler_demo`. Construit une
+base à l'échelle réelle (~2 130 communes) sans aucun téléchargement, à graine
+fixe — tout le monde voit exactement le même site.
 
 **Réelles** : voir le pipeline d'import décrit dans [`CLAUDE.md`](CLAUDE.md).
+
+## Tests et qualité
+
+```bash
+pytest                 # toute la suite (~10 s)
+pytest -m "not lent"   # sans les tests qui peuplent la base complète
+ruff check .           # lint
+```
+
+Aucune configuration n'est nécessaire : `election/settings_test.py` active
+`DEBUG` et pytest-django fabrique une base SQLite temporaire. La suite tourne
+hors-ligne, y compris les tests d'intégration.
+
+| Fichier | Ce qu'il vérifie |
+|---|---|
+| `tests/test_extrapolation.py` | le cœur mathématique sur des données synthétiques dont le résultat est connu analytiquement |
+| `tests/test_pipeline.py` | l'enchaînement `peupler_demo` → ACP → extrapolation, et le fait que la projection **corrige** le biais du dépouillement partiel |
+
+Les mêmes commandes tournent dans la CI (GitHub Actions) sur chaque *pull
+request*.
+
+### Répétition générale d'un soir de scrutin
+
+`python manage.py runscript create_fake_json_input` est l'outil officiel pour
+répéter une soirée **sans attendre un vrai dimanche de votation** : il rejoue
+d'anciens résultats sur 5 % des communes tirées au hasard et écrit un
+`json_fake.json` au format fédéral. On l'enchaîne ensuite avec le pipeline du
+jour J :
+
+```bash
+python manage.py runscript update_scrutin_en_cours --script-args <json_precedent> json_fake.json
+python manage.py runscript run_extrapolation
+```
+
+À faire avant chaque votation réelle (voir `PLAN_MODERNISATION.md`, C3).
 
 ## Configuration
 
