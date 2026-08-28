@@ -47,8 +47,9 @@ def import_votation(path_votation, commune_to_import):
                     continue
                 try:
                     commune = Commune.get_unique_commune_by_ofs(data_commune['geoLevelnummer'])
-                except:
+                except Exception:
                     print(f'Commune not found: {data_commune["geoLevelnummer"]}: {data_commune["geoLevelname"]}')
+                    continue
                 if (commune.nom in ['Rüti bei Lyssach', 'Jaberg']):
                     continue
                 result = data_commune['resultat']
