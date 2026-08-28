@@ -53,10 +53,3 @@ Tout passe par l'environnement ou un fichier `.env` non versionné — voir
 | `SECRET_KEY` | clé de dev si `DEBUG=1` | **obligatoire** dès que `DEBUG=0` |
 | `ALLOWED_HOSTS` | `localhost,127.0.0.1` | liste séparée par des virgules |
 | `DB_PATH` | `votation.sqlite3` | chemin du fichier SQLite |
-
-## Organisation du travail
-
-Le projet se développe sur deux voies parallèles, **Moteur** (maths, backend,
-infra — branches `moteur/…`) et **Interface** (design, frontend, données —
-branches `interface/…`), séparées par une couture données / présentation.
-Détail dans [`CLAUDE.md`](CLAUDE.md) et `PLAN_MODERNISATION.md` (Partie 0).

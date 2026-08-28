@@ -6,6 +6,9 @@ __pycache__/
 venv/
 
 # Django
+# La base n'est jamais versionnée : binaire, réécrit à chaque scrutin, illisible
+# en diff. Celle de démo se régénère en quelques secondes (peupler_demo) ; celle
+# de production est protégée par des sauvegardes du fichier, pas par git.
 *.sqlite3
 *.sqlite3-wal
 *.sqlite3-shm
