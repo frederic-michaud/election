@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Django
+# La base n'est jamais versionnée : binaire, réécrit à chaque scrutin, illisible
+# en diff. Celle de démo se régénère en quelques secondes (peupler_demo) ; celle
+# de production est protégée par des sauvegardes du fichier, pas par git.
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+/static/
+media/
+
+# Configuration locale
+.env
+
+# Artefacts
+cache.pickle
+votation_matrix.csv
+politiques/          # sortie de wget --recursive
+
+# Éditeurs / OS
+.idea/
+.vscode/
+.DS_Store
