@@ -1,7 +1,10 @@
+import plotly
 import plotly.express as px
 from django.shortcuts import render
-import plotly
+
 from pca.models import PCAResult
+
+
 def get_hover_info(commune):
     return f'{commune.nom} \n {commune.canton.abreviation}'
 

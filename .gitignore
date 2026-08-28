@@ -18,6 +18,10 @@ media/
 # Configuration locale
 .env
 
+# Outils
+.pytest_cache/
+.ruff_cache/
+
 # Artefacts
 cache.pickle
 votation_matrix.csv

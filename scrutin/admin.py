@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import SujetVote, Commune, Voix, Canton, District, ScrutinEnCours
+from .models import Canton, Commune, District, ScrutinEnCours, SujetVote, Voix
 
 admin.site.register(SujetVote)
 admin.site.register(Commune)

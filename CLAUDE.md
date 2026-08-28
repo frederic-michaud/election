@@ -145,15 +145,44 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
 3. `update_scrutin_en_cours.get_new_commune` boucle sur `range(2)` : il ne compare
    que les **deux premiers** objets de votation.
 
-**Bugs latents repérés à la lecture** (non corrigés)
-4. `Commune.get_last_nb_electeur_slow` fait `list(voix).sort(…)` sur une liste
-    jetable : le tri n'a **aucun effet**, et `voix[0]` renvoie un ordre arbitraire.
-5. `add_initial_scrutin_en_cours` / `update_scrutin_en_cours` : le `except:` autour
-    de `get_unique_commune_by_ofs` imprime l'erreur mais **ne fait pas `continue`** —
-    la boucle réutilise alors la `commune` de l'itération précédente.
-6. `ScrutinAPI.getVotationMatrixWithMetaInfo` utilise `voixs` **après** la boucle
-    (variable qui fuit) pour construire `sujets`, et appelle `Warning(…)` au lieu de
-    `warnings.warn(…)` — donc l'avertissement n'est jamais émis.
+**Bugs latents repérés à la lecture** — **corrigés** (jalon 2, tâche A4)
+4. `Commune.get_last_nb_electeur_slow` triait une liste jetable (tri sans effet)
+    → `order_by('-sujet_vote__date').first()`.
+5. `add_initial_scrutin_en_cours` / `update_scrutin_en_cours` /
+    `create_fake_json_input` : le `except` autour de `get_unique_commune_by_ofs`
+    ne faisait pas `continue` — la boucle réutilisait la `commune` de
+    l'itération précédente.
+6. `ScrutinAPI.getVotationMatrixWithMetaInfo` utilisait `voixs` après la boucle
+    (variable qui fuit) et appelait `Warning(…)` au lieu de `warnings.warn(…)`.
+7. `populate_voix.add_foreigner` testait `len(districts)` au lieu de
+    `len(communes)` ; le message d'erreur des sujets en double référençait une
+    variable inexistante (`commune.Canton`).
+
+Les `except:` nus ont été remplacés par des exceptions ciblées partout.
+
+## Tests, lint et CI
+
+```bash
+pytest                 # toute la suite (~10 s), hors-ligne
+pytest -m "not lent"   # sans les tests qui peuplent la base complète
+ruff check .           # lint
+```
+
+`tests/test_extrapolation.py` fixe le cœur mathématique sur des données
+synthétiques **dont le résultat est connu analytiquement** (le modèle affine
+qui a engendré les données doit être retrouvé par le fit) ; `tests/test_pipeline.py`
+enchaîne `peupler_demo` → ACP → extrapolation et vérifie que la projection
+**corrige** le biais du dépouillement partiel, en plus de garder un œil sur le
+« 55 » codé en dur.
+
+La configuration vit dans `pyproject.toml` : sans elle, ruff prenait la
+configuration globale de chaque machine et les deux voies ne voyaient pas les
+mêmes erreurs. Le jeu de règles est volontairement modeste (`E4`, `E7`, `E9`,
+`F`, `I`) — élargir d'un coup noierait les vraies erreurs sous du style.
+
+`election/settings_test.py` active `DEBUG` avant d'importer les réglages : la
+suite tourne donc depuis un clone frais, sans `.env`. GitHub Actions rejoue
+lint + tests sur chaque PR.
 
 ## Travail à deux — deux voies parallèles
 

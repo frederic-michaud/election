@@ -1,6 +1,7 @@
-from scrutin.models import ScrutinEnCours, Commune, SujetVote
 import json
-import numpy as np
+
+from scrutin.models import Commune, ScrutinEnCours, SujetVote
+
 
 def clean_date(date_str):
     return f'{date_str[0:4]}-{date_str[4:6]}-{date_str[6:8]}'

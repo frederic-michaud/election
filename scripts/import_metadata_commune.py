@@ -1,7 +1,6 @@
-from scrutin.models import Commune
 import pandas as pd
-import numpy as np
 
+from scrutin.models import Commune
 
 
 def  import_commune(path_commune):
@@ -14,7 +13,7 @@ def  import_commune(path_commune):
             commune_db.langue = row_commune.HR_SPRGEB2016_Name_fr
             commune_db.degre_urbanisation = row_commune.HR_GDETYP2012_L1_Name_fr
             commune_db.save()
-        except:
+        except Exception:
             print(f'unable to find info for {row_commune.Name_fr} with numero OFS {row_commune.CODE_OFS}')
 
 

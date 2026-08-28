@@ -1,5 +1,7 @@
-from scrutin.models import ScrutinAPI
 import pandas as pd
+
+from scrutin.models import ScrutinAPI
+
 
 def run():
     (sujets, communes), X = ScrutinAPI.getVotationMatrixWithMetaInfo()

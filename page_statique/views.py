@@ -1,5 +1,7 @@
 from django.shortcuts import render
+
 from page_statique.models import PageStatique
+
 
 # a useless comment here.
 def static_view(requete, *args, **kwargs):

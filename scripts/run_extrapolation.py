@@ -1,5 +1,6 @@
 from scrutin.extrapolation import get_extrapolation
-from scrutin.models import SujetVote, Extrapolation
+from scrutin.models import Extrapolation, SujetVote
+
 
 def run():
     last_sujet = SujetVote.objects.latest('date')

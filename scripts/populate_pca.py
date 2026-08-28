@@ -1,6 +1,7 @@
-from scrutin.models import ScrutinAPI
-from pca.models import PCAResult
 from sklearn.decomposition import PCA
+
+from pca.models import PCAResult
+from scrutin.models import ScrutinAPI
 
 #import numpy as np
 #import matplotlib.pyplot as plt
