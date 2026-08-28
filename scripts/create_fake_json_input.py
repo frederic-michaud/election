@@ -13,8 +13,12 @@ def get_result(commune, sujet):
     return None
 
 
-def run():
-    path_votation = "../data/votation_septembre_2022_1.json"
+def run(*args):
+    if not args:
+        raise SystemExit("usage: runscript create_fake_json_input "
+                         "--script-args <json_du_scrutin> [<json_de_sortie>]")
+    path_votation = args[0]
+    path_sortie = args[1] if len(args) > 1 else "json_fake.json"
     sujets = SujetVote.objects.order_by("date")
     with open(path_votation, 'r') as f:
         data = json.load(f)
@@ -40,5 +44,5 @@ def run():
                     resultat_json["anzahlStimmberechtigte"] = resultat_previous.electeurs_inscrits
                     resultat_json["eingelegteStimmzettel"] = resultat_previous.bulletins_rentres
 
-    with open("json_fake.json", 'w') as f:
+    with open(path_sortie, 'w') as f:
         json.dump(data, f)

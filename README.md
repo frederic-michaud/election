@@ -92,13 +92,13 @@ request*.
 
 ### Répétition générale d'un soir de scrutin
 
-`python manage.py runscript create_fake_json_input` est l'outil officiel pour
-répéter une soirée **sans attendre un vrai dimanche de votation** : il rejoue
-d'anciens résultats sur 5 % des communes tirées au hasard et écrit un
-`json_fake.json` au format fédéral. On l'enchaîne ensuite avec le pipeline du
-jour J :
+`create_fake_json_input` est l'outil officiel pour répéter une soirée **sans
+attendre un vrai dimanche de votation** : il rejoue d'anciens résultats sur 5 %
+des communes tirées au hasard et écrit un JSON au format fédéral. On l'enchaîne
+ensuite avec le pipeline du jour J :
 
 ```bash
+python manage.py runscript create_fake_json_input --script-args <json_du_scrutin> json_fake.json
 python manage.py runscript update_scrutin_en_cours --script-args <json_precedent> json_fake.json
 python manage.py runscript run_extrapolation
 ```

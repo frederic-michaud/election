@@ -1,3 +1,5 @@
+import warnings
+
 from django.db import models
 
 
@@ -82,7 +84,6 @@ class Commune(models.Model):
         voix = Voix.objects.filter(commune = self).order_by('-sujet_vote__date').first()
         if voix is not None:
             return voix.electeurs_inscrits
-        import warnings
         warnings.warn(f"Nb electeur not found for {self}")
         return 0
 
@@ -126,16 +127,28 @@ class Extrapolation(models.Model):
 def get_percentage(voix):
     return voix.nombre_oui/(voix.nombre_oui + voix.nombre_non)
 
+
+def nb_sujets_historiques():
+    """Nombre d'objets de votation présents dans l'historique.
+
+    Remplace le « 55 » qui était codé en dur : il fallait le mettre à jour à
+    chaque votation ajoutée, faute de quoi toutes les communes étaient écartées
+    de l'ACP sans que rien ne le signale.
+    """
+    return Voix.objects.values('sujet_vote').distinct().count()
+
+
 class ScrutinAPI:
     def getVotationMatrixWithMetaInfo():
-        import warnings
+        attendu = nb_sujets_historiques()
         valid_communes = []
         percentage_oui_all_commune = []
         sujets = []
         for commune in Commune.objects.all():
             voix = Voix.objects.filter(commune=commune)
-            if len(voix) != 55:
-                warnings.warn(f"{commune} has only {len(voix)} and will be dropped from the PCA")
+            if len(voix) != attendu:
+                warnings.warn(f"{commune} has only {len(voix)} of {attendu} historical "
+                              "results and will be dropped from the PCA")
                 continue
             valid_communes.append(commune)
             voixs = Voix.objects.filter(commune=commune).order_by('sujet_vote')
@@ -146,12 +159,13 @@ class ScrutinAPI:
         return (sujets, valid_communes), percentage_oui_all_commune
 
     def get_nb_inscrit():
-        import warnings
+        attendu = nb_sujets_historiques()
         nb_inscrit_all_commune = []
         for commune in Commune.objects.all():
             voix = Voix.objects.filter(commune=commune)
-            if len(voix) != 55:
-                warnings.warn(f"{commune} has only {len(voix)} and will be dropped from the result")
+            if len(voix) != attendu:
+                warnings.warn(f"{commune} has only {len(voix)} of {attendu} historical "
+                              "results and will be dropped from the result")
                 continue
             voixs = Voix.objects.filter(commune=commune).order_by('sujet_vote')
             nb_inscrit_all_commune.append((commune.nom, [(voix.electeurs_inscrits, voix.sujet_vote.date) for voix in voixs]))
