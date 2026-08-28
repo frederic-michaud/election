@@ -42,13 +42,7 @@ par exemple) et qu'on veut le consulter depuis son propre poste.
    ```
    ALLOWED_HOSTS=localhost,127.0.0.1,<IP ou nom d'hôte de la machine>
    ```
-3. **Ouvrir le port dans le(s) pare-feu.** Il peut y en avoir deux couches
-   indépendantes à vérifier : un pare-feu local sur la machine (ex. `ufw`) et,
-   si la machine est hébergée chez un fournisseur cloud, un pare-feu réseau
-   géré depuis son panneau d'administration (invisible depuis la machine
-   elle-même). Dans les deux cas, la règle à ajouter est une règle **entrante
-   (inbound) en TCP** sur le port choisi — HTTP tourne sur TCP, pas UDP.
-4. Ouvrir `http://<IP ou nom d'hôte>:<port>/` depuis le navigateur du poste
+3. Ouvrir `http://<IP ou nom d'hôte>:<port>/` depuis le navigateur du poste
    distant.
 
 Ce mode reste un serveur de développement (`runserver`), pas un déploiement
