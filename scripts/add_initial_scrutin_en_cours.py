@@ -23,8 +23,9 @@ def import_votation(path_votation):
             for data_commune in data_canton['gemeinden']:
                 try:
                     commune = Commune.get_unique_commune_by_ofs(data_commune['geoLevelnummer'])
-                except:
+                except Exception:
                     print(f'Commune not found: {data_commune["geoLevelnummer"]}: {data_commune["geoLevelname"]}')
+                    continue
                 if (commune.nom in ['Rüti bei Lyssach', 'Jaberg']):
                     continue
                 scrutin = ScrutinEnCours(commune=commune,

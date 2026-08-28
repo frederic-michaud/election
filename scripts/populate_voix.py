@@ -135,7 +135,7 @@ def add_foreigner(commune_voix, sujet_vote):
     communes = Commune.objects.filter(nom=name_commune)
     if len(communes) == 0:
         commune = Commune(nom=name_commune, numero_ofs=n_ofs_distric_etrange[name_district], district = district, canton=canton)
-    elif len(districts) == 1:
+    elif len(communes) == 1:
         commune = communes[0]
     else:
         raise Exception(f'There are more than one commune named {name_commune}')

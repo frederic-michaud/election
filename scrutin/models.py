@@ -79,10 +79,9 @@ class Commune(models.Model):
         self.save()
 
     def get_last_nb_electeur_slow(self):
-        voix = Voix.objects.filter(commune = self)
-        list(voix).sort(key = lambda obj: obj.sujet_vote.date)
-        if len(voix) > 0 :
-            return voix[0].electeurs_inscrits
+        voix = Voix.objects.filter(commune = self).order_by('-sujet_vote__date').first()
+        if voix is not None:
+            return voix.electeurs_inscrits
         import warnings
         warnings.warn(f"Nb electeur not found for {self}")
         return 0
@@ -129,26 +128,30 @@ def get_percentage(voix):
 
 class ScrutinAPI:
     def getVotationMatrixWithMetaInfo():
+        import warnings
         valid_communes = []
         percentage_oui_all_commune = []
+        sujets = []
         for commune in Commune.objects.all():
             voix = Voix.objects.filter(commune=commune)
             if len(voix) != 55:
-                Warning(f"{commune} has only {len(voix)} and will be dropped from the PCA")
+                warnings.warn(f"{commune} has only {len(voix)} and will be dropped from the PCA")
                 continue
             valid_communes.append(commune)
             voixs = Voix.objects.filter(commune=commune).order_by('sujet_vote')
             percentage_oui = [get_percentage(voix) for voix in voixs]
             percentage_oui_all_commune.append(percentage_oui)
-        sujets = [voix.sujet_vote.nom for voix in voixs]
+            if not sujets:
+                sujets = [voix.sujet_vote.nom for voix in voixs]
         return (sujets, valid_communes), percentage_oui_all_commune
 
     def get_nb_inscrit():
+        import warnings
         nb_inscrit_all_commune = []
         for commune in Commune.objects.all():
             voix = Voix.objects.filter(commune=commune)
             if len(voix) != 55:
-                Warning(f"{commune} has only {len(voix)} and will be dropped from the result")
+                warnings.warn(f"{commune} has only {len(voix)} and will be dropped from the result")
                 continue
             voixs = Voix.objects.filter(commune=commune).order_by('sujet_vote')
             nb_inscrit_all_commune.append((commune.nom, [(voix.electeurs_inscrits, voix.sujet_vote.date) for voix in voixs]))
