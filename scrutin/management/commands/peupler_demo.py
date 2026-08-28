@@ -36,9 +36,6 @@ from scrutin.models import (
 
 GRAINE = 20260825
 
-# Le « 55 » est encore codé en dur dans ScrutinAPI (tâche B2) : on génère
-# exactement ce nombre de votations historiques pour que le vrai populate_pca
-# tourne sans modification sur la base de démo.
 NB_VOTATIONS_HISTORIQUES = 55
 NB_OBJETS_JOUR_J = 3
 

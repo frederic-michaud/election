@@ -6,28 +6,35 @@ from scrutin.models import Commune, ScrutinEnCours, SujetVote
 def clean_date(date_str):
     return f'{date_str[0:4]}-{date_str[4:6]}-{date_str[6:8]}'
 
+def communes_depouillees(sujet_json):
+    return {
+        data_commune['geoLevelnummer']
+        for data_canton in sujet_json['kantone']
+        for data_commune in data_canton['gemeinden']
+        if data_commune['resultat']["jaStimmenAbsolut"] is not None
+    }
+
 def get_new_commune(path_previous, path_current):
+    """Communes nouvellement dépouillées pour *tous* les objets du scrutin.
+
+    On n'importe une commune que lorsqu'elle est rentrée pour chaque objet :
+    la boucle ne portait que sur les deux premiers, et un scrutin peut en
+    compter 1, 3 ou 4.
+    """
     with open(path_previous, 'r') as f:
         data_old = json.load(f)
     with open(path_current, 'r') as f:
         data_new = json.load(f)
-    commune_known_previous = []
-    all_new_commune = []
-    for index_sujet in range(2):
-        first_object = data_old['schweiz']['vorlagen'][index_sujet]
-        for data_canton in first_object['kantone']:
-            for data_commune in data_canton['gemeinden']:
-                if data_commune['resultat']["jaStimmenAbsolut"] is not None:
-                    commune_known_previous.append(data_commune['geoLevelnummer'])
-        commune_known_current = []
-        first_object = data_new['schweiz']['vorlagen'][index_sujet]
-        for data_canton in first_object['kantone']:
-            for data_commune in data_canton['gemeinden']:
-                if data_commune['resultat']["jaStimmenAbsolut"] is not None:
-                    commune_known_current.append(data_commune['geoLevelnummer'])
-        new_commune = set(commune_known_current) - set(commune_known_previous)
-        all_new_commune.append(new_commune)    
-    return all_new_commune[0].intersection(all_new_commune[1])
+    nouvelles = None
+    for sujet_ancien, sujet_nouveau in zip(data_old['schweiz']['vorlagen'],
+                                           data_new['schweiz']['vorlagen']):
+        nouvelles_du_sujet = (communes_depouillees(sujet_nouveau)
+                              - communes_depouillees(sujet_ancien))
+        if nouvelles is None:
+            nouvelles = nouvelles_du_sujet
+        else:
+            nouvelles &= nouvelles_du_sujet
+    return nouvelles if nouvelles is not None else set()
 def import_votation(path_votation, commune_to_import):
     with open(path_votation, 'r') as f:
         data = json.load(f)
@@ -66,7 +73,9 @@ def import_votation(path_votation, commune_to_import):
                 scrutin.save()
 
 def run(*args):
-    #commune_to_import = get_new_commune("../data/votation_septembre_2022_1.json", "json_fake.json")
+    if len(args) < 2:
+        raise SystemExit("usage: runscript update_scrutin_en_cours "
+                         "--script-args <json_precedent> <json_courant>")
     commune_to_import = get_new_commune(args[0], args[1])
     print(commune_to_import)
     import_votation(args[1], commune_to_import)

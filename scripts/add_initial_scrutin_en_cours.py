@@ -34,6 +34,9 @@ def import_votation(path_votation):
                                          sujet_vote=sujet)
                 scrutin.save()
 
-def run():
+def run(*args):
+    if not args:
+        raise SystemExit("usage: runscript add_initial_scrutin_en_cours "
+                         "--script-args <json_du_scrutin>")
     ScrutinEnCours.objects.all().delete()
-    import_votation("../data/votation_septembre_2022_0.json")
+    import_votation(args[0])

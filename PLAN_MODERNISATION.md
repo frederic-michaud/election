@@ -310,19 +310,22 @@ future sans toucher au code** — seulement la config et les données.
       (`python manage.py import_votations …`). Supprime la dépendance à
       django-extensions et donne argparse, `--help`, tests faciles.
 
-### B2. Dé-harcoder « septembre 2022 » **[M]**
-- [ ] Sujets affichés (cartes 6/7/8 en dur dans `scrutin/views.py`, 6 dans
+### B2. Dé-harcoder « septembre 2022 » **[M]** — *fait*
+- [x] Sujets affichés (cartes 6/7/8 en dur dans `scrutin/views.py`, 6 dans
       `carte/views.py`) → dériver dynamiquement : « les sujets de la dernière date
       de votation », déjà la logique de `home_view` pour l'histogramme.
-- [ ] Le « 55 » de `ScrutinAPI` (nombre de votations historiques) → calculé :
-      `SujetVote.objects.filter(historique).count()`, ou critère « la commune a un
-      résultat pour ≥ N % des sujets ». Marquer les sujets historiques vs jour J
-      (champ booléen ou convention par date).
-- [ ] `update_scrutin_en_cours.get_new_commune` : `range(2)` → itérer sur tous les
-      objets du scrutin (il peut y en avoir 1, 3, 4…).
-- [ ] Noms de fichiers `votation_septembre_2022_*` → chemin/date paramétrés.
-- [ ] URL du JSON fédéral paramétrée (elle change à chaque scrutin :
-      `sd-t-17-02-<date>-eidgAbstimmung.json`).
+      *(Déjà fait au jalon 1, avec `peupler_demo`.)*
+- [x] Le « 55 » de `ScrutinAPI` → `nb_sujets_historiques()`, déduit des `Voix`.
+      Pas de champ booléen ni de convention par date : un objet est historique
+      s'il a des `Voix`, ce qui est déjà la distinction structurante du modèle.
+      Le critère « ≥ N % des sujets » est laissé à la Partie 6 — il change les
+      entrées de l'ACP, ce n'est pas du dé-harcodage.
+- [x] `update_scrutin_en_cours.get_new_commune` : `range(2)` → itère sur tous les
+      objets du scrutin (il plantait aussi sur un scrutin à objet unique).
+- [x] Noms de fichiers `votation_septembre_2022_*` → arguments `--script-args` ;
+      `download_data.sh` dérive tout de `DATE_SCRUTIN`.
+- [x] URL du JSON fédéral paramétrée (elle change à chaque scrutin :
+      `sd-t-17-02-<date>-eidgAbstimmung.json`) — construite depuis `DATE_SCRUTIN`.
 
 ### B3. Qualité du pipeline **[M]**
 - [ ] `ScrutinAPI.getVotationMatrixWithMetaInfo` et `get_nb_inscrit` : boucle

@@ -1,42 +1,58 @@
 #!/bin/bash
+# Boucle du jour de scrutin : télécharger le JSON fédéral, mettre à jour la
+# base, relancer l'extrapolation, puis régénérer le mirroir statique.
+#
+# Tout ce qui change d'un scrutin à l'autre est en haut, ou surchargeable par
+# l'environnement :
+#   DATE_SCRUTIN=20260927 ./download_data.sh
 
-#avant de lancer le scipt, s'assurer d'avoir un fichier de données vides en exécutant
-#wget https://app-prod-static-voteinfo.s3.eu-central-1.amazonaws.com/v1/ogd/sd-t-17-02-20220925-eidgAbstimmung.json -O data/votation_septembre_2022_0.json;
-# AVANT QU'IL N'Y AIT LA MOINDRE DONNEE DISPONIBLE
+set -u
 
+DATE_SCRUTIN="${DATE_SCRUTIN:?à définir, ex. DATE_SCRUTIN=20260927}"
+DOSSIER_DATA="${DOSSIER_DATA:-../data}"
+HOTE_DJANGO="${HOTE_DJANGO:-192.168.1.20:8000}"
+DOSSIER_HTML="${DOSSIER_HTML:-/srv/html/}"
+VENV="${VENV:-~/env/django/bin/activate}"
+CADENCE="${CADENCE:-0}"
 
-#lancer django pour pouvoir activer les scripts
-source ~/env/django/bin/activate
+URL_SCRUTIN="https://app-prod-static-voteinfo.s3.eu-central-1.amazonaws.com/v1/ogd/sd-t-17-02-${DATE_SCRUTIN}-eidgAbstimmung.json"
+PREFIXE="${DOSSIER_DATA}/votation_${DATE_SCRUTIN}"
 
-#lancer la boucle qui va mettre à jour le site, le jour des votations.
+# Avant de lancer le script, s'assurer d'avoir un instantané initial — celui
+# d'avant toute donnée disponible :
+#   wget "$URL_SCRUTIN" -O "${PREFIXE}_0.json"
+# puis, une fois la base peuplée :
+#   python manage.py runscript add_initial_scrutin_en_cours --script-args "${PREFIXE}_0.json"
+
+# shellcheck source=/dev/null
+source "${VENV}"
+
 i=2
 while true;
 do
   #récupérer les données des dépouillements partiels (stockage incrémentiel)
 ((i=i+1));
-curl --output ../data/votation_septembre_2022_${i}.json.gz https://app-prod-static-voteinfo.s3.eu-central-1.amazonaws.com/v1/ogd/sd-t-17-02-20220925-eidgAbstimmung.json;
+curl --output "${PREFIXE}_${i}.json.gz" "${URL_SCRUTIN}";
 
-gunzip ../data/votation_septembre_2022_${i}.json.gz;
+gunzip "${PREFIXE}_${i}.json.gz";
 
   #mettre les données récupérées ci-dessus dans la base de donnée du site
 ((j=i-1))
-python manage.py runscript update_scrutin_en_cours --script-args ../data/votation_septembre_2022_${i}.json ../data/votation_septembre_2022_${j}.json
-
-#python manage.py runscript update_scrutin_en_cours --script-args ../data/votation_septembre_2022_1.json json_fake.json
+python manage.py runscript update_scrutin_en_cours --script-args "${PREFIXE}_${i}.json" "${PREFIXE}_${j}.json"
 
 echo "--------scrutin en cours mis à jour ---------"
 
   #fabriquer l'extrapolation sur la base des dépouillements partiels
 python manage.py runscript run_extrapolation
 echo " ** extrapolation terminée ** "
-#sleep 500;
 
   #copier le site dans le dossier où apache saura le trouver
-wget      --recursive      --no-clobber      --page-requisites      --html-extension      --convert-links      --restrict-file-names=windows                    192.168.1.20:8000  -P politiques
+wget      --recursive      --no-clobber      --page-requisites      --html-extension      --convert-links      --restrict-file-names=windows                    "${HOTE_DJANGO}"  -P politiques
 
 echo "!!!! site téléchargé !!!!";
 
-cp -r politiques/192.168.1.20+8000/* /srv/html/
+cp -r "politiques/${HOTE_DJANGO/:/+}"/* "${DOSSIER_HTML}"
 echo "** ** **"
 
+sleep "${CADENCE}";
 done

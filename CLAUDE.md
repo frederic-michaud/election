@@ -92,18 +92,22 @@ import_metadata_commune   # langue, degré d'urbanisation
 populate_voix             # 55 votations historiques  (⚠ supprime tous les SujetVote)
 set_nb_voix_commune       # Commune.nb_voix = électeurs de la dernière votation
 populate_pca              # ACP → PCAResult          (⚠ supprime tous les PCAResult)
-add_initial_scrutin_en_cours   # crée les lignes vides du jour J
+add_initial_scrutin_en_cours --script-args <json_du_scrutin>   # lignes vides du jour J
 ```
 
 Puis, en boucle le jour du scrutin :
-`update_scrutin_en_cours <json_courant> <json_precedent>` → `run_extrapolation`.
+`update_scrutin_en_cours --script-args <json_courant> <json_precedent>` →
+`run_extrapolation`. C'est ce que fait `download_data.sh`, qui dérive URL et noms
+de fichiers de `DATE_SCRUTIN`.
 
 `update_scrutin_en_cours` ne réimporte que les communes **nouvellement** dépouillées
-(différence entre deux instantanés JSON) — l'import complet était trop lent.
+(différence entre deux instantanés JSON) — l'import complet était trop lent. Une
+commune n'est reprise que lorsqu'elle est rentrée pour **tous** les objets du
+scrutin.
 
-`create_fake_json_input` fabrique un JSON de test en rejouant d'anciens résultats
-sur 5 % des communes tirées au hasard : c'est le moyen de tester sans attendre un
-vrai dimanche de votation.
+`create_fake_json_input --script-args <json_du_scrutin> [<sortie>]` fabrique un JSON
+de test en rejouant d'anciens résultats sur 5 % des communes tirées au hasard :
+c'est le moyen de tester sans attendre un vrai dimanche de votation.
 
 ### Source des données
 JSON open data de la Confédération (`app-prod-static-voteinfo.s3…/ogd/`), format
@@ -138,23 +142,27 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
    **rien de tout ça n'est versionné**), alors que `carte/API.py` lit `data/…`
    (dans le repo). Ne pas les confondre.
 
-**Valeurs codées en dur**
-2. Le `55` de `ScrutinAPI` (nombre de votations historiques attendu) est en dur à
-   deux endroits ; il doit être mis à jour à chaque ajout de votation, sinon toutes
-   les communes sont silencieusement écartées de l'ACP.
-3. `update_scrutin_en_cours.get_new_commune` boucle sur `range(2)` : il ne compare
-   que les **deux premiers** objets de votation.
+**Valeurs codées en dur** — **corrigées** (jalon 3, tâche B2)
+2. Le `55` de `ScrutinAPI` était en dur à deux endroits → `nb_sujets_historiques()`,
+   déduit des `Voix`. Une commune à l'historique incomplet est toujours écartée de
+   l'ACP, mais avec un avertissement (le seuil de couverture est l'affaire de la
+   Partie 6).
+3. `update_scrutin_en_cours.get_new_commune` bouclait sur `range(2)` : il ignorait
+   les objets au-delà du deuxième et plantait sur un scrutin à objet unique.
+4. Les chemins `votation_septembre_2022_*` sont devenus des arguments
+   (`--script-args`), et `download_data.sh` dérive URL et fichiers de
+   `DATE_SCRUTIN`.
 
 **Bugs latents repérés à la lecture** — **corrigés** (jalon 2, tâche A4)
-4. `Commune.get_last_nb_electeur_slow` triait une liste jetable (tri sans effet)
+5. `Commune.get_last_nb_electeur_slow` triait une liste jetable (tri sans effet)
     → `order_by('-sujet_vote__date').first()`.
-5. `add_initial_scrutin_en_cours` / `update_scrutin_en_cours` /
+6. `add_initial_scrutin_en_cours` / `update_scrutin_en_cours` /
     `create_fake_json_input` : le `except` autour de `get_unique_commune_by_ofs`
     ne faisait pas `continue` — la boucle réutilisait la `commune` de
     l'itération précédente.
-6. `ScrutinAPI.getVotationMatrixWithMetaInfo` utilisait `voixs` après la boucle
+7. `ScrutinAPI.getVotationMatrixWithMetaInfo` utilisait `voixs` après la boucle
     (variable qui fuit) et appelait `Warning(…)` au lieu de `warnings.warn(…)`.
-7. `populate_voix.add_foreigner` testait `len(districts)` au lieu de
+8. `populate_voix.add_foreigner` testait `len(districts)` au lieu de
     `len(communes)` ; le message d'erreur des sujets en double référençait une
     variable inexistante (`commune.Canton`).
 
