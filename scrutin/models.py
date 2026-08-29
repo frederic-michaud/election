@@ -81,14 +81,14 @@ class Commune(models.Model):
         self.save()
 
     def get_last_nb_electeur_slow(self):
-        voix = Voix.objects.filter(commune = self).order_by('-sujet_vote__date').first()
+        voix = ResultatCommunalHistorique.objects.filter(commune = self).order_by('-sujet_vote__date').first()
         if voix is not None:
             return voix.electeurs_inscrits
         warnings.warn(f"Nb electeur not found for {self}")
         return 0
 
 
-class Voix(models.Model):
+class ResultatCommunalHistorique(models.Model):
     sujet_vote = models.ForeignKey(SujetVote, default=1, on_delete=models.CASCADE)
     commune = models.ForeignKey(Commune, on_delete=models.CASCADE)
     nombre_oui = models.IntegerField()
@@ -99,7 +99,7 @@ class Voix(models.Model):
         return str(self.commune) + " " + str(self.sujet_vote)
 
 
-class ScrutinEnCours(models.Model):
+class ResultatCommunalEnCours(models.Model):
     sujet_vote = models.ForeignKey(SujetVote, on_delete=models.CASCADE)
     commune = models.ForeignKey(Commune, on_delete=models.CASCADE)
     nombre_oui = models.IntegerField(null=True)
@@ -135,7 +135,7 @@ def nb_sujets_historiques():
     chaque votation ajoutée, faute de quoi toutes les communes étaient écartées
     de l'ACP sans que rien ne le signale.
     """
-    return Voix.objects.values('sujet_vote').distinct().count()
+    return ResultatCommunalHistorique.objects.values('sujet_vote').distinct().count()
 
 
 class ScrutinAPI:
@@ -145,13 +145,13 @@ class ScrutinAPI:
         percentage_oui_all_commune = []
         sujets = []
         for commune in Commune.objects.all():
-            voix = Voix.objects.filter(commune=commune)
+            voix = ResultatCommunalHistorique.objects.filter(commune=commune)
             if len(voix) != attendu:
                 warnings.warn(f"{commune} has only {len(voix)} of {attendu} historical "
                               "results and will be dropped from the PCA")
                 continue
             valid_communes.append(commune)
-            voixs = Voix.objects.filter(commune=commune).order_by('sujet_vote')
+            voixs = ResultatCommunalHistorique.objects.filter(commune=commune).order_by('sujet_vote')
             percentage_oui = [get_percentage(voix) for voix in voixs]
             percentage_oui_all_commune.append(percentage_oui)
             if not sujets:
@@ -162,15 +162,15 @@ class ScrutinAPI:
         attendu = nb_sujets_historiques()
         nb_inscrit_all_commune = []
         for commune in Commune.objects.all():
-            voix = Voix.objects.filter(commune=commune)
+            voix = ResultatCommunalHistorique.objects.filter(commune=commune)
             if len(voix) != attendu:
                 warnings.warn(f"{commune} has only {len(voix)} of {attendu} historical "
                               "results and will be dropped from the result")
                 continue
-            voixs = Voix.objects.filter(commune=commune).order_by('sujet_vote')
+            voixs = ResultatCommunalHistorique.objects.filter(commune=commune).order_by('sujet_vote')
             nb_inscrit_all_commune.append((commune.nom, [(voix.electeurs_inscrits, voix.sujet_vote.date) for voix in voixs]))
         return nb_inscrit_all_commune
 
     def get_percentage_oui_all_commune(sujet_id):
-        scrutin_en_cours = ScrutinEnCours.objects.filter(sujet_vote_id = sujet_id).select_related('commune')
+        scrutin_en_cours = ResultatCommunalEnCours.objects.filter(sujet_vote_id = sujet_id).select_related('commune')
         return {scrutin.commune.numero_ofs: scrutin.get_pourcentage_oui() for scrutin in scrutin_en_cours}

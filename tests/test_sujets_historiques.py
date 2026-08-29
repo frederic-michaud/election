@@ -14,9 +14,9 @@ from scrutin.models import (
     Canton,
     Commune,
     District,
+    ResultatCommunalHistorique,
     ScrutinAPI,
     SujetVote,
-    Voix,
     nb_sujets_historiques,
 )
 
@@ -40,7 +40,7 @@ def ajouter_sujet(communes, index):
         date=datetime.date(2020, 1, 1) + datetime.timedelta(days=91 * index),
     )
     for rang, commune in enumerate(communes):
-        Voix.objects.create(
+        ResultatCommunalHistorique.objects.create(
             commune=commune, sujet_vote=sujet,
             nombre_oui=400 + rang, nombre_non=600 - rang,
             electeurs_inscrits=2000, bulletins_rentres=1000,
@@ -53,7 +53,7 @@ def test_le_nombre_de_sujets_historiques_se_deduit_des_voix():
     communes = peupler(nb_sujets=4)
     assert nb_sujets_historiques() == 4
 
-    # Un objet du jour J n'a pas encore de Voix : il ne compte pas.
+    # Un objet du jour J n'a pas encore de ResultatCommunalHistorique : il ne compte pas.
     SujetVote.objects.create(nom="Jour J", sujet_id=99,
                              date=datetime.date(2026, 9, 27))
     assert nb_sujets_historiques() == 4
@@ -80,7 +80,7 @@ def test_ajouter_une_votation_n_ecarte_pas_les_communes_de_l_acp():
 @pytest.mark.django_db
 def test_une_commune_a_l_historique_incomplet_est_ecartee_avec_un_avertissement():
     communes = peupler(nb_sujets=4)
-    Voix.objects.filter(commune=communes[0]).first().delete()
+    ResultatCommunalHistorique.objects.filter(commune=communes[0]).first().delete()
 
     with pytest.warns(UserWarning, match="Commune 0"):
         (_, retenues), _ = ScrutinAPI.getVotationMatrixWithMetaInfo()

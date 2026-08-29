@@ -2,12 +2,12 @@ import json
 
 import numpy as np
 
-from scrutin.models import Commune, SujetVote, Voix
+from scrutin.models import Commune, ResultatCommunalHistorique, SujetVote
 
 p_rejection = 0.95
 
 def get_result(commune, sujet):
-    voixs = Voix.objects.filter(commune = commune, sujet_vote = sujet)
+    voixs = ResultatCommunalHistorique.objects.filter(commune = commune, sujet_vote = sujet)
     if len(voixs) > 0:
         return voixs[0]
     return None

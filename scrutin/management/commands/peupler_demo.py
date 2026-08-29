@@ -29,9 +29,9 @@ from scrutin.models import (
     Commune,
     District,
     Extrapolation,
-    ScrutinEnCours,
+    ResultatCommunalEnCours,
+    ResultatCommunalHistorique,
     SujetVote,
-    Voix,
 )
 
 GRAINE = 20260825
@@ -118,7 +118,7 @@ class Command(BaseCommand):
 
     def _vider(self):
         """Idempotence : on repart d'une base propre à chaque exécution."""
-        for modele in (Extrapolation, ScrutinEnCours, Voix, PCAResult,
+        for modele in (Extrapolation, ResultatCommunalEnCours, ResultatCommunalHistorique, PCAResult,
                        SujetVote, Commune, District, Canton):
             modele.objects.all().delete()
 
@@ -234,13 +234,13 @@ class Command(BaseCommand):
             for commune in communes:
                 oui, non, votants = self._tirer_resultat(
                     alea, profils[commune.numero_ofs], sensibilites)
-                voix.append(Voix(
+                voix.append(ResultatCommunalHistorique(
                     commune=commune, sujet_vote=sujet,
                     nombre_oui=oui, nombre_non=non,
                     electeurs_inscrits=profils[commune.numero_ofs][2],
                     bulletins_rentres=votants,
                 ))
-        Voix.objects.bulk_create(voix, batch_size=5000)
+        ResultatCommunalHistorique.objects.bulk_create(voix, batch_size=5000)
         self.stdout.write(f"  {len(voix)} résultats historiques "
                           f"({len(sujets)} votations)")
 
@@ -283,7 +283,7 @@ class Command(BaseCommand):
                 # Les communes non dépouillées portent quand même une valeur :
                 # c'est ce que run_extrapolation écrit en vrai, et ce qui
                 # permet aux cartes d'afficher toute la Suisse.
-                lignes.append(ScrutinEnCours(
+                lignes.append(ResultatCommunalEnCours(
                     commune=commune, sujet_vote=sujet,
                     nombre_oui=oui, nombre_non=non,
                     electeurs_inscrits=profils[commune.numero_ofs][2],
@@ -302,7 +302,7 @@ class Command(BaseCommand):
                 avance=(oui_compte + non_compte) / max(1, oui_total + non_total),
             ))
 
-        ScrutinEnCours.objects.bulk_create(lignes, batch_size=5000)
+        ResultatCommunalEnCours.objects.bulk_create(lignes, batch_size=5000)
         Extrapolation.objects.bulk_create(extrapolations)
         self.stdout.write(
             f"  {len(lignes)} lignes de scrutin en cours "

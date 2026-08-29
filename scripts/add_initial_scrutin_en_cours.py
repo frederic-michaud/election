@@ -1,6 +1,6 @@
 import json
 
-from scrutin.models import Commune, ScrutinEnCours, SujetVote
+from scrutin.models import Commune, ResultatCommunalEnCours, SujetVote
 
 
 def clean_date(date_str):
@@ -29,7 +29,7 @@ def import_votation(path_votation):
                     continue
                 if (commune.nom in ['Rüti bei Lyssach', 'Jaberg']):
                     continue
-                scrutin = ScrutinEnCours(commune=commune,
+                scrutin = ResultatCommunalEnCours(commune=commune,
                                          electeur_election_precedente=commune.nb_voix,
                                          sujet_vote=sujet)
                 scrutin.save()
@@ -38,5 +38,5 @@ def run(*args):
     if not args:
         raise SystemExit("usage: runscript add_initial_scrutin_en_cours "
                          "--script-args <json_du_scrutin>")
-    ScrutinEnCours.objects.all().delete()
+    ResultatCommunalEnCours.objects.all().delete()
     import_votation(args[0])

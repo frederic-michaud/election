@@ -192,7 +192,7 @@ Le détail est dans [`CLAUDE.md`](CLAUDE.md). L'essentiel pour le plan :
 **Ce qui est solide et à préserver**
 - La méthode (ACP 6 composantes + régression pondérée le jour J) : validée en
   conditions réelles, c'est le capital du projet.
-- Le modèle de données `Voix` (historique) / `ScrutinEnCours` (jour J) /
+- Le modèle de données `ResultatCommunalHistorique` (historique) / `ResultatCommunalEnCours` (jour J) /
   `Extrapolation` (instantanés horodatés).
 - L'import incrémental des JSON fédéraux (seulement les communes nouvelles).
 - Le principe « site statique en production » : insensible à la charge.
@@ -315,9 +315,9 @@ future sans toucher au code** — seulement la config et les données.
       `carte/views.py`) → dériver dynamiquement : « les sujets de la dernière date
       de votation », déjà la logique de `home_view` pour l'histogramme.
       *(Déjà fait au jalon 1, avec `peupler_demo`.)*
-- [x] Le « 55 » de `ScrutinAPI` → `nb_sujets_historiques()`, déduit des `Voix`.
+- [x] Le « 55 » de `ScrutinAPI` → `nb_sujets_historiques()`, déduit des `ResultatCommunalHistorique`.
       Pas de champ booléen ni de convention par date : un objet est historique
-      s'il a des `Voix`, ce qui est déjà la distinction structurante du modèle.
+      s'il a des `ResultatCommunalHistorique`, ce qui est déjà la distinction structurante du modèle.
       Le critère « ≥ N % des sujets » est laissé à la Partie 6 — il change les
       entrées de l'ACP, ce n'est pas du dé-harcodage.
 - [x] `update_scrutin_en_cours.get_new_commune` : `range(2)` → itère sur tous les
@@ -334,10 +334,10 @@ future sans toucher au code** — seulement la config et les données.
 - [ ] Rendre les imports **idempotents** (relançables sans doublons) :
       `update_or_create` plutôt que `save()` aveugle ; aujourd'hui relancer
       `update_scrutin_en_cours` sur le même JSON crée des doublons de
-      `ScrutinEnCours`.
+      `ResultatCommunalEnCours`.
 - [ ] Séparer clairement « résultat extrapolé » et « résultat observé » :
       `run_extrapolation` écrit actuellement les estimations **dans**
-      `ScrutinEnCours` (champs oui/non des communes non dépouillées). Ajouter des
+      `ResultatCommunalEnCours` (champs oui/non des communes non dépouillées). Ajouter des
       champs dédiés (`oui_estime`, …) ou une table `ExtrapolationCommune` — condition
       préalable aux cartes réel/estimé de la phase D.
 - [ ] Journalisation (`logging`) au lieu de `print`.
@@ -347,7 +347,7 @@ future sans toucher au code** — seulement la config et les données.
       ouvertes de la Confédération (opendata.swiss / BFS), pour ne plus dépendre
       du fichier `donnee_federale_v3.txt` au format exotique.
 - [ ] Mettre à jour l'historique après chaque votation (les résultats définitifs
-      du jour J rejoignent `Voix` → l'ACP se bonifie toute seule). En faire une
+      du jour J rejoignent `ResultatCommunalHistorique` → l'ACP se bonifie toute seule). En faire une
       management command : `manage.py archiver_scrutin`.
 
 ### B5. Communes dans le temps — fusions et mutations (voir Partie 6) **[2]**
@@ -372,7 +372,7 @@ commande, et le site survit à un pic de trafic.**
       `quantinemo-frontend/infra` (même hébergeur, même gabarit de VPS).
 - [ ] Secrets par `.env` non versionné + `.env.example` ; sauvegarde =
       **copie datée du fichier SQLite** (`VACUUM INTO`, sûr à chaud),
-      quotidienne — l'historique `Voix` est le bien précieux du projet.
+      quotidienne — l'historique `ResultatCommunalHistorique` est le bien précieux du projet.
 
 ### C2. Remplacer la boucle `wget --recursive` **[M]**
 Le principe statique est bon ; l'implémentation est fragile. Deux options :
@@ -418,7 +418,7 @@ Dans les deux cas :
 ### D2. Élections (intégration d'`extrapolation_politique`) **[2]**
 Généraliser du binaire oui/non au multi-candidats :
 - [ ] Modèles : `Scrutin` (votation OU élection), `Candidat`,
-      `ResultatCandidat(commune, candidat, voix)` — `Voix` actuel devient le cas
+      `ResultatCandidat(commune, candidat, voix)` — `ResultatCommunalHistorique` actuel devient le cas
       particulier à deux « candidats ».
 - [ ] Porter la méthode du repo `extrapolation_politique` (reports de voix
       1er → 2e tour par moindres carrés) comme **second modèle d'extrapolation**,
@@ -488,11 +488,11 @@ ad hoc, tous fragiles :
    appariées **par nom**, sommées à l'import historique. Contient déjà un cas
    non trivial : Clavaleyres → Murten est un **changement de canton** (BE→FR).
 2. **Exclusions nominatives** de Rüti bei Lyssach / Jaberg dans 3 scripts jour-J.
-   Cause racine : commune présente en base mais sans les 55 `Voix` → pas de
+   Cause racine : commune présente en base mais sans les 55 `ResultatCommunalHistorique` → pas de
    `PCAResult` → `get_extrapolation` lève et **tout le jour J plante**.
 3. **Pseudo-communes « XX-étranger »** avec OFS 9010–9250 attribués à la main,
    détectées par sous-chaîne `Ausland/étranger/estero`.
-4. **Filtre « exactement 55 Voix »** : écarte silencieusement de l'ACP toute
+4. **Filtre « exactement 55 ResultatCommunalHistorique »** : écarte silencieusement de l'ACP toute
    commune à historique incomplet (le `Warning()` sans effet masque tout).
 5. **Trois systèmes de clés** : historique par nom, jour J par n° OFS, cartes par
    `vogeId`/`vogeName` sur un GeoJSON millésimé 2022-05-01.
@@ -541,7 +541,7 @@ class Mutation:
 
 ### Ordre d'implémentation **[2]**
 1. Import eCH-0071 → `CommuneVersion` + `Mutation` (management command).
-2. Ré-appariement de l'historique `Voix` sur les versions (par OFS + date —
+2. Ré-appariement de l'historique `ResultatCommunalHistorique` sur les versions (par OFS + date —
    supprime le matching par nom).
 3. Construction de la matrice ACP par résolution (supprime `fusions` et le 55).
 4. Jour J : résolution + replis (supprime les exclusions nominatives).

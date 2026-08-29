@@ -1,6 +1,6 @@
 import json
 
-from scrutin.models import Commune, ScrutinEnCours, SujetVote
+from scrutin.models import Commune, ResultatCommunalEnCours, SujetVote
 
 
 def clean_date(date_str):
@@ -61,7 +61,7 @@ def import_votation(path_votation, commune_to_import):
                 if (commune.nom in ['Rüti bei Lyssach', 'Jaberg']):
                     continue
                 result = data_commune['resultat']
-                scrutin = ScrutinEnCours(commune = commune,
+                scrutin = ResultatCommunalEnCours(commune = commune,
                                          electeur_election_precedente = commune.nb_voix,
                                          sujet_vote = sujet,
                                          nombre_oui = result["jaStimmenAbsolut"],

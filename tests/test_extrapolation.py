@@ -23,7 +23,7 @@ from scrutin.extrapolation import (
     get_percentage,
     nb_component,
 )
-from scrutin.models import Canton, Commune, District, ScrutinEnCours, SujetVote
+from scrutin.models import Canton, Commune, District, ResultatCommunalEnCours, SujetVote
 
 # Le modèle qui engendre les données synthétiques : le % de oui et la
 # participation sont des fonctions affines de la première composante ACP.
@@ -148,7 +148,7 @@ def peupler_base_lineaire(nb_communes, nb_comptees):
             **{f"coordinate_{axe + 1}": valeur
                for axe, valeur in enumerate(composante(c1))},
         )
-        ScrutinEnCours.objects.create(
+        ResultatCommunalEnCours.objects.create(
             commune=commune, sujet_vote=sujet,
             nombre_oui=oui, nombre_non=non,
             electeurs_inscrits=electeurs, bulletins_rentres=votants,
