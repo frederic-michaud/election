@@ -1,6 +1,6 @@
 import pandas as pd
 
-from scrutin.models import Canton, Commune, District, SujetVote, Voix
+from scrutin.models import Canton, Commune, District, ResultatCommunalHistorique, SujetVote
 
 fusions = {"Galmiz": "Murten", "Gempenach": "Murten", "Clavaleyres": "Murten",
            "Bözen": "Böztal", "Effingen": "Böztal", "Elfingen": "Böztal", "Hornussen": "Böztal",
@@ -84,7 +84,7 @@ def import_votation(path_votation):
             raise Exception(f'More than one commune with name: {commune_voix.commune}')
         commune = communes[0]
         commune.save()
-        voix = Voix(commune = commune,
+        voix = ResultatCommunalHistorique(commune = commune,
                     sujet_vote = sujet_vote,
                     nombre_oui = commune_voix.Oui,
                     nombre_non = commune_voix.Non,
@@ -98,9 +98,9 @@ def add_fusion(commune_fusionnee_a_ajouter):
     for commune_name, commune_voix in commune_fusionnee_a_ajouter:
         commune = Commune.get_unique_commune_by_name(commune_name)
         sujet_vote = SujetVote.get_unique_sujet_vote(commune_voix.sujet)
-        voixs = Voix.objects.filter(commune = commune, sujet_vote = sujet_vote)
+        voixs = ResultatCommunalHistorique.objects.filter(commune = commune, sujet_vote = sujet_vote)
         if len(voixs) == 0:
-            voix = Voix(commune=commune,
+            voix = ResultatCommunalHistorique(commune=commune,
                         sujet_vote=sujet_vote,
                         nombre_oui=0,
                         nombre_non=0,
@@ -140,7 +140,7 @@ def add_foreigner(commune_voix, sujet_vote):
     else:
         raise Exception(f'There are more than one commune named {name_commune}')
     commune.save()
-    voix = Voix(commune=commune,
+    voix = ResultatCommunalHistorique(commune=commune,
                 sujet_vote=sujet_vote,
                 nombre_oui=commune_voix.Oui,
                 nombre_non=commune_voix.Non,

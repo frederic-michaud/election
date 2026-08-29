@@ -17,7 +17,7 @@ from django.core.management import call_command
 
 from pca.models import PCAResult
 from scrutin.extrapolation import get_extrapolation
-from scrutin.models import Commune, ScrutinAPI, ScrutinEnCours, SujetVote
+from scrutin.models import Commune, ResultatCommunalEnCours, ScrutinAPI, SujetVote
 
 NB_VOTATIONS_HISTORIQUES = 55
 
@@ -44,7 +44,7 @@ def resultat_reel(sujet):
     ``peupler_demo`` écrit les vraies valeurs dans *toutes* les lignes, y
     compris celles marquées non dépouillées — c'est ce qui donne un étalon.
     """
-    lignes = ScrutinEnCours.objects.filter(sujet_vote=sujet)
+    lignes = ResultatCommunalEnCours.objects.filter(sujet_vote=sujet)
     oui = sum(ligne.nombre_oui for ligne in lignes)
     non = sum(ligne.nombre_non for ligne in lignes)
     return oui / (oui + non)
@@ -58,7 +58,7 @@ def test_peupler_demo_produit_une_base_coherente(base_demo):
     assert PCAResult.objects.count() == Commune.objects.count()
 
     # Une soirée en cours : ni rien ni tout n'est dépouillé.
-    lignes = ScrutinEnCours.objects.filter(sujet_vote=sujets_du_jour()[0])
+    lignes = ResultatCommunalEnCours.objects.filter(sujet_vote=sujets_du_jour()[0])
     comptees = lignes.filter(comptabilise=True).count()
     assert 0 < comptees < lignes.count()
 
@@ -68,7 +68,7 @@ def test_peupler_demo_produit_une_base_coherente(base_demo):
 def test_aucune_commune_n_est_ecartee_de_la_matrice_acp(base_demo):
     """Garde-fou sur le « 55 » codé en dur dans ``ScrutinAPI`` (piège connu).
 
-    Une commune qui n'a pas *exactement* 55 ``Voix`` est silencieusement
+    Une commune qui n'a pas *exactement* 55 ``ResultatCommunalHistorique`` est silencieusement
     écartée de l'ACP. Le jour où l'on ajoutera une votation historique sans
     toucher à cette constante, toutes les communes disparaîtront — et ce test
     est le seul endroit qui s'en apercevra.

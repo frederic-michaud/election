@@ -17,9 +17,9 @@ leur historique, puis on prédit les communes non dépouillées à partir de cel
 le sont déjà.
 
 1. **Profil de commune par ACP** (`scripts/populate_pca.py`). On construit la matrice
-   commune × objet des % de oui sur **55 votations passées** (`Voix`), et on la
+   commune × objet des % de oui sur **55 votations passées** (`ResultatCommunalHistorique`), et on la
    réduit à **6 composantes principales** (`sklearn`), stockées dans `PCAResult`.
-   Une commune qui n'a pas exactement 55 `Voix` est écartée de l'ACP.
+   Une commune qui n'a pas exactement 55 `ResultatCommunalHistorique` est écartée de l'ACP.
 2. **Régression le jour J** (`scrutin/extrapolation.py`). Sur les communes déjà
    comptabilisées, on ajuste par moindres carrés — **pondérés par le nombre de
    bulletins rentrés** — un modèle linéaire `% oui ≈ Σ aᵢ·composanteᵢ + b`
@@ -33,7 +33,7 @@ Garde-fou : sous **7 communes dépouillées**, `get_extrapolation` renvoie `0.5,
 plutôt qu'un ajustement sur trop peu de points.
 
 À noter : `scripts/run_extrapolation.py` **écrit les valeurs extrapolées dans les
-lignes `ScrutinEnCours`** des communes non dépouillées (tout en laissant
+lignes `ResultatCommunalEnCours`** des communes non dépouillées (tout en laissant
 `comptabilise=False`). C'est ce qui permet aux cartes d'afficher toute la Suisse —
 mais les cartes **ne distinguent donc pas visuellement réel et estimé**.
 
@@ -50,12 +50,12 @@ mais les cartes **ne distinguent donc pas visuellement réel et estimé**.
 
 ### Modèles (`scrutin/models.py`)
 `Canton` → `District` → `Commune` ; `SujetVote` (un objet de votation) ;
-**`Voix`** = résultat *historique définitif* commune × objet ; **`ScrutinEnCours`** =
+**`ResultatCommunalHistorique`** = résultat *historique définitif* commune × objet ; **`ResultatCommunalEnCours`** =
 résultat *du jour*, avec `comptabilise` et `electeur_election_precedente` ;
 `Extrapolation` = un instantané horodaté de la projection (la vue affiche le dernier).
 
-La distinction `Voix` / `ScrutinEnCours` est structurante : `Voix` alimente l'ACP,
-`ScrutinEnCours` est réécrit toutes les quelques minutes le jour du scrutin.
+La distinction `ResultatCommunalHistorique` / `ResultatCommunalEnCours` est structurante : `ResultatCommunalHistorique` alimente l'ACP,
+`ResultatCommunalEnCours` est réécrit toutes les quelques minutes le jour du scrutin.
 
 ---
 
@@ -144,7 +144,7 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
 
 **Valeurs codées en dur** — **corrigées** (jalon 3, tâche B2)
 2. Le `55` de `ScrutinAPI` était en dur à deux endroits → `nb_sujets_historiques()`,
-   déduit des `Voix`. Une commune à l'historique incomplet est toujours écartée de
+   déduit des `ResultatCommunalHistorique`. Une commune à l'historique incomplet est toujours écartée de
    l'ACP, mais avec un avertissement (le seuil de couverture est l'affaire de la
    Partie 6).
 3. `update_scrutin_en_cours.get_new_commune` bouclait sur `range(2)` : il ignorait
@@ -261,7 +261,7 @@ Détail complet et découpage des tâches par voie : [`PLAN_MODERNISATION.md`](P
 
 ## Conventions
 
-Domaine et modèles en **français** (`Commune`, `SujetVote`, `Voix`, `nombre_oui`,
+Domaine et modèles en **français** (`Commune`, `SujetVote`, `ResultatCommunalHistorique`, `nombre_oui`,
 `requete`), messages de commit et quelques helpers en anglais. Garder le français
 pour tout ce qui touche au métier et à l'interface.
 

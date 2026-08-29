@@ -2,7 +2,7 @@ import numpy as np
 import scipy.optimize
 
 from pca.models import PCAResult
-from scrutin.models import ScrutinEnCours
+from scrutin.models import ResultatCommunalEnCours
 
 nb_component = 6
 
@@ -43,7 +43,7 @@ def get_extrapolation(sujet):
         pca_result.commune_id: pca_result
         for pca_result in PCAResult.objects.all()
     }
-    for voix in ScrutinEnCours.objects.filter(sujet_vote = sujet).order_by("commune"):
+    for voix in ResultatCommunalEnCours.objects.filter(sujet_vote = sujet).order_by("commune"):
         try:
             pca = PCAResult_dict[voix.commune_id]
         except KeyError as absent:
