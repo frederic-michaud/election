@@ -2,6 +2,12 @@
 
 *Établi le 24 août 2026. Document de travail : cocher / annoter au fil de l'eau.*
 
+> **Règle** : une tâche du plan qui est terminée se coche **dans la même PR**
+> que le travail qui la termine (ou dans un commit `plan: …` juste après si
+> le travail dépasse une seule tâche). Ne pas laisser ça pour plus tard — le
+> jalon 1 (A1–A3) a été fait sans jamais toucher ce fichier, et le plan a
+> menti pendant plusieurs jours sur ce qui restait à faire.
+
 ## Décisions actées
 
 - **Architecture** : on garde Django, modernisé (Django 5.2 LTS, Python 3.12+).
@@ -225,29 +231,36 @@ nouveau fonctionnellement.
 `peupler_demo` (A1–A3 + la commande) débloque la voie I, qui enchaîne ensuite la
 Partie 7 en parallèle de A4–A5.*
 
-### A1. Reproductibilité du repo **[M]**
-- [ ] `requirements/` avec versions épinglées : `web.txt` (django, plotly,
+### A1. Reproductibilité du repo **[M]** — *fait*
+- [x] `requirements/` avec versions épinglées : `web.txt` (django, plotly,
       geojson) et `calcul.txt` (numpy, scipy, scikit-learn, pandas).
       Plus de `psycopg` — SQLite est dans la bibliothèque standard.
-- [ ] `.gitignore` : `*.pyc`, `__pycache__/`, `static/`, `cache.pickle`, `.env`,
+- [x] `.gitignore` : `*.pyc`, `__pycache__/`, `static/`, `cache.pickle`, `.env`,
       `*.sqlite3`, `politiques/` (sortie wget), `votation_matrix.csv`.
-- [ ] Supprimer `data/switzerland2.geojson` (6 Mo, référencé nulle part).
-- [ ] README développeur : mise en route pas à pas, ordre du pipeline de données.
+- [x] Supprimer `data/switzerland2.geojson` (6 Mo, référencé nulle part) —
+      seul `K4voge_20220501_gf.geojson` reste dans `data/`.
+- [x] README développeur : mise en route pas à pas, ordre du pipeline de données.
 
-### A2. Configuration saine (`settings.py`) **[M]**
-- [ ] `SECRET_KEY` depuis variable d'environnement, avec valeur de dev par défaut
+*(Fait au jalon 1, PR #10 « moteur: fondations » — la checklist n'avait pas été
+mise à jour à l'époque ; corrigé le 2026-08-30 en relisant le repo.)*
+
+### A2. Configuration saine (`settings.py`) **[M]** — *fait*
+- [x] `SECRET_KEY` depuis variable d'environnement, avec valeur de dev par défaut
       si `DEBUG=True` (fini `/etc/secret_key.txt`).
-- [ ] `DEBUG` : `False` par défaut, activable par env ; supprimer le parsing fragile
-      `"True"/"False"` (utiliser `os.environ.get("DEBUG") == "1"` ou équivalent).
-- [ ] `.env.example` versionné, chargé depuis la racine du repo (pas `../.env`).
-- [ ] **SQLite partout**, chemin paramétrable par env (`DB_PATH`), mode **WAL**
-      activé. Supprimer `db_user` / `db_password` et l'`ENGINE` postgresql.
-- [ ] `ALLOWED_HOSTS` depuis env (pas `["*"]` en prod).
+- [x] `DEBUG` : `False` par défaut, activable par env via `env_bool` ; plus de
+      parsing fragile `"True"/"False"`.
+- [x] `.env.example` versionné, chargé depuis la racine du repo (pas `../.env`).
+- [x] **SQLite partout**, chemin paramétrable par env (`DB_PATH`), mode **WAL**
+      activé (`PRAGMA journal_mode=WAL`). Plus de `db_user` / `db_password` ni
+      d'`ENGINE` postgresql.
+- [x] `ALLOWED_HOSTS` depuis env (pas `["*"]` en prod).
 
-### A3. Migrations versionnées **[M]**
-- [ ] `makemigrations scrutin pca carte` et committer les fichiers.
-- [ ] Vérifier que le schéma généré correspond à la base de prod historique
-      (si un dump existe encore) ; sinon assumer le schéma neuf comme référence.
+*(Fait au jalon 1, PR #10. Idem A1 : checklist mise à jour après coup.)*
+
+### A3. Migrations versionnées **[M]** — *fait*
+- [x] `makemigrations scrutin pca carte page_statique` et fichiers committés
+      (`scrutin/migrations/0001_initial.py`, `pca/migrations/0001_initial.py`,
+      `page_statique/migrations/0001_initial.py`, `carte/migrations/`).
 
 ### A4. Corriger les bugs latents (liste fermée, issue de la lecture du code) **[M]** — *fait*
 - [x] `scrutin/views.py` : cache pickle ouvert en `'ab'` → **supprimé** (la prod
@@ -299,16 +312,21 @@ Objectif de sortie de phase : **le site peut couvrir n'importe quelle votation
 future sans toucher au code** — seulement la config et les données.
 
 ### B1. Mise à jour de la stack **[M]**
-- [ ] Python 3.12+, Django **5.2 LTS**. Le code est simple, la migration 3.1 → 5.2
-      devrait être douce. Points d'attention connus :
-      - pandas : `fillna(method='ffill')` déprécié → `.ffill()` (populate_voix) ;
-      - plotly : `px.choropleth_mapbox` déprécié dans les versions récentes →
+- [x] Python 3.12+, Django **5.2 LTS** — épinglé dans `requirements/web.txt`
+      depuis le jalon 1 (PR #10). Points d'attention encore ouverts :
+      - [ ] pandas : `fillna(method='ffill')` déprécié → `.ffill()` (populate_voix) ;
+      - [ ] plotly : `px.choropleth_mapbox` déprécié dans les versions récentes →
         `px.choropleth_map` (MapLibre) ; vérifier le rendu des cartes ;
-      - la route attrape-tout `path("<str>", …)` fonctionne mais mérite
+      - [ ] la route attrape-tout `path("<str>", …)` fonctionne mais mérite
         `path("<slug:url>", …)` + 404 propre au lieu d'une exception brute.
 - [ ] Passer les scripts `runscript` en **management commands Django natives**
       (`python manage.py import_votations …`). Supprime la dépendance à
       django-extensions et donne argparse, `--help`, tests faciles.
+      **Pas fait** : seul `peupler_demo` est une vraie management command
+      (`scrutin/management/commands/peupler_demo.py`) ; tout le reste
+      (`add_initial_scrutin_en_cours`, `update_scrutin_en_cours`,
+      `run_extrapolation`, `populate_*`, `create_fake_json_input`…) est encore
+      sous `scripts/`, appelé via `runscript`.
 
 ### B2. Dé-harcoder « septembre 2022 » **[M]** — *fait*
 - [x] Sujets affichés (cartes 6/7/8 en dur dans `scrutin/views.py`, 6 dans
