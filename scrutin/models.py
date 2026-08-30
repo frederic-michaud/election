@@ -138,20 +138,33 @@ def nb_sujets_historiques():
     return ResultatCommunalHistorique.objects.values('sujet_vote').distinct().count()
 
 
+def resultats_historiques_par_commune():
+    """Tout l'historique, groupé par commune, en une seule requête.
+
+    Chaque liste est ordonnée par objet de votation : c'est ce qui garantit que
+    les colonnes de la matrice ACP désignent le même objet d'une commune à
+    l'autre.
+    """
+    resultats = {}
+    for voix in ResultatCommunalHistorique.objects.select_related('sujet_vote').order_by('sujet_vote'):
+        resultats.setdefault(voix.commune_id, []).append(voix)
+    return resultats
+
+
 class ScrutinAPI:
     def getVotationMatrixWithMetaInfo():
         attendu = nb_sujets_historiques()
+        resultats = resultats_historiques_par_commune()
         valid_communes = []
         percentage_oui_all_commune = []
         sujets = []
         for commune in Commune.objects.all():
-            voix = ResultatCommunalHistorique.objects.filter(commune=commune)
-            if len(voix) != attendu:
-                warnings.warn(f"{commune} has only {len(voix)} of {attendu} historical "
+            voixs = resultats.get(commune.id, [])
+            if len(voixs) != attendu:
+                warnings.warn(f"{commune} has only {len(voixs)} of {attendu} historical "
                               "results and will be dropped from the PCA")
                 continue
             valid_communes.append(commune)
-            voixs = ResultatCommunalHistorique.objects.filter(commune=commune).order_by('sujet_vote')
             percentage_oui = [get_percentage(voix) for voix in voixs]
             percentage_oui_all_commune.append(percentage_oui)
             if not sujets:
@@ -160,14 +173,14 @@ class ScrutinAPI:
 
     def get_nb_inscrit():
         attendu = nb_sujets_historiques()
+        resultats = resultats_historiques_par_commune()
         nb_inscrit_all_commune = []
         for commune in Commune.objects.all():
-            voix = ResultatCommunalHistorique.objects.filter(commune=commune)
-            if len(voix) != attendu:
-                warnings.warn(f"{commune} has only {len(voix)} of {attendu} historical "
+            voixs = resultats.get(commune.id, [])
+            if len(voixs) != attendu:
+                warnings.warn(f"{commune} has only {len(voixs)} of {attendu} historical "
                               "results and will be dropped from the result")
                 continue
-            voixs = ResultatCommunalHistorique.objects.filter(commune=commune).order_by('sujet_vote')
             nb_inscrit_all_commune.append((commune.nom, [(voix.electeurs_inscrits, voix.sujet_vote.date) for voix in voixs]))
         return nb_inscrit_all_commune
 
