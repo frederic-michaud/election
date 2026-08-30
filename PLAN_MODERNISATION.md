@@ -261,11 +261,6 @@ mise à jour à l'époque ; corrigé le 2026-08-30 en relisant le repo.)*
 - [x] `makemigrations scrutin pca carte page_statique` et fichiers committés
       (`scrutin/migrations/0001_initial.py`, `pca/migrations/0001_initial.py`,
       `page_statique/migrations/0001_initial.py`, `carte/migrations/`).
-- [ ] Vérifier que le schéma généré correspond à la base de prod historique
-      (si un dump existe encore) ; sinon assumer le schéma neuf comme référence.
-      **Pas fait** — aucun dump de prod retrouvé à ce jour.
-
-*(Fait au jalon 1, PR #10. Idem A1 : checklist mise à jour après coup.)*
 
 ### A4. Corriger les bugs latents (liste fermée, issue de la lecture du code) **[M]** — *fait*
 - [x] `scrutin/views.py` : cache pickle ouvert en `'ab'` → **supprimé** (la prod
