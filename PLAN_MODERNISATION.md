@@ -328,9 +328,14 @@ future sans toucher au code** — seulement la config et les données.
       `sd-t-17-02-<date>-eidgAbstimmung.json`) — construite depuis `DATE_SCRUTIN`.
 
 ### B3. Qualité du pipeline **[M]**
-- [ ] `ScrutinAPI.getVotationMatrixWithMetaInfo` et `get_nb_inscrit` : boucle
+- [x] `ScrutinAPI.getVotationMatrixWithMetaInfo` et `get_nb_inscrit` : boucle
       1 requête/commune → une seule requête `select_related` + regroupement en
       mémoire (même optimisation déjà faite pour les cartes, commit d8d43b8).
+      Sur la base de démo (2 141 communes × 55 objets) : 4 339 → 3 requêtes pour
+      la matrice ACP (1,9 s → 1,1 s), et 20,3 s → 1,3 s pour `get_nb_inscrit`,
+      qui interrogeait la base à *chaque* accès à `sujet_vote.date`.
+      *À noter* : `get_nb_inscrit` n'a aucun appelant dans le dépôt — à supprimer
+      si personne ne la réclame.
 - [x] Rendre les imports **idempotents** (relançables sans doublons) :
       `update_or_create` plutôt que `save()` aveugle. C'était pire que prévu —
       le doublon n'attendait pas un rejeu : `add_initial_scrutin_en_cours` crée
