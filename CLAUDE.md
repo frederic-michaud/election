@@ -105,6 +105,12 @@ de fichiers de `DATE_SCRUTIN`.
 commune n'est reprise que lorsqu'elle est rentrée pour **tous** les objets du
 scrutin.
 
+Les deux imports du jour J sont **idempotents** : `add_initial_scrutin_en_cours`
+sème les lignes vides (`get_or_create`), `update_scrutin_en_cours` les remplit
+(`update_or_create`). Il n'y a donc jamais qu'une ligne `ResultatCommunalEnCours` par
+commune et par objet — l'invariant n'est pas garanti par la base, seulement par
+le code et `tests/test_import_idempotent.py`.
+
 `create_fake_json_input --script-args <json_du_scrutin> [<sortie>]` fabrique un JSON
 de test en rejouant d'anciens résultats sur 5 % des communes tirées au hasard :
 c'est le moyen de tester sans attendre un vrai dimanche de votation.
