@@ -331,10 +331,16 @@ future sans toucher au code** — seulement la config et les données.
 - [ ] `ScrutinAPI.getVotationMatrixWithMetaInfo` et `get_nb_inscrit` : boucle
       1 requête/commune → une seule requête `select_related` + regroupement en
       mémoire (même optimisation déjà faite pour les cartes, commit d8d43b8).
-- [ ] Rendre les imports **idempotents** (relançables sans doublons) :
-      `update_or_create` plutôt que `save()` aveugle ; aujourd'hui relancer
-      `update_scrutin_en_cours` sur le même JSON crée des doublons de
-      `ResultatCommunalEnCours`.
+- [x] Rendre les imports **idempotents** (relançables sans doublons) :
+      `update_or_create` plutôt que `save()` aveugle. C'était pire que prévu —
+      le doublon n'attendait pas un rejeu : `add_initial_scrutin_en_cours` crée
+      la ligne vide, `update_scrutin_en_cours` en créait une **seconde** dès le
+      premier import, et l'extrapolation comptait la commune deux fois (une
+      réelle, une estimée).
+      *Reste ouvert* : aucune contrainte d'unicité en base sur
+      `(commune, sujet_vote)` — l'invariant n'est tenu que par le code et son
+      test. À ajouter si l'on accepte une migration qui échouera sur une base
+      contenant déjà des doublons.
 - [ ] Séparer clairement « résultat extrapolé » et « résultat observé » :
       `run_extrapolation` écrit actuellement les estimations **dans**
       `ResultatCommunalEnCours` (champs oui/non des communes non dépouillées). Ajouter des

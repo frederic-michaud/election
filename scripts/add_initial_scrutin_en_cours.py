@@ -29,10 +29,11 @@ def import_votation(path_votation):
                     continue
                 if (commune.nom in ['Rüti bei Lyssach', 'Jaberg']):
                     continue
-                scrutin = ResultatCommunalEnCours(commune=commune,
-                                         electeur_election_precedente=commune.nb_voix,
-                                         sujet_vote=sujet)
-                scrutin.save()
+                ResultatCommunalEnCours.objects.get_or_create(
+                    commune=commune,
+                    sujet_vote=sujet,
+                    defaults={"electeur_election_precedente": commune.nb_voix},
+                )
 
 def run(*args):
     if not args:

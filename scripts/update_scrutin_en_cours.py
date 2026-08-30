@@ -61,16 +61,18 @@ def import_votation(path_votation, commune_to_import):
                 if (commune.nom in ['Rüti bei Lyssach', 'Jaberg']):
                     continue
                 result = data_commune['resultat']
-                scrutin = ResultatCommunalEnCours(commune = commune,
-                                         electeur_election_precedente = commune.nb_voix,
-                                         sujet_vote = sujet,
-                                         nombre_oui = result["jaStimmenAbsolut"],
-                                         nombre_non = result["neinStimmenAbsolut"],
-                                         electeurs_inscrits=result["anzahlStimmberechtigte"],
-                                         bulletins_rentres=result["eingelegteStimmzettel"],
-                                         comptabilise = True
-                                         )
-                scrutin.save()
+                ResultatCommunalEnCours.objects.update_or_create(
+                    commune=commune,
+                    sujet_vote=sujet,
+                    defaults={
+                        "electeur_election_precedente": commune.nb_voix,
+                        "nombre_oui": result["jaStimmenAbsolut"],
+                        "nombre_non": result["neinStimmenAbsolut"],
+                        "electeurs_inscrits": result["anzahlStimmberechtigte"],
+                        "bulletins_rentres": result["eingelegteStimmzettel"],
+                        "comptabilise": True,
+                    },
+                )
 
 def run(*args):
     if len(args) < 2:
