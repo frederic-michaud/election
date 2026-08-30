@@ -346,11 +346,12 @@ future sans toucher au code** — seulement la config et les données.
       `(commune, sujet_vote)` — l'invariant n'est tenu que par le code et son
       test. À ajouter si l'on accepte une migration qui échouera sur une base
       contenant déjà des doublons.
-- [ ] Séparer clairement « résultat extrapolé » et « résultat observé » :
-      `run_extrapolation` écrit actuellement les estimations **dans**
-      `ResultatCommunalEnCours` (champs oui/non des communes non dépouillées). Ajouter des
-      champs dédiés (`oui_estime`, …) ou une table `ExtrapolationCommune` — condition
-      préalable aux cartes réel/estimé de la phase D.
+- [x] Séparer « résultat extrapolé » et « résultat observé » : déjà porté par
+      `ResultatCommunalEnCours.comptabilise`, auquel `run_extrapolation` ne touche
+      pas. Ni champ dédié ni migration.
+- [ ] `ScrutinAPI.get_percentage_oui_all_commune` laisse tomber `comptabilise` :
+      le faire remonter jusqu'au contrat de vue, pour les cartes réel/estimé de
+      la phase D.
 - [ ] Journalisation (`logging`) au lieu de `print`.
 
 ### B4. Données historiques pérennes — **[I]** sources, **[M]** code
