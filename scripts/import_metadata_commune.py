@@ -1,6 +1,10 @@
+import logging
+
 import pandas as pd
 
 from scrutin.models import Commune
+
+logger = logging.getLogger(__name__)
 
 
 def  import_commune(path_commune):
@@ -14,7 +18,8 @@ def  import_commune(path_commune):
             commune_db.degre_urbanisation = row_commune.HR_GDETYP2012_L1_Name_fr
             commune_db.save()
         except Exception:
-            print(f'unable to find info for {row_commune.Name_fr} with numero OFS {row_commune.CODE_OFS}')
+            logger.warning('unable to find info for %s with numero OFS %s',
+                           row_commune.Name_fr, row_commune.CODE_OFS)
 
 
 

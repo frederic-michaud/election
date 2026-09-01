@@ -155,3 +155,18 @@ DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+# Journalisation : les scripts du pipeline parlent via ``logging`` ; sans
+# handler sur la racine, Python n'affiche que WARNING et plus, et les messages
+# d'avancement du jour J (INFO) seraient perdus.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {'format': '{asctime} {levelname} {name}: {message}', 'style': '{'},
+    },
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'simple'},
+    },
+    'root': {'handlers': ['console'], 'level': 'INFO'},
+}
