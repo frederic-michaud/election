@@ -46,7 +46,7 @@ mais les cartes **ne distinguent donc pas visuellement réel et estimé**.
 | `scrutin` | Cœur métier : tous les modèles, la logique d'extrapolation, la vue d'accueil, le CSS et le logo. |
 | `pca` | Modèle `PCAResult` (6 coordonnées par commune) + vue nuage de points ACP colorée par langue. |
 | `carte` | `carte/API.py` : cartes choroplèthes Plotly sur le GeoJSON communal. |
-| `page_statique` | Pages éditables en base (Méthodes, Contact), servies par une route attrape-tout `path("<str>", …)`. |
+| `page_statique` | Pages éditables en base (Méthodes, Contact), servies par la route attrape-tout `path("<slug:url>", …)` (404 si absente). |
 
 ### Modèles (`scrutin/models.py`)
 `Canton` → `District` → `Commune` ; `SujetVote` (un objet de votation) ;

@@ -323,8 +323,11 @@ future sans toucher au code** — seulement la config et les données.
       - [x] pandas : `fillna(method='ffill')` déprécié → `.ffill()` (populate_voix) ;
       - [ ] plotly : `px.choropleth_mapbox` déprécié dans les versions récentes →
         `px.choropleth_map` (MapLibre) ; vérifier le rendu des cartes ;
-      - [ ] la route attrape-tout `path("<str>", …)` fonctionne mais mérite
-        `path("<slug:url>", …)` + 404 propre au lieu d'une exception brute.
+      - [x] la route attrape-tout `path("<str>", …)` → `path("<slug:url>", …)`
+        + `get_object_or_404` : une URL inconnue (favicon, page absente de la
+        base) renvoie 404 au lieu d'un 500. *Reste côté I* : un `404.html`
+        dans la charte, et les liens `methode`/`contact`/`NA` de `base.html`
+        qui pointent sur des pages que `peupler_demo` ne crée pas.
 - [x] Passer les scripts `runscript` en **management commands Django natives**
       (`python manage.py <nom> [args]`, `--help`). `scripts/` a disparu, les
       commandes vivent dans `scrutin/management/commands/` (et `populate_pca`
