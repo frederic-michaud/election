@@ -69,7 +69,7 @@ carte/figure.py        [I]  carte(donnees) -> div HTML
 scrutin/views.py    [commun] assemble les deux, ~15 lignes, rarement touché
 ```
 
-Forme du contrat, à figer ensemble :
+Forme du contrat (celle que `scrutin/donnees.py` renvoie aujourd'hui) :
 
 ```python
 {
@@ -77,11 +77,14 @@ Forme du contrat, à figer ensemble :
   "avance": 0.42,
   "sujets": [
     {"id": 6, "nom": "AVS 21", "oui_connu": 0.512, "oui_extrapole": 0.507,
-     "ic_bas": 0.494, "ic_haut": 0.520,
-     "communes": {1: 0.61, 2: 0.48}},   # clé = numéro OFS
+     "communes": {1: {"oui": 0.61, "comptabilise": True},    # clé = numéro OFS
+                  2: {"oui": 0.48, "comptabilise": False}}},  # False = estimé
   ],
 }
 ```
+
+`ic_bas` / `ic_haut` (intervalle de confiance) s'ajouteront avec le bootstrap
+de la phase D1 — le test du contrat sera mis à jour à ce moment-là.
 
 Ce n'est **pas un fichier chargé à l'exécution** — juste la forme du dict que
 `donnees.py` renvoie et que `graphiques.py` consomme. Elle est figée par
@@ -115,11 +118,12 @@ tout le monde voit exactement le même site.
 
 - [x] **[M]** `manage.py peupler_demo` : communes depuis le GeoJSON, historique
       et scrutin en cours fictifs, graine fixe, idempotent.
-- [ ] **[2]** Écrire `tests/test_contrat.py` : forme du dict figée, exécuté
-      sur la base fictive. **Toujours à faire — c'est le jalon 0, et le seul
-      point du plan franchi hors ordre.** L'infrastructure de test existe
-      désormais (`pytest`, base fictive, CI) : il ne reste que la décision à
-      deux sur la forme du dict.
+- [x] **[2]** Écrire `tests/test_contrat.py` : forme du dict figée, exécuté
+      sur la base fictive. Proposé côté M (`scrutin/donnees.py` +
+      `tests/test_contrat.py`) et validé en PR à deux. `views.py` consomme le
+      contrat ; le Plotly de l'histogramme y attend encore son déménagement
+      vers `graphiques.py` **[I]**, et `carte/API.py` refait sa propre requête
+      au lieu de lire `sujet["communes"]` **[I]**.
 
 **Conséquence sur le parallélisme** : la voie I ne démarre qu'une fois le
 jalon 0 franchi (A1–A3 + `peupler_demo`, ≈ 1 jour côté M) au lieu de démarrer
@@ -368,9 +372,9 @@ future sans toucher au code** — seulement la config et les données.
 - [x] Séparer « résultat extrapolé » et « résultat observé » : déjà porté par
       `ResultatCommunalEnCours.comptabilise`, auquel `run_extrapolation` ne touche
       pas. Ni champ dédié ni migration.
-- [ ] `ScrutinAPI.get_percentage_oui_all_commune` laisse tomber `comptabilise` :
-      le faire remonter jusqu'au contrat de vue, pour les cartes réel/estimé de
-      la phase D.
+- [x] `ScrutinAPI.get_percentage_oui_all_commune` laisse tomber `comptabilise` :
+      remonté jusqu'au contrat de vue (`sujet["communes"][ofs]["comptabilise"]`,
+      jalon 0), pour les cartes réel/estimé de la phase D.
 - [x] Journalisation (`logging`) au lieu de `print` : cinq `print` dans les
       scripts d'import → `logger.warning` / `logger.info`, et un `LOGGING`
       minimal dans `settings.py` (console, niveau INFO) pour que les messages
