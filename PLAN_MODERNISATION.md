@@ -320,19 +320,20 @@ future sans toucher au code** — seulement la config et les données.
 ### B1. Mise à jour de la stack **[M]**
 - [x] Python 3.12+, Django **5.2 LTS** — épinglé dans `requirements/web.txt`
       depuis le jalon 1 (PR #10). Points d'attention encore ouverts :
-      - [ ] pandas : `fillna(method='ffill')` déprécié → `.ffill()` (populate_voix) ;
+      - [x] pandas : `fillna(method='ffill')` déprécié → `.ffill()` (populate_voix) ;
       - [ ] plotly : `px.choropleth_mapbox` déprécié dans les versions récentes →
         `px.choropleth_map` (MapLibre) ; vérifier le rendu des cartes ;
       - [ ] la route attrape-tout `path("<str>", …)` fonctionne mais mérite
         `path("<slug:url>", …)` + 404 propre au lieu d'une exception brute.
-- [ ] Passer les scripts `runscript` en **management commands Django natives**
-      (`python manage.py import_votations …`). Supprime la dépendance à
-      django-extensions et donne argparse, `--help`, tests faciles.
-      **Pas fait** : seul `peupler_demo` est une vraie management command
-      (`scrutin/management/commands/peupler_demo.py`) ; tout le reste
-      (`add_initial_scrutin_en_cours`, `update_scrutin_en_cours`,
-      `run_extrapolation`, `populate_*`, `create_fake_json_input`…) est encore
-      sous `scripts/`, appelé via `runscript`.
+- [x] Passer les scripts `runscript` en **management commands Django natives**
+      (`python manage.py <nom> [args]`, `--help`). `scripts/` a disparu, les
+      commandes vivent dans `scrutin/management/commands/` (et `populate_pca`
+      dans `pca/`) ; django-extensions n'est plus une dépendance. Les noms
+      sont conservés. Les chemins `../data/…` des imports historiques sont
+      des arguments optionnels avec l'ancien chemin en défaut (A6 décidera
+      où vivent ces fichiers). *Trouvé en passant* : `download_data.sh`
+      passait les deux JSON à `update_scrutin_en_cours` dans l'ordre inverse
+      de celui attendu (courant, précédent) — corrigé.
 
 ### B2. Dé-harcoder « septembre 2022 » **[M]** — *fait*
 - [x] Sujets affichés (cartes 6/7/8 en dur dans `scrutin/views.py`, 6 dans
@@ -346,7 +347,7 @@ future sans toucher au code** — seulement la config et les données.
       entrées de l'ACP, ce n'est pas du dé-harcodage.
 - [x] `update_scrutin_en_cours.get_new_commune` : `range(2)` → itère sur tous les
       objets du scrutin (il plantait aussi sur un scrutin à objet unique).
-- [x] Noms de fichiers `votation_septembre_2022_*` → arguments `--script-args` ;
+- [x] Noms de fichiers `votation_septembre_2022_*` → arguments de ligne de commande ;
       `download_data.sh` dérive tout de `DATE_SCRUTIN`.
 - [x] URL du JSON fédéral paramétrée (elle change à chaque scrutin :
       `sd-t-17-02-<date>-eidgAbstimmung.json`) — construite depuis `DATE_SCRUTIN`.

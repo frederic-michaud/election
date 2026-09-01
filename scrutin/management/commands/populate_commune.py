@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from django.core.management.base import BaseCommand
 
 from scrutin.models import Canton, Commune, District
 
@@ -55,5 +56,11 @@ def  import_commune(path_commune):
 
 
 
-def run():
-    import_commune("../data/communes/Communes_actuelles.csv")
+class Command(BaseCommand):
+    help = "Crée cantons, districts et communes depuis le CSV des communes."
+
+    def add_arguments(self, parser):
+        parser.add_argument("csv", nargs="?", default="../data/communes/Communes_actuelles.csv")
+
+    def handle(self, *args, **options):
+        import_commune(options["csv"])

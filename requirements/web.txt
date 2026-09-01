@@ -11,8 +11,3 @@ python-dotenv==1.*
 # (PLAN_MODERNISATION.md, Partie 7), pas avant.
 numpy==2.*
 pandas==2.*
-
-# Fournit `manage.py runscript`, utilisé par les scripts de scripts/.
-# À supprimer en phase B1, une fois les scripts convertis en management
-# commands natives.
-django-extensions==4.*

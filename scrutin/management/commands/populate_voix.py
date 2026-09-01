@@ -1,4 +1,5 @@
 import pandas as pd
+from django.core.management.base import BaseCommand
 
 from scrutin.models import Canton, Commune, District, ResultatCommunalHistorique, SujetVote
 
@@ -20,7 +21,7 @@ n_ofs_distric_etrange = {"ZH-étranger": 9010, "LU-étranger": 9030, "UR-étrang
 
 def import_votation(path_votation):
     df_full = pd.read_csv(path_votation, sep = ";")
-    df_full.fillna(method='ffill', inplace=True)
+    df_full.ffill(inplace=True)
     def is_commune(nom_commune):
         if nom_commune[0:6] != "......":
             return False
@@ -149,6 +150,12 @@ def add_foreigner(commune_voix, sujet_vote):
                 )
     voix.save()
 
-def run():
-    SujetVote.objects.all().delete()
-    import_votation("../data/donnee_federale_v3.txt")
+class Command(BaseCommand):
+    help = "Importe l'historique des votations. Supprime d'abord tous les SujetVote."
+
+    def add_arguments(self, parser):
+        parser.add_argument("csv", nargs="?", default="../data/donnee_federale_v3.txt")
+
+    def handle(self, *args, **options):
+        SujetVote.objects.all().delete()
+        import_votation(options["csv"])

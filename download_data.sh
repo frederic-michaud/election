@@ -22,7 +22,7 @@ PREFIXE="${DOSSIER_DATA}/votation_${DATE_SCRUTIN}"
 # d'avant toute donnée disponible :
 #   wget "$URL_SCRUTIN" -O "${PREFIXE}_0.json"
 # puis, une fois la base peuplée :
-#   python manage.py runscript add_initial_scrutin_en_cours --script-args "${PREFIXE}_0.json"
+#   python manage.py add_initial_scrutin_en_cours "${PREFIXE}_0.json"
 
 # shellcheck source=/dev/null
 source "${VENV}"
@@ -38,12 +38,12 @@ gunzip "${PREFIXE}_${i}.json.gz";
 
   #mettre les données récupérées ci-dessus dans la base de donnée du site
 ((j=i-1))
-python manage.py runscript update_scrutin_en_cours --script-args "${PREFIXE}_${i}.json" "${PREFIXE}_${j}.json"
+python manage.py update_scrutin_en_cours "${PREFIXE}_${j}.json" "${PREFIXE}_${i}.json"
 
 echo "--------scrutin en cours mis à jour ---------"
 
   #fabriquer l'extrapolation sur la base des dépouillements partiels
-python manage.py runscript run_extrapolation
+python manage.py run_extrapolation
 echo " ** extrapolation terminée ** "
 
   #copier le site dans le dossier où apache saura le trouver

@@ -11,10 +11,9 @@ Tu possèdes le calcul et les données. Tu ne touches jamais à l'apparence du s
 
 ## Fichiers possédés
 - `scrutin/extrapolation.py` — ACP + régression pondérée, le cœur mathématique.
-- `scrutin/donnees.py` — construit le **contrat de vue** depuis l'ORM (à créer).
+- `scrutin/donnees.py` — construit le **contrat de vue** depuis l'ORM.
 - `scrutin/models.py`, `pca/`, toutes les migrations.
-- `carte/donnees.py` — résultats par commune, sans Plotly (à créer).
-- `scripts/` puis les management commands qui les remplacent.
+- les management commands (`scrutin/management/commands/`, `pca/management/commands/`).
 - `election/settings.py`, `Dockerfile`, `compose.yaml`, CI, `requirements/`.
 - `scrutin/management/commands/peupler_demo.py` — la base fictive.
 

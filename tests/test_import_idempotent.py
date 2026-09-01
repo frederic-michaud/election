@@ -12,8 +12,12 @@ import json
 
 import pytest
 
-from scripts.add_initial_scrutin_en_cours import import_votation as import_initial
-from scripts.update_scrutin_en_cours import import_votation as import_mise_a_jour
+from scrutin.management.commands.add_initial_scrutin_en_cours import (
+    import_votation as import_initial,
+)
+from scrutin.management.commands.update_scrutin_en_cours import (
+    import_votation as import_mise_a_jour,
+)
 from scrutin.models import Canton, Commune, District, ResultatCommunalEnCours
 
 OFS = [1001, 1002, 1003]

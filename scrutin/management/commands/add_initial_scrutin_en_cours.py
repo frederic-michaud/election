@@ -1,6 +1,8 @@
 import json
 import logging
 
+from django.core.management.base import BaseCommand
+
 from scrutin.models import Commune, ResultatCommunalEnCours, SujetVote
 
 logger = logging.getLogger(__name__)
@@ -39,9 +41,13 @@ def import_votation(path_votation):
                     defaults={"electeur_election_precedente": commune.nb_voix},
                 )
 
-def run(*args):
-    if not args:
-        raise SystemExit("usage: runscript add_initial_scrutin_en_cours "
-                         "--script-args <json_du_scrutin>")
-    ResultatCommunalEnCours.objects.all().delete()
-    import_votation(args[0])
+class Command(BaseCommand):
+    help = "Sème les lignes vides du jour J depuis le premier JSON fédéral."
+
+    def add_arguments(self, parser):
+        parser.add_argument("json_du_scrutin")
+
+    def handle(self, *args, **options):
+        ResultatCommunalEnCours.objects.all().delete()
+        import_votation(options["json_du_scrutin"])
+

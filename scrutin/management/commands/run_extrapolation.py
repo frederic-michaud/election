@@ -1,5 +1,14 @@
+from django.core.management.base import BaseCommand
+
 from scrutin.extrapolation import get_extrapolation
 from scrutin.models import Extrapolation, SujetVote
+
+
+class Command(BaseCommand):
+    help = "Extrapole les communes manquantes et enregistre un instantané Extrapolation."
+
+    def handle(self, *args, **options):
+        run()
 
 
 def run():
