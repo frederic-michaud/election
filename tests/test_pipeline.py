@@ -98,7 +98,7 @@ def test_l_extrapolation_corrige_le_biais_du_depouillement_partiel(base_demo):
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        call_command("runscript", "populate_pca")
+        call_command("populate_pca")
 
     assert PCAResult.objects.count() == Commune.objects.count()
 

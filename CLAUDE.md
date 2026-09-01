@@ -16,7 +16,7 @@ L'idée : les communes suisses ont des profils de vote stables. On les caractér
 leur historique, puis on prédit les communes non dépouillées à partir de celles qui
 le sont déjà.
 
-1. **Profil de commune par ACP** (`scripts/populate_pca.py`). On construit la matrice
+1. **Profil de commune par ACP** (`manage.py populate_pca`). On construit la matrice
    commune × objet des % de oui sur **55 votations passées** (`ResultatCommunalHistorique`), et on la
    réduit à **6 composantes principales** (`sklearn`), stockées dans `PCAResult`.
    Une commune qui n'a pas exactement 55 `ResultatCommunalHistorique` est écartée de l'ACP.
@@ -32,7 +32,7 @@ le sont déjà.
 Garde-fou : sous **7 communes dépouillées**, `get_extrapolation` renvoie `0.5, 0.5, 0`
 plutôt qu'un ajustement sur trop peu de points.
 
-À noter : `scripts/run_extrapolation.py` **écrit les valeurs extrapolées dans les
+À noter : `manage.py run_extrapolation` **écrit les valeurs extrapolées dans les
 lignes `ResultatCommunalEnCours`** des communes non dépouillées (tout en laissant
 `comptabilise=False`). C'est ce qui permet aux cartes d'afficher toute la Suisse —
 mais les cartes **ne distinguent donc pas visuellement réel et estimé**.
@@ -81,8 +81,8 @@ l'ACP y trouve une vraie structure et l'extrapolation a un vrai biais à corrige
 
 ## Pipeline de données
 
-Les scripts s'exécutent via **django-extensions** :
-`python manage.py runscript <nom>` (depuis la racine du repo).
+Le pipeline est fait de **management commands Django** (`scrutin/management/commands/`,
+`pca/management/commands/`) : `python manage.py <nom> [args]`, `--help` pour les arguments.
 
 Amorçage, **dans cet ordre** (chaque étape dépend de la précédente) :
 
@@ -92,11 +92,11 @@ import_metadata_commune   # langue, degré d'urbanisation
 populate_voix             # 55 votations historiques  (⚠ supprime tous les SujetVote)
 set_nb_voix_commune       # Commune.nb_voix = électeurs de la dernière votation
 populate_pca              # ACP → PCAResult          (⚠ supprime tous les PCAResult)
-add_initial_scrutin_en_cours --script-args <json_du_scrutin>   # lignes vides du jour J
+add_initial_scrutin_en_cours <json_du_scrutin>   # lignes vides du jour J
 ```
 
 Puis, en boucle le jour du scrutin :
-`update_scrutin_en_cours --script-args <json_courant> <json_precedent>` →
+`update_scrutin_en_cours <json_precedent> <json_courant>` →
 `run_extrapolation`. C'est ce que fait `download_data.sh`, qui dérive URL et noms
 de fichiers de `DATE_SCRUTIN`.
 
@@ -111,7 +111,7 @@ sème les lignes vides (`get_or_create`), `update_scrutin_en_cours` les remplit
 commune et par objet — l'invariant n'est pas garanti par la base, seulement par
 le code et `tests/test_import_idempotent.py`.
 
-`create_fake_json_input --script-args <json_du_scrutin> [<sortie>]` fabrique un JSON
+`create_fake_json_input <json_du_scrutin> [<sortie>]` fabrique un JSON
 de test en rejouant d'anciens résultats sur 5 % des communes tirées au hasard :
 c'est le moyen de tester sans attendre un vrai dimanche de votation.
 
@@ -155,8 +155,7 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
    Partie 6).
 3. `update_scrutin_en_cours.get_new_commune` bouclait sur `range(2)` : il ignorait
    les objets au-delà du deuxième et plantait sur un scrutin à objet unique.
-4. Les chemins `votation_septembre_2022_*` sont devenus des arguments
-   (`--script-args`), et `download_data.sh` dérive URL et fichiers de
+4. Les chemins `votation_septembre_2022_*` sont devenus des arguments, et `download_data.sh` dérive URL et fichiers de
    `DATE_SCRUTIN`.
 
 **Bugs latents repérés à la lecture** — **corrigés** (jalon 2, tâche A4)

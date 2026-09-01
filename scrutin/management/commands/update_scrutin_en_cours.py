@@ -1,6 +1,8 @@
 import json
 import logging
 
+from django.core.management.base import BaseCommand
+
 from scrutin.models import Commune, ResultatCommunalEnCours, SujetVote
 
 logger = logging.getLogger(__name__)
@@ -78,11 +80,16 @@ def import_votation(path_votation, commune_to_import):
                     },
                 )
 
-def run(*args):
-    if len(args) < 2:
-        raise SystemExit("usage: runscript update_scrutin_en_cours "
-                         "--script-args <json_precedent> <json_courant>")
-    commune_to_import = get_new_commune(args[0], args[1])
-    logger.info('%d nouvelles communes dépouillées : %s',
-                len(commune_to_import), sorted(commune_to_import))
-    import_votation(args[1], commune_to_import)
+class Command(BaseCommand):
+    help = "Importe les communes nouvellement dépouillées entre deux instantanés JSON."
+
+    def add_arguments(self, parser):
+        parser.add_argument("json_precedent")
+        parser.add_argument("json_courant")
+
+    def handle(self, *args, **options):
+        commune_to_import = get_new_commune(options["json_precedent"], options["json_courant"])
+        logger.info('%d nouvelles communes dépouillées : %s',
+                    len(commune_to_import), sorted(commune_to_import))
+        import_votation(options["json_courant"], commune_to_import)
+

@@ -98,9 +98,9 @@ des communes tirées au hasard et écrit un JSON au format fédéral. On l'encha
 ensuite avec le pipeline du jour J :
 
 ```bash
-python manage.py runscript create_fake_json_input --script-args <json_du_scrutin> json_fake.json
-python manage.py runscript update_scrutin_en_cours --script-args <json_precedent> json_fake.json
-python manage.py runscript run_extrapolation
+python manage.py create_fake_json_input <json_du_scrutin> json_fake.json
+python manage.py update_scrutin_en_cours <json_precedent> json_fake.json
+python manage.py run_extrapolation
 ```
 
 À faire avant chaque votation réelle (voir `PLAN_MODERNISATION.md`, C3).

@@ -2,6 +2,7 @@ import json
 import logging
 
 import numpy as np
+from django.core.management.base import BaseCommand
 
 from scrutin.models import Commune, ResultatCommunalHistorique, SujetVote
 
@@ -16,12 +17,18 @@ def get_result(commune, sujet):
     return None
 
 
-def run(*args):
-    if not args:
-        raise SystemExit("usage: runscript create_fake_json_input "
-                         "--script-args <json_du_scrutin> [<json_de_sortie>]")
-    path_votation = args[0]
-    path_sortie = args[1] if len(args) > 1 else "json_fake.json"
+class Command(BaseCommand):
+    help = "Fabrique un JSON de test en rejouant d'anciens résultats sur 5 % des communes."
+
+    def add_arguments(self, parser):
+        parser.add_argument("json_du_scrutin")
+        parser.add_argument("json_de_sortie", nargs="?", default="json_fake.json")
+
+    def handle(self, *args, **options):
+        fabriquer(options["json_du_scrutin"], options["json_de_sortie"])
+
+
+def fabriquer(path_votation, path_sortie):
     sujets = SujetVote.objects.order_by("date")
     with open(path_votation, 'r') as f:
         data = json.load(f)

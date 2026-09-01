@@ -6,7 +6,7 @@ La boucle ne portait que sur les deux premiers objets du scrutin : un scrutin
 
 import json
 
-from scripts.update_scrutin_en_cours import get_new_commune
+from scrutin.management.commands.update_scrutin_en_cours import get_new_commune
 
 
 def ecrire_scrutin(chemin, objets):
