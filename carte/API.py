@@ -4,19 +4,18 @@ import geojson
 import plotly
 import plotly.express as px
 
-from scrutin.models import ScrutinAPI
 
-
-def generate_carte_plot(id_scrutin):
+def generate_carte_plot(communes):
+    """``communes`` : le dict ``sujet["communes"]`` du contrat de vue."""
     with open("data/K4voge_20220501_gf.geojson") as f:
         gj = geojson.load(f)
     all_cities = []
     all_results = []
-    oui_per_commune_id = ScrutinAPI.get_percentage_oui_all_commune(id_scrutin)
     for entry in gj["features"]:
-        if entry['properties']['vogeId'] in oui_per_commune_id.keys():
+        resultat = communes.get(entry['properties']['vogeId'])
+        if resultat is not None and resultat["oui"] is not None:
             all_cities.append(entry["properties"]['vogeName'])
-            all_results.append(oui_per_commune_id[entry['properties']['vogeId']] * 100)
+            all_results.append(resultat["oui"] * 100)
     all_results_formated = list(map(lambda x: f'{x:.2f} %', all_results))
     dict_properties = {'name': all_cities,
                        'results': all_results,

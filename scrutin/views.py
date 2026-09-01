@@ -41,7 +41,7 @@ def home_view(requete, *args, **kwargs):
     date = datetime.date.fromisoformat(vue["date"]).strftime("%d %b %Y")
     return render(requete, "home.html", {
         "histo": histogramme(vue),
-        "maps": [carte_api.generate_carte_plot(sujet["id"]) for sujet in vue["sujets"]],
+        "maps": [carte_api.generate_carte_plot(sujet["communes"]) for sujet in vue["sujets"]],
         "avance": f"{100*vue['avance']:.1f}%",
         "date": date,
     })

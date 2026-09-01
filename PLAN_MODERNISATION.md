@@ -120,10 +120,12 @@ tout le monde voit exactement le même site.
       et scrutin en cours fictifs, graine fixe, idempotent.
 - [x] **[2]** Écrire `tests/test_contrat.py` : forme du dict figée, exécuté
       sur la base fictive. Proposé côté M (`scrutin/donnees.py` +
-      `tests/test_contrat.py`) et validé en PR à deux. `views.py` consomme le
-      contrat ; le Plotly de l'histogramme y attend encore son déménagement
-      vers `graphiques.py` **[I]**, et `carte/API.py` refait sa propre requête
-      au lieu de lire `sujet["communes"]` **[I]**.
+      `tests/test_contrat.py`) et validé en PR à deux. `views.py` et la carte
+      consomment le contrat (`resultats_par_commune` vit dans
+      `scrutin/donnees.py`, pas besoin d'un `carte/donnees.py` à part). Le
+      Plotly de l'histogramme attend encore son déménagement de `views.py`
+      vers `graphiques.py` **[I]**, celui de la carte de `carte/API.py` vers
+      `carte/figure.py` **[I]**.
 
 **Conséquence sur le parallélisme** : la voie I ne démarre qu'une fois le
 jalon 0 franchi (A1–A3 + `peupler_demo`, ≈ 1 jour côté M) au lieu de démarrer
