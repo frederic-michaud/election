@@ -1,6 +1,9 @@
 import json
+import logging
 
 from scrutin.models import Commune, ResultatCommunalEnCours, SujetVote
+
+logger = logging.getLogger(__name__)
 
 
 def clean_date(date_str):
@@ -25,7 +28,8 @@ def import_votation(path_votation):
                 try:
                     commune = Commune.get_unique_commune_by_ofs(data_commune['geoLevelnummer'])
                 except Exception:
-                    print(f'Commune not found: {data_commune["geoLevelnummer"]}: {data_commune["geoLevelname"]}')
+                    logger.warning('Commune not found: %s: %s',
+                                   data_commune["geoLevelnummer"], data_commune["geoLevelname"])
                     continue
                 if (commune.nom in ['Rüti bei Lyssach', 'Jaberg']):
                     continue

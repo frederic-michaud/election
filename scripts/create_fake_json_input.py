@@ -1,8 +1,11 @@
 import json
+import logging
 
 import numpy as np
 
 from scrutin.models import Commune, ResultatCommunalHistorique, SujetVote
+
+logger = logging.getLogger(__name__)
 
 p_rejection = 0.95
 
@@ -30,7 +33,8 @@ def run(*args):
                 try:
                     commune = Commune.get_unique_commune_by_ofs(data_commune['geoLevelnummer'])
                 except Exception:
-                    print(f'Commune not found: {data_commune["geoLevelnummer"]}: {data_commune["geoLevelname"]}')
+                    logger.warning('Commune not found: %s: %s',
+                                   data_commune["geoLevelnummer"], data_commune["geoLevelname"])
                     continue
                 if (commune.nom in ['Rüti bei Lyssach', 'Jaberg']):
                     continue
