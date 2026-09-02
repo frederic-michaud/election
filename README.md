@@ -66,7 +66,9 @@ Deux jeux, **un seul chemin de code** — seule la base change.
 
 **Fictives** (usage quotidien) : `python manage.py peupler_demo`. Construit une
 base à l'échelle réelle (~2 130 communes) sans aucun téléchargement, à graine
-fixe — tout le monde voit exactement le même site.
+fixe — tout le monde voit exactement le même site. Les deux pages du menu
+(Méthodes, Contact) sont semées elles aussi, sinon leurs onglets tomberaient
+en 404.
 
 **Réelles** : voir le pipeline d'import décrit dans [`CLAUDE.md`](CLAUDE.md).
 
@@ -86,6 +88,8 @@ hors-ligne, y compris les tests d'intégration.
 |---|---|
 | `tests/test_extrapolation.py` | le cœur mathématique sur des données synthétiques dont le résultat est connu analytiquement |
 | `tests/test_pipeline.py` | l'enchaînement `peupler_demo` → ACP → extrapolation, et le fait que la projection **corrige** le biais du dépouillement partiel |
+| `tests/test_contrat.py` | la forme du dict passé de `donnees.py` aux graphiques — le garde-fou entre les deux voies |
+| `tests/test_page_statique.py` | pages éditables servies, 404 sur une URL inconnue, et menu construit depuis la base |
 
 Les mêmes commandes tournent dans la CI (GitHub Actions) sur chaque *pull
 request*.

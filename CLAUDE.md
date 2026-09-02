@@ -46,7 +46,7 @@ mais les cartes **ne distinguent donc pas visuellement réel et estimé**.
 | `scrutin` | Cœur métier : tous les modèles, la logique d'extrapolation, la vue d'accueil, le CSS et le logo. |
 | `pca` | Modèle `PCAResult` (6 coordonnées par commune) + vue nuage de points ACP colorée par langue. |
 | `carte` | `carte/API.py` : cartes choroplèthes Plotly sur le GeoJSON communal. |
-| `page_statique` | Pages éditables en base (Méthodes, Contact), servies par la route attrape-tout `path("<slug:url>", …)` (404 si absente). |
+| `page_statique` | Pages éditables en base (Méthodes, Contact), servies par la route attrape-tout `path("<slug:url>", …)` (404 si absente). **Ce sont aussi les onglets du menu** : le context processor `page_statique.context_processors.menu` les expose à tous les gabarits, et `base.html` boucle dessus. Ajouter une page en base ajoute donc un onglet, sans toucher au HTML. |
 
 ### Modèles (`scrutin/models.py`)
 `Canton` → `District` → `Commune` ; `SujetVote` (un objet de votation) ;
@@ -69,6 +69,9 @@ python manage.py migrate        # SQLite, aucune installation requise
 python manage.py peupler_demo   # base fictive à l'échelle réelle
 python manage.py runserver
 ```
+
+`peupler_demo` sème aussi les deux pages du menu (Méthodes, Contact) : sans
+elles, un clone frais aurait des onglets en 404.
 
 `peupler_demo` fabrique 2 141 communes réelles (nom, numéro OFS, district, canton
 lus dans `data/K4voge_*.geojson`), 55 votations historiques et une soirée de
