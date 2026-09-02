@@ -464,18 +464,21 @@ Dans les deux cas :
       donc ajouter une page oblige de toute façon à éditer le gabarit, et une
       page écrite dans un clone n'existe pas dans l'autre. D'où les trois
       tâches ci-dessous, qui remplacent la migration vers markdown.
-- [ ] **[M]** Menu construit depuis la base : un *context processor* de
-      `page_statique` injecte les `PageStatique` dans tous les gabarits.
-      Prévoir un champ `ordre` et sa migration pour fixer l'ordre des onglets,
-      sinon tri par titre.
-- [ ] **[I]** `base.html` boucle sur ces pages au lieu des trois `<a>` en dur.
+- [x] **[M]** Menu construit depuis la base : le *context processor*
+      `page_statique.context_processors.menu` injecte `pages_statiques` dans
+      tous les gabarits, triées par le nouveau champ `ordre` puis par titre
+      (migration `0002`).
+- [x] **[I]** `base.html` boucle sur `pages_statiques` au lieu des `<a>` en
+      dur. Fait côté M **à la demande de Frédéric**, malgré la règle des zones.
+      Accueil et Cartes restent écrits à la main, ce sont de vraies routes ;
+      les trois liens passent par `{% url %}`, ce qui a réparé l'onglet Cartes
+      qui pointait sur `NA`.
       Accueil et Cartes restent écrits à la main : ce sont de vraies routes,
       pas des pages en base. Au passage, l'onglet Cartes pointe sur `NA`, qui
       n'existe pas : la route est `/cartes`.
-- [ ] **[M]** `peupler_demo` sème « Méthodes » et « Contact » : un clone frais
-      doit avoir un menu qui marche, alors qu'aujourd'hui ces deux onglets
-      tombent en 404. Attention, `_vider()` ne purge pas `PageStatique` : soit
-      l'ajouter à la liste, soit passer par `get_or_create`.
+- [x] **[M]** `peupler_demo` sème « Méthodes » et « Contact », contenu
+      squelettique, et `_vider()` purge désormais `PageStatique` : un clone
+      frais a un menu qui marche.
 - [ ] **[2]** Page « Méthodes » réécrite — le contenu lui-même, pas le support.
 - [ ] Validation rétrospective : rejouer les votations passées et publier l'erreur
       de projection en fonction de l'avance du dépouillement.

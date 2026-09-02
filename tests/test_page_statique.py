@@ -21,3 +21,18 @@ def test_une_page_existante_est_servie(client):
 @pytest.mark.parametrize("url", ["/inconnue", "/favicon.ico", "/a/b", "/methodes/"])
 def test_une_url_inconnue_renvoie_404(client, url):
     assert client.get(url).status_code == 404
+
+
+def test_le_menu_expose_les_pages_triees(client):
+    PageStatique.objects.create(titre="Contact", contenu="", url="contact", ordre=2)
+    PageStatique.objects.create(titre="Méthodes", contenu="", url="methode", ordre=1)
+    contexte = client.get("/contact").context["pages_statiques"]
+    assert [page.url for page in contexte] == ["methode", "contact"]
+
+
+def test_le_menu_affiche_un_onglet_par_page(client):
+    PageStatique.objects.create(titre="Méthodes", contenu="", url="methode", ordre=1)
+    html = client.get("/methode").content.decode()
+    assert '<a href="/methode">Méthodes</a>' in html
+    assert '<a href="/cartes">Cartes</a>' in html
+    assert 'href="NA"' not in html

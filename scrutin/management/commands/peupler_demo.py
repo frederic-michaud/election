@@ -23,6 +23,7 @@ import random
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
+from page_statique.models import PageStatique
 from pca.models import PCAResult
 from scrutin.models import (
     Canton,
@@ -106,6 +107,7 @@ class Command(BaseCommand):
         self._creer_historique(alea, communes, profils)
         self._creer_jour_j(alea, communes, profils, part_depouillee)
         self._creer_pca(alea, communes, profils)
+        self._creer_pages_statiques()
 
         self.stdout.write(self.style.SUCCESS(
             f"\nBase de démonstration prête : {len(communes)} communes, "
@@ -119,7 +121,7 @@ class Command(BaseCommand):
     def _vider(self):
         """Idempotence : on repart d'une base propre à chaque exécution."""
         for modele in (Extrapolation, ResultatCommunalEnCours, ResultatCommunalHistorique, PCAResult,
-                       SujetVote, Commune, District, Canton):
+                       SujetVote, Commune, District, Canton, PageStatique):
             modele.objects.all().delete()
 
     def _creer_communes(self, alea):
@@ -307,6 +309,30 @@ class Command(BaseCommand):
         self.stdout.write(
             f"  {len(lignes)} lignes de scrutin en cours "
             f"({nb_comptees}/{len(communes)} communes dépouillées)")
+
+    def _creer_pages_statiques(self):
+        """Les pages du menu, sinon les onglets tombent en 404 sur un clone frais.
+
+        Contenu volontairement squelettique : la vraie page « Méthodes » est
+        écrite en base, page par page (PLAN_MODERNISATION.md, D1).
+        """
+        PageStatique.objects.bulk_create([
+            PageStatique(
+                titre="Méthodes",
+                url="methode",
+                ordre=1,
+                contenu="<p>Page de démonstration. La méthode réelle est décrite "
+                        "dans le README : ACP sur l'historique communal, puis "
+                        "régression pondérée sur les communes déjà dépouillées.</p>",
+            ),
+            PageStatique(
+                titre="Contact",
+                url="contact",
+                ordre=2,
+                contenu="<p>Page de démonstration.</p>",
+            ),
+        ])
+        self.stdout.write("  2 pages statiques (menu)")
 
     def _creer_pca(self, alea, communes, profils):
         """Coordonnées ACP cohérentes avec le profil latent.
