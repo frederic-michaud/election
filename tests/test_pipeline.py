@@ -75,17 +75,13 @@ def test_aucune_commune_n_est_ecartee_de_la_matrice_acp(base_demo):
 @pytest.mark.django_db
 def test_l_historique_se_lit_en_un_nombre_constant_de_requetes(
         base_demo, django_assert_max_num_queries):
-    """La lecture faisait deux requêtes par commune, plus une par ``sujet_vote``.
+    """La lecture faisait deux requêtes par commune, soit 4 339 en tout.
 
-    Soit 4 339 requêtes pour la matrice ACP et 20 s pour ``get_nb_inscrit``.
     Le seuil est large : ce qu'on veut attraper, c'est le retour d'une boucle
     de requêtes, pas quelques requêtes de plus.
     """
     with django_assert_max_num_queries(10):
         ScrutinAPI.getVotationMatrixWithMetaInfo()
-
-    with django_assert_max_num_queries(10):
-        ScrutinAPI.get_nb_inscrit()
 
 
 @pytest.mark.lent

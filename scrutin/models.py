@@ -108,6 +108,16 @@ class ResultatCommunalEnCours(models.Model):
     bulletins_rentres = models.IntegerField(null=True)
     electeur_election_precedente = models.IntegerField()
     comptabilise = models.BooleanField(default=False)
+
+    class Meta:
+        # L'invariant « une seule ligne par commune et par objet » n'était tenu
+        # que par le code : un doublon faisait compter la commune deux fois par
+        # l'extrapolation, une fois réelle et une fois à estimer.
+        constraints = [
+            models.UniqueConstraint(fields=["commune", "sujet_vote"],
+                                    name="une_ligne_par_commune_et_objet"),
+        ]
+
     def __str__(self):
         return str(self.commune) + " " + str(self.sujet_vote)
     def get_pourcentage_oui(self):
@@ -170,16 +180,3 @@ class ScrutinAPI:
             if not sujets:
                 sujets = [voix.sujet_vote.nom for voix in voixs]
         return (sujets, valid_communes), percentage_oui_all_commune
-
-    def get_nb_inscrit():
-        attendu = nb_sujets_historiques()
-        resultats = resultats_historiques_par_commune()
-        nb_inscrit_all_commune = []
-        for commune in Commune.objects.all():
-            voixs = resultats.get(commune.id, [])
-            if len(voixs) != attendu:
-                warnings.warn(f"{commune} has only {len(voixs)} of {attendu} historical "
-                              "results and will be dropped from the result")
-                continue
-            nb_inscrit_all_commune.append((commune.nom, [(voix.electeurs_inscrits, voix.sujet_vote.date) for voix in voixs]))
-        return nb_inscrit_all_commune

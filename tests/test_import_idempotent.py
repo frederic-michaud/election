@@ -9,8 +9,11 @@ fois pour de vrai, une fois comme commune à estimer.
 
 import datetime
 import json
+from importlib import import_module
+from types import SimpleNamespace
 
 import pytest
+from django.db.utils import IntegrityError
 
 from scrutin.management.commands.add_initial_scrutin_en_cours import (
     import_votation as import_initial,
@@ -18,7 +21,7 @@ from scrutin.management.commands.add_initial_scrutin_en_cours import (
 from scrutin.management.commands.update_scrutin_en_cours import (
     import_votation as import_mise_a_jour,
 )
-from scrutin.models import Canton, Commune, District, ResultatCommunalEnCours
+from scrutin.models import Canton, Commune, District, ResultatCommunalEnCours, SujetVote
 
 OFS = [1001, 1002, 1003]
 
@@ -109,3 +112,28 @@ def test_la_date_du_sujet_vient_du_json(communes, tmp_path):
 
     ligne = ResultatCommunalEnCours.objects.first()
     assert ligne.sujet_vote.date == datetime.date(2026, 9, 27)
+
+
+@pytest.mark.django_db
+def test_la_base_refuse_desormais_un_doublon(communes):
+    """L'invariant n'était tenu que par le code ; il l'est maintenant par la base."""
+    sujet = SujetVote.objects.create(nom="Objet", sujet_id=8000,
+                                     date=datetime.date(2026, 9, 27))
+    commune = Commune.objects.first()
+    ResultatCommunalEnCours.objects.create(commune=commune, sujet_vote=sujet,
+                                           electeur_election_precedente=10)
+
+    with pytest.raises(IntegrityError):
+        ResultatCommunalEnCours.objects.create(commune=commune, sujet_vote=sujet,
+                                               electeur_election_precedente=10)
+
+
+def test_la_migration_garde_la_ligne_depouillee():
+    """Une base ancienne peut porter des doublons : on garde le bon."""
+    module = import_module(
+        "scrutin.migrations.0002_resultatcommunalencours_une_ligne_par_commune_et_objet")
+    vide = SimpleNamespace(comptabilise=False, nombre_oui=None)
+    depouillee = SimpleNamespace(comptabilise=True, nombre_oui=400)
+
+    assert module.meilleure(depouillee, vide)
+    assert not module.meilleure(vide, depouillee)
