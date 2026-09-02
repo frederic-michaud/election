@@ -35,10 +35,12 @@
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
       <div class="navigation" id="Topnav">
-        <a href="/">Home</a>
-        <a href="NA">Cartes</a>
-        <a href="methode">Méthodes</a>
-        <a href="contact">Contact</a>
+        <a href="{% url 'home' %}">Accueil</a>
+        <a href="{% url 'cartes' %}">Cartes</a>
+        {# Onglets éditables : un par PageStatique, servis par le context processor. #}
+        {% for page in pages_statiques %}
+        <a href="{% url 'page' page.url %}">{{ page.titre }}</a>
+        {% endfor %}
         <a href="javascript:void(0);" class="icon" onclick="myFunction()">
           <i class="fa fa-bars"></i>
         </a>

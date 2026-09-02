@@ -468,8 +468,11 @@ Dans les deux cas :
       `page_statique.context_processors.menu` injecte `pages_statiques` dans
       tous les gabarits, triées par le nouveau champ `ordre` puis par titre
       (migration `0002`).
-- [ ] **[I]** `base.html` boucle sur `pages_statiques` au lieu des `<a>` en
-      dur — **seul morceau restant**, la donnée est prête côté M.
+- [x] **[I]** `base.html` boucle sur `pages_statiques` au lieu des `<a>` en
+      dur. Fait côté M **à la demande de Frédéric**, malgré la règle des zones.
+      Accueil et Cartes restent écrits à la main, ce sont de vraies routes ;
+      les trois liens passent par `{% url %}`, ce qui a réparé l'onglet Cartes
+      qui pointait sur `NA`.
       Accueil et Cartes restent écrits à la main : ce sont de vraies routes,
       pas des pages en base. Au passage, l'onglet Cartes pointe sur `NA`, qui
       n'existe pas : la route est `/cartes`.
