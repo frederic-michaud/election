@@ -93,6 +93,7 @@ Amorçage, **dans cet ordre** (chaque étape dépend de la précédente) :
 populate_commune          # cantons, districts, communes
 import_metadata_commune   # langue, degré d'urbanisation
 populate_voix             # 55 votations historiques  (⚠ supprime tous les SujetVote)
+                          #   ou : importer_historique <json…> (open data fédéral)
 set_nb_voix_commune       # Commune.nb_voix = électeurs de la dernière votation
 populate_pca              # ACP → PCAResult          (⚠ supprime tous les PCAResult)
 add_initial_scrutin_en_cours <json_du_scrutin>   # lignes vides du jour J
@@ -113,6 +114,17 @@ sème les lignes vides (`get_or_create`), `update_scrutin_en_cours` les remplit
 (`update_or_create`). Il n'y a donc jamais qu'une ligne `ResultatCommunalEnCours` par
 commune et par objet — l'invariant n'est pas garanti par la base, seulement par
 le code et `tests/test_import_idempotent.py`.
+
+Le lendemain du scrutin, `archiver_scrutin [--date AAAA-MM-JJ]` verse les
+résultats **comptabilisés** du jour J dans `ResultatCommunalHistorique` :
+l'ACP gagne une votation sans réimporter quoi que ce soit. Les lignes
+`comptabilise=False` sont ignorées — ce sont les estimations écrites par
+`run_extrapolation`, les archiver nourrirait l'ACP de chiffres inventés.
+
+`importer_historique <json…>` reconstruit l'historique depuis les JSON de
+l'open data fédéral, au même format que le jour J. Il remplace
+`donnee_federale_v3.txt`, fichier hors dépôt au format exotique dont il ne
+reste aucune copie sur la machine du projet.
 
 `create_fake_json_input <json_du_scrutin> [<sortie>]` fabrique un JSON
 de test en rejouant d'anciens résultats sur 5 % des communes tirées au hasard :

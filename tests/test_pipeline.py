@@ -18,7 +18,14 @@ from django.core.management import call_command
 from page_statique.models import PageStatique
 from pca.models import PCAResult
 from scrutin.extrapolation import get_extrapolation
-from scrutin.models import Commune, ResultatCommunalEnCours, ScrutinAPI, SujetVote
+from scrutin.management.commands.archiver_scrutin import archiver
+from scrutin.models import (
+    Commune,
+    ResultatCommunalEnCours,
+    ResultatCommunalHistorique,
+    ScrutinAPI,
+    SujetVote,
+)
 
 NB_VOTATIONS_HISTORIQUES = 55
 
@@ -127,3 +134,18 @@ def test_l_extrapolation_corrige_le_biais_du_depouillement_partiel(base_demo):
 def test_la_demo_seme_les_pages_du_menu(base_demo):
     """Sans elles, les onglets Méthodes et Contact tombent en 404."""
     assert set(PageStatique.objects.values_list("url", flat=True)) == {"methode", "contact"}
+
+
+@pytest.mark.lent
+@pytest.mark.django_db
+def test_archiver_le_jour_j_ajoute_une_votation_a_l_historique(base_demo):
+    """L'ACP se bonifie à chaque scrutin, sans réimporter quoi que ce soit."""
+    avant = ResultatCommunalHistorique.objects.count()
+    jour = SujetVote.objects.latest("date").date
+    comptabilisees = ResultatCommunalEnCours.objects.filter(
+        sujet_vote__date=jour, comptabilise=True).count()
+
+    archives, ignores = archiver(jour)
+
+    assert archives == comptabilisees
+    assert ResultatCommunalHistorique.objects.count() == avant + comptabilisees

@@ -306,9 +306,11 @@ mise à jour à l'époque ; corrigé le 2026-08-30 en relisant le repo.)*
       fichiers sources : liste des communes, méta-info (langue, urbanisation).
 - [ ] Documenter la provenance de `donnee_federale_v3.txt` (55 votations
       historiques) et le format attendu — c'est l'intrant de l'ACP, il est
-      aujourd'hui irremplaçable s'il est perdu. **À vérifier : en existe-t-il
-      encore une copie quelque part ?** Sinon, prévoir un script de
-      reconstruction depuis opendata.swiss (B4).
+      aujourd'hui irremplaçable s'il est perdu. **Vérifié le 2026-09-02 : plus
+      aucune copie sur la machine du projet** (recherche sur `/home`, `/srv`,
+      `/opt`, `/tmp`). Le script de reconstruction existe désormais
+      (`importer_historique`, B4) ; reste à rassembler les JSON sources, ce qui
+      est du sourcing, donc voie I.
 
 ---
 
@@ -386,12 +388,17 @@ future sans toucher au code** — seulement la config et les données.
       d'avancement du jour J restent visibles.
 
 ### B4. Données historiques pérennes — **[I]** sources, **[M]** code
-- [ ] Script de (re)construction de la matrice historique depuis les données
-      ouvertes de la Confédération (opendata.swiss / BFS), pour ne plus dépendre
-      du fichier `donnee_federale_v3.txt` au format exotique.
-- [ ] Mettre à jour l'historique après chaque votation (les résultats définitifs
-      du jour J rejoignent `ResultatCommunalHistorique` → l'ACP se bonifie toute seule). En faire une
-      management command : `manage.py archiver_scrutin`.
+- [x] Script de (re)construction de la matrice historique depuis les données
+      ouvertes de la Confédération : `manage.py importer_historique <json…>`,
+      qui lit le **même format que le jour J** (un fichier par dimanche de
+      votation) et écrit en `update_or_create`. Testé hors ligne sur des JSON
+      synthétiques. *Reste côté I* : rassembler les fichiers des 55 votations
+      et vérifier le résultat sur données réelles — le sourcing est voie I.
+- [x] Mettre à jour l'historique après chaque votation : `manage.py
+      archiver_scrutin [--date]`. **N'archive que les lignes
+      `comptabilise=True`** ; les autres portent les estimations de
+      `run_extrapolation`, et les archiver nourrirait l'ACP de chiffres
+      inventés. Vérifié aussi sur la base fictive.
 
 ### B5. Communes dans le temps — fusions et mutations (voir Partie 6) **[2]**
 Chantier structurant de la phase B : remplacer les cinq rustines actuelles
