@@ -15,6 +15,7 @@ import warnings
 import pytest
 from django.core.management import call_command
 
+from page_statique.models import PageStatique
 from pca.models import PCAResult
 from scrutin.extrapolation import get_extrapolation
 from scrutin.models import Commune, ResultatCommunalEnCours, ScrutinAPI, SujetVote
@@ -119,3 +120,10 @@ def test_l_extrapolation_corrige_le_biais_du_depouillement_partiel(base_demo):
         # moitié des communes rentrées mais les plus petites, elle reste faible.
         assert 0 < avance < 1
         assert len(sans_resultat) > 0
+
+
+@pytest.mark.lent
+@pytest.mark.django_db
+def test_la_demo_seme_les_pages_du_menu(base_demo):
+    """Sans elles, les onglets Méthodes et Contact tombent en 404."""
+    assert set(PageStatique.objects.values_list("url", flat=True)) == {"methode", "contact"}
