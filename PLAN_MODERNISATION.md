@@ -309,6 +309,14 @@ mise à jour à l'époque ; corrigé le 2026-08-30 en relisant le repo.)*
       aujourd'hui irremplaçable s'il est perdu. **À vérifier : en existe-t-il
       encore une copie quelque part ?** Sinon, prévoir un script de
       reconstruction depuis opendata.swiss (B4).
+      *Note pour la Partie 6* : ce fichier n'appareille les communes **que par
+      nom** (`populate_voix.py`, colonne `commune`, aucun numéro OFS) — c'est
+      la cause racine du dict `fusions` codé en dur. Documenter/sécuriser le
+      fichier ici n'élimine pas ce problème : la donnée de vote par nom reste
+      un intrant légitime (c'était le nom exact à la date de la votation),
+      mais la Partie 6 devra la ré-apparier via le référentiel historisé de
+      l'OFS plutôt que via le dict `fusions` (voir Partie 6, étape
+      d'implémentation 2).
 
 ---
 
@@ -555,6 +563,10 @@ ad hoc, tous fragiles :
 1. **Dict `fusions` en dur** (`populate_voix.py:5`) : 19 communes → héritière,
    appariées **par nom**, sommées à l'import historique. Contient déjà un cas
    non trivial : Clavaleyres → Murten est un **changement de canton** (BE→FR).
+   Cause racine : `donnee_federale_v3.txt` (voir A6) n'identifie les communes
+   que par leur nom à la date de la votation, sans numéro OFS — le dict
+   `fusions` est la traduction manuelle, forcément incomplète, de ces anciens
+   noms vers les communes actuelles.
 2. **Exclusions nominatives** de Rüti bei Lyssach / Jaberg dans 3 scripts jour-J.
    Cause racine : commune présente en base mais sans les 55 `ResultatCommunalHistorique` → pas de
    `PCAResult` → `get_extrapolation` lève et **tout le jour J plante**.
