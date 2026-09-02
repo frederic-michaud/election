@@ -1,14 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 
 from page_statique.models import PageStatique
 
 
-# a useless comment here.
-def static_view(requete, *args, **kwargs):
-    pages = PageStatique.objects.filter(url = requete.path[1:])
-    if len(pages) == 1:
-        page = pages[0]
-    else:
-        raise Exception(requete.path)
-
-    return render(requete, "static.html", {"page_content" : page})
+def static_view(requete, url):
+    page = get_object_or_404(PageStatique, url=url)
+    return render(requete, "static.html", {"page_content": page})

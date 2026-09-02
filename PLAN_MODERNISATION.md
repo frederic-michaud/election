@@ -323,8 +323,10 @@ future sans toucher au code** — seulement la config et les données.
       - [x] pandas : `fillna(method='ffill')` déprécié → `.ffill()` (populate_voix) ;
       - [ ] plotly : `px.choropleth_mapbox` déprécié dans les versions récentes →
         `px.choropleth_map` (MapLibre) ; vérifier le rendu des cartes ;
-      - [ ] la route attrape-tout `path("<str>", …)` fonctionne mais mérite
-        `path("<slug:url>", …)` + 404 propre au lieu d'une exception brute.
+      - [x] la route attrape-tout `path("<str>", …)` → `path("<slug:url>", …)`
+        + `get_object_or_404` : une URL inconnue (favicon, page absente de la
+        base) renvoie 404 au lieu d'un 500. *Reste côté I* : un `404.html`
+        dans la charte. Les liens morts du menu sont traités en D1.
 - [x] Passer les scripts `runscript` en **management commands Django natives**
       (`python manage.py <nom> [args]`, `--help`). `scripts/` a disparu, les
       commandes vivent dans `scrutin/management/commands/` (et `populate_pca`
@@ -451,8 +453,30 @@ Dans les deux cas :
 - [ ] Courbe de **convergence de la soirée** : les instantanés `Extrapolation`
       horodatés sont déjà en base, il n'y a qu'à les tracer (projection vs heure,
       avec le résultat final en ligne de référence).
-- [ ] Page « Méthodes » réécrite ; passer `page_statique` (contenu en DB) à des
-      fichiers markdown versionnés rendus par Django.
+- [x] **Décidé le 2026-09-01 : `page_statique` reste en base**, contre l'idée
+      initiale de ce plan (fichiers markdown versionnés). L'app date de 2022,
+      fait vingt lignes, ne coûte rien à maintenir, et corriger une coquille un
+      soir de votation ne demande ni commit ni redémarrage : le miroir statique
+      reprend la correction au tour de boucle suivant. Le prix accepté : ce
+      contenu échappe à git, donc ni revue, ni historique, ni retour arrière.
+      Ce qui était réellement bancal, ce n'est pas le stockage mais la
+      **coupure menu / contenu** : les onglets sont en dur dans `base.html`,
+      donc ajouter une page oblige de toute façon à éditer le gabarit, et une
+      page écrite dans un clone n'existe pas dans l'autre. D'où les trois
+      tâches ci-dessous, qui remplacent la migration vers markdown.
+- [ ] **[M]** Menu construit depuis la base : un *context processor* de
+      `page_statique` injecte les `PageStatique` dans tous les gabarits.
+      Prévoir un champ `ordre` et sa migration pour fixer l'ordre des onglets,
+      sinon tri par titre.
+- [ ] **[I]** `base.html` boucle sur ces pages au lieu des trois `<a>` en dur.
+      Accueil et Cartes restent écrits à la main : ce sont de vraies routes,
+      pas des pages en base. Au passage, l'onglet Cartes pointe sur `NA`, qui
+      n'existe pas : la route est `/cartes`.
+- [ ] **[M]** `peupler_demo` sème « Méthodes » et « Contact » : un clone frais
+      doit avoir un menu qui marche, alors qu'aujourd'hui ces deux onglets
+      tombent en 404. Attention, `_vider()` ne purge pas `PageStatique` : soit
+      l'ajouter à la liste, soit passer par `get_or_create`.
+- [ ] **[2]** Page « Méthodes » réécrite — le contenu lui-même, pas le support.
 - [ ] Validation rétrospective : rejouer les votations passées et publier l'erreur
       de projection en fonction de l'avance du dépouillement.
 

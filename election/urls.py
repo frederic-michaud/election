@@ -26,5 +26,5 @@ urlpatterns = [
     path("", home_view, name="home"),
     path("cartes", carte_view, name="cartes"),
     path("pca", pca_view, name="PCA"),
-    path("<str>", static_view)
+    path("<slug:url>", static_view, name="page"),
 ]
