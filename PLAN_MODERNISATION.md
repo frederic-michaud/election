@@ -658,11 +658,30 @@ l'année courante. Zéro code à toucher après une fusion.
 ### Ce qui reste à la main
 
 - **GeoJSON communal** — **[I]**. `data/K4voge_20220501_gf.geojson` est millésimé
-  mai 2022. Il lui manque 10 communes existant aujourd'hui : Andelfingen (291),
-  Fétigny-Ménières (2056), Grolley-Ponthaux (2239), Neckertal (3396),
-  Herznach-Ueken (4186), Lema (5395), Laténa (6513), Damphreux-Lugnez (6811),
-  Basse-Vendline (6812) et Moutier (6831). Les cartes ont donc des trous.
-  Il faut un millésime 2026, en WGS84 pour Plotly.
+  mai 2022 : il lui manque 10 communes actuelles (Andelfingen 291,
+  Fétigny-Ménières 2056, Grolley-Ponthaux 2239, Neckertal 3396,
+  Herznach-Ueken 4186, Lema 5395, Laténa 6513, Damphreux-Lugnez 6811,
+  Basse-Vendline 6812, Moutier 6831) **et il porte 46 géométries périmées**,
+  communes fusionnées depuis 2022.
+
+  *Source identifiée le 2026-09-03* : le jeu opendata.swiss
+  `geodaten-zu-den-eidgenoessischen-abstimmungsvorlagen` publie les géométries
+  qui accompagnent les résultats du jour J, un millésime par date de votation.
+  C'est le **même produit** que le fichier actuel, une génération plus récente :
+  `k4voge_zk_bk_kt_s_20260101gf.json`, état au 1er janvier 2026. Mêmes propriétés
+  (`vogeId`, `vogeName`, `bezkId`, …), donc remplacement direct. Vérifié :
+  ses 2 105 communes correspondent **exactement** à celles du fichier du
+  14 juin 2026, les deux différences symétriques sont vides.
+
+  Deux points d'intégration : la source est en **TopoJSON quantifié, en LV95
+  (EPSG:2056)**, à convertir en GeoJSON WGS84 pour Plotly ; et l'URL de
+  téléchargement change à chaque millésime, donc passer par l'API CKAN
+  (`ckan.opendata.swiss/api/3/action/package_show?id=…`) plutôt que coder un
+  lien en dur.
+- **`carte/API.py` apparie les géométries par `vogeName`**, donc par nom, alors
+  que tout le reste du code utilise le numéro OFS. Les noms sont uniques dans
+  les deux millésimes, ce n'est donc pas un bug aujourd'hui — mais c'est la
+  dernière survivance du matching par nom. À basculer sur `vogeId` **[I]**.
 - **Approximations assumées**, inchangées : les échanges partiels de territoire
   sont traités comme « pas de mutation ». Les pseudo-communes « étranger »
   restent hors carte mais **dans** l'extrapolation, leur profil de vote étant un
