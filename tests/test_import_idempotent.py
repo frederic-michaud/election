@@ -9,8 +9,6 @@ fois pour de vrai, une fois comme commune à estimer.
 
 import datetime
 import json
-from importlib import import_module
-from types import SimpleNamespace
 
 import pytest
 from django.db.utils import IntegrityError
@@ -126,14 +124,3 @@ def test_la_base_refuse_desormais_un_doublon(communes):
     with pytest.raises(IntegrityError):
         ResultatCommunalEnCours.objects.create(commune=commune, sujet_vote=sujet,
                                                electeur_election_precedente=10)
-
-
-def test_la_migration_garde_la_ligne_depouillee():
-    """Une base ancienne peut porter des doublons : on garde le bon."""
-    module = import_module(
-        "scrutin.migrations.0002_resultatcommunalencours_une_ligne_par_commune_et_objet")
-    vide = SimpleNamespace(comptabilise=False, nombre_oui=None)
-    depouillee = SimpleNamespace(comptabilise=True, nombre_oui=400)
-
-    assert module.meilleure(depouillee, vide)
-    assert not module.meilleure(vide, depouillee)

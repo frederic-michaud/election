@@ -361,9 +361,9 @@ future sans toucher au code** — seulement la config et les données.
       Sur la base de démo (2 141 communes × 55 objets) : 4 339 → 3 requêtes pour
       la matrice ACP (1,9 s → 1,1 s), et 20,3 s → 1,3 s pour `get_nb_inscrit`,
       qui interrogeait la base à *chaque* accès à `sujet_vote.date`.
-      *Suite* : `get_nb_inscrit` n'avait aucun appelant hors de son propre
-      test de non-régression ; supprimée, avec ce test. Un `git revert` la
-      ramène si elle servait à quelque chose hors du dépôt.
+      *À noter* : `get_nb_inscrit` n'a aucun appelant dans le code applicatif —
+      seul le test de non-régression sur le nombre de requêtes l'exerce. À
+      supprimer (avec son test) si personne ne la réclame.
 - [x] Rendre les imports **idempotents** (relançables sans doublons) :
       `update_or_create` plutôt que `save()` aveugle. C'était pire que prévu —
       le doublon n'attendait pas un rejeu : `add_initial_scrutin_en_cours` crée
@@ -371,9 +371,7 @@ future sans toucher au code** — seulement la config et les données.
       premier import, et l'extrapolation comptait la commune deux fois (une
       réelle, une estimée).
       *Fait* : contrainte d'unicité `(commune, sujet_vote)` en base
-      (migration `scrutin/0002`). Elle ne peut pas échouer sur une base
-      portant déjà des doublons : la migration les résorbe d'abord, en gardant
-      la ligne dépouillée plutôt que la ligne vide.
+      (migration `scrutin/0002`).
 - [x] Séparer « résultat extrapolé » et « résultat observé » : déjà porté par
       `ResultatCommunalEnCours.comptabilise`, auquel `run_extrapolation` ne touche
       pas. Ni champ dédié ni migration.

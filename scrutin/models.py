@@ -180,3 +180,15 @@ class ScrutinAPI:
             if not sujets:
                 sujets = [voix.sujet_vote.nom for voix in voixs]
         return (sujets, valid_communes), percentage_oui_all_commune
+    def get_nb_inscrit():
+        attendu = nb_sujets_historiques()
+        resultats = resultats_historiques_par_commune()
+        nb_inscrit_all_commune = []
+        for commune in Commune.objects.all():
+            voixs = resultats.get(commune.id, [])
+            if len(voixs) != attendu:
+                warnings.warn(f"{commune} has only {len(voixs)} of {attendu} historical "
+                              "results and will be dropped from the result")
+                continue
+            nb_inscrit_all_commune.append((commune.nom, [(voix.electeurs_inscrits, voix.sujet_vote.date) for voix in voixs]))
+        return nb_inscrit_all_commune
