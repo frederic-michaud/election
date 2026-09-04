@@ -138,8 +138,39 @@ ligne est une photo statique régénérée en boucle — ce qui le rend insensib
 charge un soir de votation. Toute modification doit rester compatible avec cette
 aspiration (pas de contenu dépendant d'une requête utilisateur, pas de POST).
 
-Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/`,
-`~/env/django/bin/activate`, et les noms `votation_septembre_2022_*`.
+Le script ne contient plus de valeurs codées en dur : tout se surcharge par
+l'environnement (`DATE_SCRUTIN`, `DOSSIER_HTML`, `HOTE_DJANGO`, `MANAGE`,
+`CADENCE`).
+
+### Le conteneur (C1)
+
+`Dockerfile` + `compose.yaml`, **un seul service** : `web`, gunicorn qui sert
+Django. Ni base de données ni proxy — SQLite est un fichier et c'est le serveur
+web de l'hôte qui garde le trafic public. Le port n'est publié que sur
+`127.0.0.1`.
+
+La même image sert à tout : elle contient la pile scientifique, donc les
+commandes du pipeline s'exécutent dedans.
+
+```bash
+docker compose up -d --build
+docker compose run --rm web python manage.py run_extrapolation
+```
+
+Deux points de conception qui expliquent le reste :
+
+- **`./var` est monté sur `/app/var`**, donc au même chemin relatif des deux
+  côtés. `var/scrutins/votation_20260927_3.json` désigne le même fichier sur
+  l'hôte et dans le conteneur : `download_data.sh` passe ses chemins tels quels
+  à des commandes qui tournent, elles, dans le conteneur. C'est aussi là que vit
+  la base, pour que la sauvegarde reste une copie de fichier.
+- **whitenoise** est dans les middlewares : avec `DEBUG=0`, Django refuse de
+  servir `/static/`, et le site sortirait sans CSS ni logo. `collectstatic` est
+  lancé à la construction de l'image.
+
+Ce qui n'est **pas** dans C1, volontairement : pas de service proxy, pas de
+HTTPS, pas de systemd. Ces choix dépendent de C2 (micro-cache devant Django ou
+export statique), qui n'est pas tranché.
 
 ---
 

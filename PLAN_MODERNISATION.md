@@ -425,13 +425,28 @@ Objectif de sortie de phase : **un dimanche de votation se lance avec une seule
 commande, et le site survit à un pic de trafic.**
 
 ### C1. Conteneurisation **[M]**
-- [ ] Docker Compose à **deux services** : `web` (gunicorn) et `proxy`
-      (Caddy ou nginx, HTTPS automatique). Pas de service `db` — le fichier
-      SQLite vit dans un volume monté. Réutiliser les patterns éprouvés de
-      `quantinemo-frontend/infra` (même hébergeur, même gabarit de VPS).
-- [ ] Secrets par `.env` non versionné + `.env.example` ; sauvegarde =
-      **copie datée du fichier SQLite** (`VACUUM INTO`, sûr à chaud),
-      quotidienne — l'historique `ResultatCommunalHistorique` est le bien précieux du projet.
+- [x] Docker Compose à **un seul service** : `web`, gunicorn. Décidé le
+      2026-09-04, contre les deux services prévus. Le service `proxy` n'a de
+      sens que si la production sert Django en direct, ce que C2 n'a pas
+      tranché ; en attendant, le serveur web déjà présent sur l'hôte garde le
+      trafic public et le conteneur ne publie son port que sur `127.0.0.1`.
+      Pas de service `db` : le fichier SQLite vit dans `./var`, monté **au même
+      chemin relatif des deux côtés** pour que `download_data.sh` puisse passer
+      ses chemins à des commandes exécutées dans le conteneur.
+      *Trouvé en passant* : avec `DEBUG=0`, Django ne sert pas `/static/` — le
+      site tournait sous gunicorn sans CSS ni logo. Corrigé par whitenoise et
+      un `collectstatic` à la construction de l'image.
+- [x] Secrets par `.env` non versionné + `.env.example`, déjà en place depuis le
+      jalon 1 ; `compose.yaml` les lit par `env_file`.
+- [ ] Sauvegarde = **copie datée du fichier SQLite** (`VACUUM INTO`, sûr à
+      chaud), quotidienne — l'historique `ResultatCommunalHistorique` est le
+      bien précieux du projet. Reste à faire : `./var` la rend triviale, mais
+      rien ne la déclenche encore.
+- [ ] **Non vérifié** : l'image n'a jamais été construite, faute de Docker sur
+      la machine de développement. Ce qui est testé, c'est la configuration
+      d'exécution — gunicorn avec `DEBUG=0`, `collectstatic`, whitenoise, les
+      pages et les fichiers statiques. À construire une fois sur le VPS avant
+      d'y compter.
 
 ### C2. Remplacer la boucle `wget --recursive` **[M]**
 Le principe statique est bon ; l'implémentation est fragile. Deux options :
