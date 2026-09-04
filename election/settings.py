@@ -66,6 +66,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Sert /static/ quand DEBUG=0, ce que Django ne fait pas de lui-même.
+    # Sans lui, le site tourne sous gunicorn mais sans CSS ni logo.
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

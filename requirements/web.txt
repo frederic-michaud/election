@@ -1,6 +1,10 @@
 # Tout ce qu'il faut pour faire tourner le site.
 # La base est SQLite (bibliothèque standard) : pas de pilote à installer.
 Django==5.2.*
+# Serveur d'application et service des fichiers statiques : avec DEBUG=0,
+# Django refuse de servir /static/ lui-même (voir Dockerfile, compose.yaml).
+gunicorn==23.*
+whitenoise==6.*
 plotly==6.*
 geojson==3.*
 python-dotenv==1.*

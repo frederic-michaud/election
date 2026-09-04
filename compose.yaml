@@ -1,0 +1,23 @@
+# Un seul service. Pas de base de données : SQLite est un fichier, posé dans
+# ./var côté hôte pour que la sauvegarde reste une copie de fichier.
+#
+#   docker compose up -d --build          démarre le site
+#   docker compose run --rm web python manage.py run_extrapolation
+#
+# Le dossier ./var est monté au même chemin relatif des deux côtés : un
+# chemin comme var/scrutins/x.json désigne le même fichier sur l'hôte et
+# dans le conteneur, donc download_data.sh peut passer les siens tels quels.
+#
+# Le port n'est publié que sur l'adresse locale : c'est le serveur web de
+# l'hôte qui reçoit le trafic public et le transmet ici.
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_PATH: /app/var/votation.sqlite3
+    volumes:
+      - ./var:/app/var
+    ports:
+      - "127.0.0.1:8000:8000"

@@ -31,3 +31,6 @@ politiques/          # sortie de wget --recursive
 .idea/
 .vscode/
 .DS_Store
+
+# Données de production montées dans le conteneur (base SQLite).
+/var/

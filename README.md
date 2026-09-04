@@ -109,6 +109,29 @@ python manage.py run_extrapolation
 
 À faire avant chaque votation réelle (voir `PLAN_MODERNISATION.md`, C3).
 
+## Déploiement en conteneur
+
+Une image, un service. Elle sert le site *et* exécute les commandes du
+pipeline, puisqu'elle embarque la pile scientifique.
+
+```bash
+cp .env.example .env        # renseigner SECRET_KEY et ALLOWED_HOSTS
+docker compose up -d --build
+docker compose run --rm web python manage.py migrate
+docker compose run --rm web python manage.py peupler_demo
+```
+
+Le site écoute alors sur `127.0.0.1:8000`, **uniquement en local** : le
+serveur web de la machine hôte reçoit le trafic public et le transmet. Rien
+d'autre n'est à installer sur l'hôte que Docker.
+
+La base SQLite et les JSON de scrutin vivent dans `./var`, monté dans le
+conteneur au même chemin relatif. Sauvegarder le site, c'est copier ce
+dossier.
+
+Pour travailler sans Docker, rien ne change : le `runserver` de la section
+« Mise en route » reste la façon normale de développer.
+
 ## Configuration
 
 Tout passe par l'environnement ou un fichier `.env` non versionné — voir
