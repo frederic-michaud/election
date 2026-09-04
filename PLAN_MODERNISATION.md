@@ -345,7 +345,7 @@ future sans toucher au code** — seulement la config et les données.
 - [x] Le « 55 » de `ScrutinAPI` → `nb_sujets_historiques()`, déduit des `ResultatCommunalHistorique`.
       Pas de champ booléen ni de convention par date : un objet est historique
       s'il a des `ResultatCommunalHistorique`, ce qui est déjà la distinction structurante du modèle.
-      Le critère « ≥ N % des sujets » est laissé à la Partie 6 — il change les
+      Le critère « ≥ N % des sujets » est laissé à B4 — il change les
       entrées de l'ACP, ce n'est pas du dé-harcodage.
 - [x] `update_scrutin_en_cours.get_new_commune` : `range(2)` → itère sur tous les
       objets du scrutin (il plantait aussi sur un scrutin à objet unique).
@@ -401,16 +401,6 @@ livre l'historique **déjà harmonisé sur les communes actuelles**. Voir Partie
       depuis 1960 ; le code actuel en utilise 55. Plus d'objets = un profil de
       commune plus fin, mais aussi plus de communes à couverture incomplète.
 
-**Abandonné : `manage.py archiver_scrutin`.** L'idée était de verser les résultats
-du jour J dans l'historique pour que l'ACP se bonifie. Devenu inutile : STAT-TAB
-publie les résultats définitifs de chaque scrutin, déjà harmonisés, et
-`importer_historique` rejoué avant chaque votation les récupère. Écrire une
-seconde voie d'écriture vers `ResultatCommunalHistorique` — avec son piège propre,
-`run_extrapolation` ayant rempli les lignes non dépouillées d'estimations —
-coûterait plus cher que de relancer un import.
-*Seule réserve* : l'OFS met le cube à jour avec quelques semaines de décalage.
-Sans importance ici, puisque l'import se relance entre deux scrutins.
-
 ### B5. Communes dans le temps — fusions et mutations (voir Partie 6) **[2]**
 *Révisé le 2026-09-03 : ramené de « chantier structurant » à « conséquence de
 B4 ». L'OFS harmonise l'historique à notre place.*
@@ -426,9 +416,8 @@ Reste de B5, une fois B4 fait :
       non versionnés de `../data`. Règle au passage le piège n° 1, les deux
       racines de données.
 - [ ] Jour J blindé : commune sans profil ACP → repli sur le profil moyen du
-      district + log, jamais une exception qui tue l'extrapolation. C'est le
-      seul point du design initial qui garde tout son intérêt.
-- [ ] **[I]** GeoJSON communal à jour — voir Partie 6, « ce qui reste à la main ».
+      district + log, jamais une exception qui tue l'extrapolation.
+- [ ] **[I]** GeoJSON communal à jour — voir Partie 6.
 
 ---
 
@@ -578,124 +567,32 @@ extrapolation qui tourne, site consultable. La conteneurisation peut suivre.
 
 ---
 
-## Partie 6 — Gestion des mutations de communes (design)
+## Partie 6 — Mutations de communes
 
-### Le problème *(tel qu'il se posait avant le 2026-09-03)*
-La Suisse fusionne 10 à 30 communes par an (plus renommages, changements de
-canton, échanges de territoire). Le code actuel gère ça par cinq mécanismes
-ad hoc, tous fragiles :
+*Révisé le 2026-09-03.* Cette partie décrivait un référentiel de communes
+historisé à bâtir nous-mêmes (versions, mutations, résolution). Abandonné :
+l'OFS publie l'historique des votations **déjà harmonisé sur les communes
+actuelles** (voir B4), et les 2 105 communes du fichier du jour J s'y retrouvent
+toutes. L'appariement par numéro OFS suffit.
 
-1. **Dict `fusions` en dur** (`populate_voix.py:5`) : 19 communes → héritière,
-   appariées **par nom**, sommées à l'import historique. Contient déjà un cas
-   non trivial : Clavaleyres → Murten est un **changement de canton** (BE→FR).
-2. **Exclusions nominatives** de Rüti bei Lyssach / Jaberg dans 3 scripts jour-J.
-   Cause racine : commune présente en base mais sans les 55 `ResultatCommunalHistorique` → pas de
-   `PCAResult` → `get_extrapolation` lève et **tout le jour J plante**.
-3. **Pseudo-communes « XX-étranger »** avec OFS 9010–9250 attribués à la main,
-   détectées par sous-chaîne `Ausland/étranger/estero`.
-4. **Filtre « exactement 55 ResultatCommunalHistorique »** : écarte silencieusement de l'ACP toute
-   commune à historique incomplet (le `Warning()` sans effet masque tout).
-5. **Trois systèmes de clés** : historique par nom, jour J par n° OFS, cartes par
-   `vogeId`/`vogeName` sur un GeoJSON millésimé 2022-05-01.
+### Ce qui reste à faire
 
-Chaque mutation = du code à éditer à plusieurs endroits ; tout oubli = crash le
-soir du scrutin ou commune silencieusement perdue.
-
-### Ce que la Confédération fournit déjà — *constaté et mesuré le 2026-09-03*
-
-Le design ci-dessous partait de l'idée qu'il fallait reconstruire nous-mêmes
-l'historique des mutations. C'est faux : **l'OFS publie déjà l'historique des
-votations harmonisé sur les communes actuelles.**
-
-**Le cube STAT-TAB `px-x-1703030000_101`** — « Votations populaires, résultats au
-niveau des communes depuis 1960 ». API PX-Web en JSON, requête POST, sans clé.
-La note du tableau annonce « communes au 01.01.2026 » et précise que
-l'harmonisation ne touche que la répartition entre communes, les totaux restant
-inchangés. Vérifié : Murten et Zurzach, nées de fusions en 2022, ont bien un
-résultat pour la votation de septembre 2014. L'OFS a sommé les ancêtres.
-
-**L'API AGVCH** (`agvchapp.bfs.admin.ch/api/communes/…`, CSV, sans clé) offre
-`snapshot`, `mutations` et `levels`. Seul `levels` reste utile, pour la langue et
-le degré d'urbanisation. Les mutations n'ont plus à être rejouées.
-
-**Les deux sources s'alignent.** Le fichier de résultats du jour J déclare
-lui-même son millésime de communes dans `spatial_reference` : `voge` au
-2026-01-01, soit exactement la date d'harmonisation de STAT-TAB.
-
-Comparaison du vrai fichier fédéral du 14 juin 2026 avec le cube :
-
-| | Communes | Pseudo-communes « étranger » |
-|---|---|---|
-| Jour J, 14.06.2026 | 2 105 | 12 |
-| STAT-TAB historique | 2 110 | 41 |
-
-**Les 2 105 communes du jour J sont toutes dans STAT-TAB.** Sous-ensemble strict,
-zéro exception : la jointure par numéro OFS suffit. Les 5 communes en trop côté
-STAT-TAB partagent une urne avec une voisine (Meienried avec Büren an der Aare,
-Hellsau avec Höchstetten…) et ne sont pas reportées séparément le jour du vote.
-Les 29 entrées « étranger » en trop sont un découpage plus fin (Suisses de
-l'étranger, vote par correspondance) que le jour J n'individualise pas.
-
-### Le design retenu : aucun modèle nouveau
-
-Les points 1 à 4 du problème ci-dessus se dissolvent dans B4 :
-
-- Le dict `fusions` et le filtre « 55 exact » disparaissent avec `populate_voix`.
-- Les OFS « étranger » inventés à la main disparaissent aussi : STAT-TAB porte
-  ses propres pseudo-communes, avec leurs numéros 9xxx.
-- Les trois systèmes de clés se réduisent à un seul, le numéro OFS.
-- Les exclusions nominatives (Rüti bei Lyssach, Jaberg) tombent avec le repli sur
-  le profil moyen du district, seul morceau du design initial qui survit.
-
-**Ce qu'on n'écrit pas** : pas de `CommuneVersion`, pas de `Mutation`, pas de DAG
-temporel, pas de fonction `resoudre`, pas d'import eCH-0071. Le référentiel
-historisé était la bonne réponse à une question que l'OFS a déjà tranchée.
-
-**Maintenance** : relancer `importer_historique` entre deux scrutins. L'état des
-communes du cube suit celui du fichier du jour J, tous deux au 1er janvier de
-l'année courante. Zéro code à toucher après une fusion.
-
-### Ce qui reste à la main
-
-- **GeoJSON communal** — **[I]**. `data/K4voge_20220501_gf.geojson` est millésimé
-  mai 2022 : il lui manque 10 communes actuelles (Andelfingen 291,
-  Fétigny-Ménières 2056, Grolley-Ponthaux 2239, Neckertal 3396,
-  Herznach-Ueken 4186, Lema 5395, Laténa 6513, Damphreux-Lugnez 6811,
-  Basse-Vendline 6812, Moutier 6831) **et il porte 46 géométries périmées**,
-  communes fusionnées depuis 2022.
-
-  *Source identifiée le 2026-09-03* : le jeu opendata.swiss
-  `geodaten-zu-den-eidgenoessischen-abstimmungsvorlagen` publie les géométries
-  qui accompagnent les résultats du jour J, un millésime par date de votation.
-  C'est le **même produit** que le fichier actuel, une génération plus récente :
-  `k4voge_zk_bk_kt_s_20260101gf.json`, état au 1er janvier 2026. Mêmes propriétés
-  (`vogeId`, `vogeName`, `bezkId`, …), donc remplacement direct. Vérifié :
-  ses 2 105 communes correspondent **exactement** à celles du fichier du
-  14 juin 2026, les deux différences symétriques sont vides.
-
-  Deux points d'intégration : la source est en **TopoJSON quantifié, en LV95
-  (EPSG:2056)**, à convertir en GeoJSON WGS84 pour Plotly ; et l'URL de
-  téléchargement change à chaque millésime, donc passer par l'API CKAN
-  (`ckan.opendata.swiss/api/3/action/package_show?id=…`) plutôt que coder un
-  lien en dur.
-- **`carte/API.py` apparie les géométries par `vogeName`**, donc par nom, alors
-  que tout le reste du code utilise le numéro OFS. Les noms sont uniques dans
-  les deux millésimes, ce n'est donc pas un bug aujourd'hui — mais c'est la
-  dernière survivance du matching par nom. À basculer sur `vogeId` **[I]**.
-- **Approximations assumées**, inchangées : les échanges partiels de territoire
-  sont traités comme « pas de mutation ». Les pseudo-communes « étranger »
-  restent hors carte mais **dans** l'extrapolation, leur profil de vote étant un
-  signal utile.
-
-### Ordre d'implémentation **[2]**
-1. `importer_historique` depuis STAT-TAB (= B4). Supprime `populate_voix`, le
-   dict `fusions`, les OFS « étranger » et le « 55 exact ».
-2. `import_metadata_commune` sur l'API AGVCH `levels`.
-3. Jour J : repli sur le profil moyen du district. Supprime les exclusions
-   nominatives.
-4. GeoJSON à jour **[I]**.
-5. Test de non-régression : rejouer le scrutin du 14 juin 2026, dont le fichier
-   complet est disponible, et comparer la projection à la réalité connue.
+- **Métadonnées commune [M]** : langue et urbanisation depuis l'API AGVCH
+  `levels`, au lieu des fichiers hors dépôt.
+- **Jour J blindé [M]** : commune sans profil ACP → profil moyen de son district
+  et un log, jamais une exception qui tue l'extrapolation.
+- **GeoJSON 2026 [I]** : l'actuel (mai 2022) manque 10 communes et porte 46
+  géométries périmées. Source : jeu opendata.swiss
+  `geodaten-zu-den-eidgenoessischen-abstimmungsvorlagen`, millésime 01.01.2026,
+  mêmes propriétés donc remplacement direct — à convertir de TopoJSON/LV95 vers
+  GeoJSON/WGS84, et à retrouver par l'API CKAN, l'URL changeant à chaque
+  millésime.
+- **`carte/API.py` [I]** : apparie les géométries par `vogeName`, à basculer sur
+  `vogeId` comme partout ailleurs.
+- **Approximations assumées** : échanges partiels de territoire ignorés ;
+  pseudo-communes « étranger » hors carte mais **dans** l'extrapolation.
+- **Non-régression** : rejouer le scrutin du 14 juin 2026, dont le fichier
+  complet est disponible, et comparer la projection au résultat connu.
 
 ---
 
