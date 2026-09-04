@@ -307,55 +307,8 @@ mise à jour à l'époque ; corrigé le 2026-08-30 en relisant le repo.)*
 - [x] Documenter la provenance de `donnee_federale_v3.txt` (55 votations
       historiques). **Il n'en reste aucune copie** sur les machines du projet.
       Sans objet désormais : B4 reconstruit l'historique depuis STAT-TAB, et
-      `populate_voix` a disparu avec lui.
-
-#### Les deux fichiers restants, et où les prendre (repérage du 2026-09-04)
-
-Les deux CSV que lisent `populate_commune` et `import_metadata_commune`
-viennent de la **même API**, le répertoire officiel des communes de l'OFS
-(AGVCH), sans clé et sans inscription. Ils font 370 Ko à eux deux : ils
-peuvent tout à fait être versionnés dans `data/`, ce qui règle le piège n° 1
-(deux racines de données). Les URL portent la date du millésime.
-
-```bash
-# Cantons, districts, communes — 26 / 144 / 2110 au 01.01.2026
-curl -o data/agvch_communes_2026-01-01.csv \
-  "https://www.agvchapp.bfs.admin.ch/api/communes/snapshot?date=01-01-2026"
-
-# Langue et degré d'urbanisation — une ligne par commune
-curl -o data/agvch_niveaux_2026-01-01.csv \
-  "https://www.agvchapp.bfs.admin.ch/api/communes/levels?date=01-01-2026"
-```
-
-**`snapshot`** remplace `Communes_actuelles.csv`. Trois niveaux dans le même
-fichier, colonne `Level` : `1` canton, `2` district, `3` commune. La hiérarchie
-se chaîne par `Parent` → `HistoricalCode`, **pas** par `BfsCode` (qui n'est
-unique qu'à l'intérieur d'un niveau). `ShortName` d'un canton est son
-abréviation à deux lettres. Les neuf cantons sans districts (UR, OW, NW, GL,
-ZG, BS, AI, NE, GE) ont quand même une ligne de niveau 2 qui les couvre en
-entier, marquée `Rec_Type_fr` = « Canton qui n'est pas subdivisé en
-districts » : rien de spécial à coder, elle se traite comme un district.
-
-**`levels`** remplace `commune_meta_info.txt`. Colonnes utiles, codes
-numériques à traduire nous-mêmes :
-
-| Colonne | Sens | Codes |
-|---|---|---|
-| `BfsCode` | numéro OFS, la jointure | |
-| `SPRGEB2020` | région linguistique | 1 allemand, 2 français, 3 italien, 4 romanche |
-| `DEGURB2021` | degré d'urbanisation (Eurostat DEGURBA) | 1 urbain, 2 intermédiaire, 3 rural |
-
-Vérifié : les deux fichiers portent exactement les mêmes 2 110 communes, et
-`DEGURB2021` donne 135 / 959 / 1 016 communes — l'ancien fichier n'avait que
-deux valeurs (urbain/rural), c'est un choix à trancher avec la voie I puisque
-`peupler_demo` écrit `urbain`/`rural`.
-
-**Écart connu avec le jour J** : le fichier fédéral du 14 juin 2026 contient
-2 117 communes, dont les 12 pseudo-communes « Suisses de l'étranger »
-(OFS 9010…9250) *absentes* du répertoire — c'est B4 qui les crée, à la
-volée. Dans l'autre sens, 5 communes bernoises du répertoire (Meienried 389,
-Hellsau 408, Deisswil 535, Oberhünigen 629, Niedermuhlern 877) ne dépouillent
-pas elles-mêmes et n'apparaissent nulle part dans les résultats.
+      `populate_voix` a disparu avec lui. Le premier point ci-dessus (liste des
+      communes, méta-info) reste entier et n'est pas touché par B4.
 
 ---
 
