@@ -5,7 +5,11 @@ Le cube « Votations populaires, résultats au niveau des communes depuis 1960 �
 actuelles** : une commune fusionnée porte les voix de ses prédécesseurs.
 L'appariement se fait donc par numéro OFS, exactement comme le jour J.
 
-    python manage.py importer_historique --depuis 2010-01-01
+    python manage.py importer_historique --depuis 2014-11-30
+
+Seuls les objets votés depuis `--depuis` sont gardés : les profils de commune
+doivent refléter le vote d'aujourd'hui, pas celui d'il y a vingt ans. Depuis le
+30 novembre 2014, les douze pseudo-communes « étranger » sont toutes publiées.
 
 API PX-Web JSON, sans clé. Les objets sont demandés par lots de 10 : au-delà,
 le pare-feu de l'OFS répond 403 (constaté le 2026-09-04, bien avant la limite
@@ -132,6 +136,7 @@ def importer(depuis, lot=10, rapport=print):
     if inconnus:
         logger.warning("%d numéros OFS du cube absents de la base : %s",
                        len(inconnus), sorted(inconnus))
+    SujetVote.objects.filter(date__lt=depuis).delete()
     return len(codes), total
 
 
@@ -140,8 +145,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--depuis", type=datetime.date.fromisoformat,
-                            default=datetime.date(2010, 1, 1),
-                            help="premier scrutin à charger, AAAA-MM-JJ (défaut : 2010-01-01)")
+                            default=datetime.date(2014, 11, 30),
+                            help="premier scrutin gardé, AAAA-MM-JJ (défaut : 2014-11-30)")
         parser.add_argument("--lot", type=int, default=10,
                             help="objets par appel à l'API (défaut : 10, 403 au-delà)")
 

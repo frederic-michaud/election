@@ -400,11 +400,21 @@ livre l'historique **déjà harmonisé sur les communes actuelles**. Voir Partie
       lu dans le nom (`VD-CH de l'étranger`). Les valeurs `...` (commune sans
       résultat pour cet objet) ne donnent pas de ligne : la commune est alors
       écartée de l'ACP, comme avant.
-- [x] Choisir le nombre d'objets historiques à charger. Défaut provisoire
-      `--depuis 2010-01-01` (144 objets) : depuis 2010 la couverture est stable
-      (mêmes ~35 numéros OFS sans résultat, dont 28 pseudo-communes vides) ; avant,
-      les trous se multiplient (550 communes sans résultat en 1960). À ajuster
-      après la non-régression sur le 14 juin 2026 (Partie 6).
+- [x] Choisir le nombre d'objets historiques à charger. **Décision (Frédéric,
+      2026-09-04) : ne garder que les objets récents, `--depuis 2014-11-30`**
+      par défaut (~100 objets). Deux raisons :
+      - *dérive démographique* : une commune qui a grossi ou changé de
+        population ne vote plus comme il y a vingt ans ; un historique long
+        gagne des colonnes mais brouille le profil actuel, et c'est le profil
+        actuel qui sert le jour J ;
+      - *couverture* : les cantons ont commencé un à un à publier séparément
+        leurs Suisses de l'étranger (TG septembre 2010, VS mars 2012, FR
+        septembre 2012, ZH novembre 2014). Depuis le 30 novembre 2014, les
+        douze pseudo-communes sont complètes, donc dans l'ACP — 59 000
+        électeurs, dont 37 000 pour ZH, qu'on aurait sinon dû traiter à part.
+      Avant 2010 les trous se multiplient (550 communes sans résultat en 1960).
+      La commande purge l'historique antérieur à la fenêtre : un rejeu avec une
+      date plus récente ne mélange pas deux fenêtres.
 
 ### B5. Communes dans le temps — fusions et mutations (voir Partie 6) **[2]**
 *Révisé le 2026-09-03 : ramené de « chantier structurant » à « conséquence de
@@ -601,16 +611,29 @@ toutes. L'appariement par numéro OFS suffit.
   pseudo-communes « étranger » hors carte mais **dans** l'extrapolation.
 - **Non-régression** : rejouer le scrutin du 14 juin 2026, dont le fichier
   complet est disponible, et comparer la projection au résultat connu.
-  *Premier essai le 2026-09-04* (historique STAT-TAB 2010 → mars 2026, ACP sur
-  2 111 communes, la moitié la plus petite des communes dépouillée, soit 11 %
-  des bulletins) : initiative « 10 millions » projetée à 45,9 % pour 45,2 %
-  réel, alors que le dépouillement partiel disait 55,0 % ; service civil
-  projeté à 53,6 % pour 52,5 % réel (partiel : 57,6 %). À automatiser en test.
-  *Constaté au passage* : 4 pseudo-communes « étranger » (FR, TG, VS, ZH) ont
-  un historique incomplet, donc pas de profil ACP, et `run_extrapolation`
-  s'arrête sur une exception dès qu'elles apparaissent dans le fichier du
-  jour J — c'est exactement le « jour J blindé » ci-dessus, à faire avant
-  le 27 septembre.
+  *Fait à la main le 2026-09-04* : historique STAT-TAB de novembre 2014 à
+  mars 2026 (101 objets), ACP sur 2 115 communes, puis les communes les plus
+  petites dépouillées d'abord — comme un vrai dimanche. Résultat réel :
+  45,2 % pour l'initiative « 10 millions », 52,5 % pour le service civil.
+
+  | Communes dépouillées | Bulletins | Partiel (10 M / SC) | Projeté (10 M / SC) |
+  |---|---|---|---|
+  | 25 % | 3 % | 54,9 / 56,9 | 46,0 / 53,8 |
+  | 50 % | 11 % | 55,0 / 57,6 | 45,4 / 53,4 |
+  | 75 % | 28 % | 54,0 / 57,8 | 45,4 / 53,4 |
+
+  Dès 3 % des bulletins, la projection est à moins d'un point (10 M) ou 1,3
+  point (SC) du résultat, là où le dépouillement partiel se trompe de 5 à 10
+  points. Avec l'historique depuis 2010, c'était un peu moins bon (45,9 /
+  53,6 à 50 %) : la fenêtre courte est confirmée. Le biais résiduel sur le
+  service civil (+0,9) ne bouge pas avec l'avance — piste pour l'IC bootstrap
+  (D1). À automatiser en test, avec le fichier complet du 14 juin en fixture.
+  *Constaté au passage* : avant que la fenêtre ne démarre fin 2014, les
+  pseudo-communes « étranger » FR, TG, VS et ZH n'avaient pas de profil ACP
+  et `run_extrapolation` s'arrêtait sur une exception dès qu'elles
+  apparaissaient dans le fichier du jour J. Le « jour J blindé » ci-dessus
+  reste à faire avant le 27 septembre : il suffit d'une commune nouvelle
+  pour retomber dessus.
 
 ---
 

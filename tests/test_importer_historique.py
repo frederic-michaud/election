@@ -115,3 +115,14 @@ def test_depuis_filtre_les_objets_et_lot_decoupe_les_appels(cube, lausanne):
     assert nb_objets == 2
     assert cube.appels == [["6180"], ["6870"]]
     assert list(SujetVote.objects.order_by("date").values_list("sujet_id", flat=True)) == [6180, 6870]
+
+
+def test_resserrer_la_fenetre_purge_l_historique_plus_ancien(cube, lausanne):
+    cube.lignes = cellules("5586", "6180", "1", "1", "1", "1") + cellules("5586", "6870", "1", "1", "1", "1")
+    ih.importer(depuis=datetime.date(2018, 1, 1), rapport=lambda _: None)
+    assert ResultatCommunalHistorique.objects.count() == 2
+
+    ih.importer(depuis=datetime.date(2026, 1, 1), rapport=lambda _: None)
+
+    assert list(ResultatCommunalHistorique.objects.values_list("sujet_vote__sujet_id", flat=True)) == [6870]
+    assert list(SujetVote.objects.values_list("sujet_id", flat=True)) == [6870]
