@@ -305,17 +305,20 @@ mise à jour à l'époque ; corrigé le 2026-08-30 en relisant le repo.)*
 - [x] Rapatrier dans le repo les petits fichiers sources : liste des communes,
       méta-info (langue, urbanisation). Source retenue : le **répertoire
       officiel des communes de l'OFS**, API AGVCH, sans clé ni inscription.
-      Deux exports versionnés dans `data/` (370 Ko à eux deux), millésimés dans
-      leur nom, rafraîchissables par le `curl` inscrit dans la docstring de
-      chaque commande : `agvch_communes_2026-01-01.csv` (`snapshot`) pour
-      `populate_commune`, `agvch_niveaux_2026-01-01.csv` (`levels`) pour
-      `import_metadata_commune`.
-      *Pièges rencontrés, tous couverts par `tests/test_referentiel_communes.py`* :
-      la hiérarchie se chaîne par `Parent` → `HistoricalCode`, jamais par
-      `BfsCode`, et **aucun des deux codes n'est unique en dehors de son
-      niveau** (52 `BfsCode` et 11 `HistoricalCode` sont partagés par un
-      district et une commune) ; les neuf cantons sans districts portent quand
-      même une ligne de niveau 2 qui les couvre en entier.
+      **Un seul export** versionné dans `data/` (268 Ko), millésimé dans son
+      nom, rafraîchissable par le `curl` inscrit dans les docstrings :
+      `agvch_niveaux_2026-01-01.csv` (endpoint `levels`), lu par
+      `populate_commune` **et** `import_metadata_commune`. Une ligne par
+      commune, la hiérarchie déjà jointe : ni chaînage à reconstituer, ni
+      collision de codes à contourner.
+      *L'export `snapshot` a d'abord été retenu en plus, puis abandonné* : il
+      n'apportait que le numéro OFS du district et l'abréviation du canton, au
+      prix d'un chaînage `Parent` → `HistoricalCode` où **aucun des deux codes
+      n'est unique en dehors de son niveau** (52 `BfsCode` et 11
+      `HistoricalCode` sont partagés par un district et une commune). Les
+      abréviations sont reconstituées depuis `CantonId`, et le district porte
+      désormais `code_historique` au lieu d'un `numero_ofs` que personne ne
+      lisait. Couvert par `tests/test_referentiel_communes.py`.
 - [ ] **Degré d'urbanisation : aligner `peupler_demo` [M]**. L'échelle
       officielle `DEGURB2021` a trois degrés (urbain 135 / intermédiaire 959 /
       rural 1 016) et `import_metadata_commune` les reprend tels quels ;
@@ -430,9 +433,9 @@ les communes d'aujourd'hui, appariable par numéro OFS avec le fichier du jour J
 Reste de B5, une fois B4 fait :
 - [x] `import_metadata_commune` : lire langue et degré d'urbanisation depuis
       l'API AGVCH (`api/communes/levels`, CSV, sans clé) au lieu des fichiers
-      non versionnés de `../data`. *Fait en A6*, avec `populate_commune`
-      (export `snapshot`) par la même occasion : le piège n° 1 ne concerne plus
-      que l'historique et les JSON du jour J.
+      non versionnés de `../data`. *Fait en A6* — et `populate_commune` lit le
+      même fichier, la hiérarchie y étant déjà jointe : le piège n° 1 ne
+      concerne plus que l'historique et les JSON du jour J.
 - [ ] Jour J blindé : commune sans profil ACP → repli sur le profil moyen du
       district + log, jamais une exception qui tue l'extrapolation.
 - [ ] **[I]** GeoJSON communal à jour — voir Partie 6.
@@ -598,8 +601,9 @@ toutes. L'appariement par numéro OFS suffit.
 
 ### Ce qui reste à faire
 
-- **Métadonnées commune [M]** : langue et urbanisation depuis l'API AGVCH
-  `levels`, au lieu des fichiers hors dépôt.
+- ~~**Métadonnées commune [M]** : langue et urbanisation depuis l'API AGVCH
+  `levels`, au lieu des fichiers hors dépôt.~~ *Fait en A6, avec tout le
+  référentiel des communes : les deux commandes lisent ce même export.*
 - **Jour J blindé [M]** : commune sans profil ACP → profil moyen de son district
   et un log, jamais une exception qui tue l'extrapolation.
 - **GeoJSON 2026 [I]** : l'actuel (mai 2022) manque 10 communes et porte 46

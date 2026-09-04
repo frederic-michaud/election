@@ -27,7 +27,7 @@ OFS = [1001, 1002, 1003]
 @pytest.fixture
 def communes(db):
     canton = Canton.objects.create(nom="Vaud", abreviation="VD")
-    district = District.objects.create(nom="Lavaux-Oron", numero_ofs=1, canton=canton)
+    district = District.objects.create(nom="Lavaux-Oron", code_historique=1, canton=canton)
     return [
         Commune.objects.create(nom=f"Commune {ofs}", numero_ofs=ofs,
                                canton=canton, district=district, nb_voix=2000)

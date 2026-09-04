@@ -5,12 +5,24 @@ fichier hors dépôt et sans provenance connue. Elle vient maintenant de l'API
 AGVCH (Répertoire officiel des communes de Suisse), sans clé ni inscription,
 et le CSV est versionné dans `data/` :
 
-    curl -o data/agvch_communes_2026-01-01.csv \\
-      "https://www.agvchapp.bfs.admin.ch/api/communes/snapshot?date=01-01-2026"
+    curl -o data/agvch_niveaux_2026-01-01.csv \\
+      "https://www.agvchapp.bfs.admin.ch/api/communes/levels?date=01-01-2026"
 
-Un seul fichier porte les trois niveaux (colonne `Level` : 1 canton,
-2 district, 3 commune). Au 01.01.2026 : 26 cantons, 144 districts,
-2 110 communes.
+Une ligne par commune, la hiérarchie déjà jointe : `BfsCode` et `Name` pour la
+commune, `DistrictId` et `District` pour son district, `CantonId` et `Canton`
+pour son canton. Au 01.01.2026 : 26 cantons, 144 districts, 2 110 communes.
+C'est le même fichier que lit `import_metadata_commune`, qui y prend en plus la
+langue et le degré d'urbanisation.
+
+Deux colonnes manquent au fichier, sans conséquence :
+
+- l'**abréviation** du canton, reconstituée par `CANTONS` ci-dessous — le site
+  est francophone, et AGVCH nomme les cantons dans toutes leurs langues
+  officielles (« Bern / Berne », « Graubünden / Grigioni / Grischun ») ;
+- le **numéro OFS du district** : `DistrictId` est son identifiant
+  d'historisation. D'où `District.code_historique`, qui ne sert qu'à rattacher
+  les communes à leur district au moment de l'import. Les résultats de votation
+  sont rattachés à des communes, jamais à des districts.
 
 **Destructif** : la commande supprime tous les `Canton`, ce qui efface en
 cascade districts, communes, résultats historiques et scrutin en cours. C'est
@@ -25,64 +37,55 @@ from django.db import transaction
 
 from scrutin.models import Canton, Commune, District
 
-NIVEAU_CANTON = 1
-NIVEAU_DISTRICT = 2
-NIVEAU_COMMUNE = 3
+# Numérotation OFS officielle des cantons (colonne `CantonId`), et les noms
+# français que sème déjà `peupler_demo`.
+CANTONS = {
+    1: ("ZH", "Zürich"), 2: ("BE", "Berne"), 3: ("LU", "Lucerne"),
+    4: ("UR", "Uri"), 5: ("SZ", "Schwytz"), 6: ("OW", "Obwald"),
+    7: ("NW", "Nidwald"), 8: ("GL", "Glaris"), 9: ("ZG", "Zoug"),
+    10: ("FR", "Fribourg"), 11: ("SO", "Soleure"), 12: ("BS", "Bâle-Ville"),
+    13: ("BL", "Bâle-Campagne"), 14: ("SH", "Schaffhouse"),
+    15: ("AR", "Appenzell Rhodes-Extérieures"),
+    16: ("AI", "Appenzell Rhodes-Intérieures"), 17: ("SG", "Saint-Gall"),
+    18: ("GR", "Grisons"), 19: ("AG", "Argovie"), 20: ("TG", "Thurgovie"),
+    21: ("TI", "Tessin"), 22: ("VD", "Vaud"), 23: ("VS", "Valais"),
+    24: ("NE", "Neuchâtel"), 25: ("GE", "Genève"), 26: ("JU", "Jura"),
+}
 
-# AGVCH nomme les cantons dans leurs langues officielles (« Bern / Berne »,
-# « Graubünden / Grigioni / Grischun ») ; le site est francophone et
-# peupler_demo sème déjà ces noms-là. L'abréviation, elle, vient du fichier
-# (colonne ShortName des lignes de niveau 1).
-canton_par_abrev = {"ZH": "Zürich", "BE": "Berne", "LU": "Lucerne", "UR": "Uri", "SZ": "Schwytz", "OW": "Obwald",
-                    "NW": "Nidwald", "GL": "Glaris", "ZG": "Zoug", "FR": "Fribourg", "SO": "Soleure",
-                    "BS": "Bâle-Ville", "BL": "Bâle-Campagne", "SH": "Schaffhouse",
-                    "AR": "Appenzell Rhodes-Extérieures", "AI": "Appenzell Rhodes-Intérieures", "SG": "Saint-Gall",
-                    "GR": "Grisons", "AG": "Argovie", "TG": "Thurgovie", "TI": "Tessin", "VD": "Vaud", "VS": "Valais",
-                    "NE": "Neuchâtel", "GE": "Genève", "JU": "Jura"}
 
+def import_commune(path_niveaux):
+    df = pd.read_csv(path_niveaux)
 
-def import_commune(path_snapshot):
-    df = pd.read_csv(path_snapshot)
-
-    # La hiérarchie se chaîne par Parent -> HistoricalCode, jamais par BfsCode.
-    # Aucun des deux codes n'est unique en dehors de son niveau : un district et
-    # une commune peuvent partager le même BfsCode comme le même HistoricalCode.
-    # D'où un dictionnaire de résolution par niveau plutôt qu'un seul global.
     with transaction.atomic():
         Canton.objects.all().delete()  # cascade : districts, communes, historique
 
-        cantons_par_hcode = {}
-        for canton_row in df[df["Level"] == NIVEAU_CANTON].itertuples():
-            canton = Canton.objects.create(
-                nom=canton_par_abrev[canton_row.ShortName],
-                abreviation=canton_row.ShortName,
-            )
-            cantons_par_hcode[canton_row.HistoricalCode] = canton
+        cantons = {}
+        for id_canton in sorted(df["CantonId"].unique()):
+            abreviation, nom = CANTONS[id_canton]
+            cantons[id_canton] = Canton.objects.create(nom=nom, abreviation=abreviation)
 
-        districts_par_hcode = {}
-        for district_row in df[df["Level"] == NIVEAU_DISTRICT].itertuples():
-            district = District.objects.create(
-                nom=district_row.Name,
-                numero_ofs=district_row.BfsCode,
-                canton=cantons_par_hcode[district_row.Parent],
+        districts = {}
+        for district_row in df.drop_duplicates("DistrictId").itertuples():
+            districts[district_row.DistrictId] = District.objects.create(
+                nom=district_row.District,
+                code_historique=district_row.DistrictId,
+                canton=cantons[district_row.CantonId],
             )
-            districts_par_hcode[district_row.HistoricalCode] = district
 
-        for commune_row in df[df["Level"] == NIVEAU_COMMUNE].itertuples():
-            district = districts_par_hcode[commune_row.Parent]
+        for commune_row in df.itertuples():
             Commune.objects.create(
                 nom=commune_row.Name,
                 numero_ofs=commune_row.BfsCode,
-                district=district,
-                canton=district.canton,
+                district=districts[commune_row.DistrictId],
+                canton=cantons[commune_row.CantonId],
             )
 
 
 class Command(BaseCommand):
-    help = "Crée cantons, districts et communes depuis l'export snapshot de l'API AGVCH."
+    help = "Crée cantons, districts et communes depuis l'export levels de l'API AGVCH."
 
     def add_arguments(self, parser):
-        parser.add_argument("csv", nargs="?", default="data/agvch_communes_2026-01-01.csv")
+        parser.add_argument("csv", nargs="?", default="data/agvch_niveaux_2026-01-01.csv")
 
     def handle(self, *args, **options):
         import_commune(options["csv"])

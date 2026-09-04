@@ -98,15 +98,20 @@ populate_pca              # ACP → PCAResult          (⚠ supprime tous les PC
 add_initial_scrutin_en_cours <json_du_scrutin>   # lignes vides du jour J
 ```
 
-Les deux premières étapes lisent le **répertoire officiel des communes de
-l'OFS** (API AGVCH, sans clé), dont les exports sont versionnés dans `data/` :
-`agvch_communes_2026-01-01.csv` (les trois niveaux, colonne `Level`) et
-`agvch_niveaux_2026-01-01.csv` (langue et urbanisation). Les deux commandes
-gardent le chemin en argument optionnel ; les URL de rafraîchissement sont dans
-leurs docstrings. Piège à connaître : la hiérarchie se chaîne par
-`Parent` → `HistoricalCode`, jamais par `BfsCode` — ni l'un ni l'autre n'est
-unique en dehors de son niveau (un district et une commune peuvent partager
-les deux).
+Les deux premières étapes lisent le **même** fichier : `data/agvch_niveaux_2026-01-01.csv`,
+export `levels` du répertoire officiel des communes de l'OFS (API AGVCH, sans
+clé), versionné dans le dépôt. Une ligne par commune, la hiérarchie déjà jointe
+(`BfsCode`, `DistrictId`, `CantonId`) plus la langue et le degré d'urbanisation.
+Les deux commandes gardent le chemin en argument optionnel ; l'URL de
+rafraîchissement est dans leurs docstrings.
+
+Deux colonnes manquent au fichier, sans conséquence : l'**abréviation** du
+canton (reconstituée depuis `CantonId` dans `populate_commune`, AGVCH nommant
+les cantons dans toutes leurs langues officielles) et le **numéro OFS du
+district** — `DistrictId` est son identifiant d'historisation, d'où le nom du
+champ `District.code_historique`. Les résultats de votation sont rattachés à
+des communes, jamais à des districts : la clé qui compte est
+`Commune.numero_ofs` (= `BfsCode` = `geoLevelnummer` du JSON du jour J).
 
 Puis, en boucle le jour du scrutin :
 `update_scrutin_en_cours <json_precedent> <json_courant>` →
@@ -158,8 +163,8 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
 **Données**
 1. **Deux racines de données différentes** — **en voie de disparition** (jalon 2,
    tâche A6). Le référentiel des communes (`populate_commune`,
-   `import_metadata_commune`) lit désormais `data/agvch_*.csv`, versionnés,
-   comme `carte/API.py`. Restent hors du dépôt, en attendant B4 :
+   `import_metadata_commune`) lit désormais `data/agvch_niveaux_2026-01-01.csv`,
+   versionné, comme `carte/API.py`. Restent hors du dépôt, en attendant B4 :
    `donnee_federale_v3.txt` (l'historique, dont plus aucune copie n'existe) et
    les `votation_septembre_2022_*.json` du jour J.
 

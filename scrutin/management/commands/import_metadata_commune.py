@@ -2,7 +2,8 @@
 
 Ces métadonnées venaient de `../data/communes/commune_meta_info.txt`, hors
 dépôt et sans provenance connue. Elles viennent maintenant de l'API AGVCH,
-dont le CSV est versionné dans `data/` :
+dont le CSV est versionné dans `data/` — le **même fichier** que lit
+`populate_commune`, qui y prend la hiérarchie des communes :
 
     curl -o data/agvch_niveaux_2026-01-01.csv \\
       "https://www.agvchapp.bfs.admin.ch/api/communes/levels?date=01-01-2026"

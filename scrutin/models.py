@@ -34,7 +34,10 @@ class Canton(models.Model):
 
 class District(models.Model):
     nom = models.CharField(max_length=50)
-    numero_ofs = models.IntegerField()
+    # Identifiant d'historisation de l'OFS (`DistrictId` / `HistoricalCode` du
+    # répertoire AGVCH), pas un numéro OFS : le fichier `levels` ne publie pas
+    # celui du district. Sert de clé de rattachement à l'import, rien de plus.
+    code_historique = models.IntegerField()
     canton = models.ForeignKey(Canton, on_delete=models.CASCADE)
     def  __str__(self):
         return  self.nom

@@ -146,10 +146,10 @@ class Command(BaseCommand):
         }
 
         District.objects.bulk_create([
-            District(nom=nom, numero_ofs=id_, canton=cantons[id_canton])
+            District(nom=nom, code_historique=id_, canton=cantons[id_canton])
             for id_, (nom, id_canton) in districts.items()
         ])
-        districts_db = {d.numero_ofs: d for d in District.objects.all()}
+        districts_db = {d.code_historique: d for d in District.objects.all()}
 
         # Une composante par district : les profils voisins se ressemblent,
         # sinon la carte serait du poivre et sel et ne dirait rien.

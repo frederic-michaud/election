@@ -2,18 +2,15 @@
 
 `populate_commune` et `import_metadata_commune` lisaient deux CSV hors dépôt,
 dans `../data/communes/`, dont personne ne connaissait plus la provenance.
-Elles lisent maintenant les exports de l'API AGVCH versionnés dans `data/`.
+Elles lisent maintenant le **même** export de l'API AGVCH, versionné dans
+`data/` : une ligne par commune, la hiérarchie déjà jointe.
 
 Le CSV réduit ci-dessous est fait de **vraies lignes** du répertoire au
-01.01.2026, choisies pour les cas qui piègent :
-
-- `Bezirk Affoltern` (district) et `Steinmaur` (commune) portent le même
-  `BfsCode` 101 : le code OFS n'est unique qu'à l'intérieur d'un niveau ;
-- `Wahlkreis Wil` (district) et `Wil (ZH)` (commune) portent le même
-  `HistoricalCode` 10268 : celui-ci non plus n'est unique qu'au sein d'un
-  niveau, alors que c'est lui qui chaîne la hiérarchie via `Parent` ;
-- `Kanton Uri` est une ligne de niveau 2 qui couvre un canton entier — neuf
-  cantons n'ont pas de districts et sont dans ce cas.
+01.01.2026, choisies pour les cas qui comptent : deux communes d'un même
+district, un canton sans districts (`Kanton Uri` est une entrée de district
+qui couvre le canton entier — huit autres cantons sont dans ce cas), les
+quatre langues et les trois degrés d'urbanisation. Le fichier réel porte 29
+colonnes ; seules celles-ci sont lues.
 """
 
 import pytest
@@ -21,58 +18,20 @@ from django.core.management import call_command
 
 from scrutin.models import Canton, Commune, District
 
-SNAPSHOT = """\
-HistoricalCode,BfsCode,ValidFrom,ValidTo,Level,Parent,Name,ShortName,Inscription,Radiation,Rec_Type_fr,Rec_Type_de
-1,1,12.09.1848,,1,,Zürich,ZH,,,,
-4,4,12.09.1848,,1,,Uri,UR,,,,
-10,10,12.09.1848,,1,,Fribourg / Freiburg,FR,,,,
-17,17,12.09.1848,,1,,St. Gallen,SG,,,,
-18,18,12.09.1848,,1,,Graubünden / Grigioni / Grischun,GR,,,,
-21,21,12.09.1848,,1,,Ticino,TI,,,,
-23,23,12.09.1848,,1,,Valais / Wallis,VS,,,,
-10053,101,12.09.1848,,2,1,Bezirk Affoltern,Affoltern,100,,,
-10080,104,12.09.1848,,2,1,Bezirk Dielsdorf,Dielsdorf,100,,,
-10081,103,12.09.1848,,2,1,Bezirk Bülach,Bülach,100,,,
-10061,400,12.09.1848,,2,4,Kanton Uri,Kt. Uri,100,,Canton qui n’est pas subdivisé en districts,Kanton ohne Bezirksunterteilung
-10104,1004,12.09.1848,,2,10,District de la Sarine,La Sarine,100,,,
-10268,1728,01.01.2003,,2,17,Wahlkreis Wil,Wil,149,,,
-10316,1850,01.01.2017,,2,18,Region Surselva,Surselva,155,,,
-10002,2106,12.09.1848,,2,21,Distretto di Mendrisio,Mendrisio,100,,,
-10013,2308,12.09.1848,,2,23,District de Monthey,Monthey,100,,,
-10597,101,12.09.1848,,3,10080,Steinmaur,Steinmaur,,,,
-10268,71,12.09.1848,,3,10081,Wil (ZH),Wil (ZH),,,,
-15610,3427,01.01.2003,,3,10268,Wil (SG),Wil (SG),,,,
-10364,1218,12.09.1848,,3,10061,Spiringen,Spiringen,,,,
-10162,2228,12.09.1848,,3,10104,Villars-sur-Glâne,Villars-sur-Glâne,,,,
-15969,3572,01.01.2017,,3,10316,Falera,Falera,3533,,,
-10381,5266,12.09.1848,,3,10002,Stabio,Stabio,,,,
-10078,6158,12.09.1848,,3,10013,Vionnaz,Vionnaz,,,,
-"""
-
-# L'export `levels` porte 29 colonnes ; seules ces quatre-là sont lues.
-# Valeurs réelles elles aussi : Falera est la commune romanche, Stabio
-# l'italienne, Villars-sur-Glâne la seule urbaine du lot.
 NIVEAUX = """\
-HistoricalCode,BfsCode,Name,DEGURB2021,SPRGEB2020
-10597,101,Steinmaur,2,1
-10268,71,Wil (ZH),3,1
-15610,3427,Wil (SG),2,1
-10364,1218,Spiringen,3,1
-10162,2228,Villars-sur-Glâne,1,2
-15969,3572,Falera,3,4
-10381,5266,Stabio,2,3
-10078,6158,Vionnaz,3,2
+HistoricalCode,BfsCode,Name,CantonId,Canton,DistrictId,District,DEGURB2021,SPRGEB2020
+10597,101,Steinmaur,1,Zürich,10080,Bezirk Dielsdorf,2,1
+12534,89,Niederglatt,1,Zürich,10080,Bezirk Dielsdorf,2,1
+10268,71,Wil (ZH),1,Zürich,10081,Bezirk Bülach,3,1
+15610,3427,Wil (SG),17,St. Gallen,10268,Wahlkreis Wil,2,1
+10364,1218,Spiringen,4,Uri,10061,Kanton Uri,3,1
+10162,2228,Villars-sur-Glâne,10,Fribourg / Freiburg,10104,District de la Sarine,1,2
+15969,3572,Falera,18,Graubünden / Grigioni / Grischun,10316,Region Surselva,3,4
+10381,5266,Stabio,21,Ticino,10002,Distretto di Mendrisio,2,3
+10078,6158,Vionnaz,23,Valais / Wallis,10013,District de Monthey,3,2
 """
 
-REEL_SNAPSHOT = "data/agvch_communes_2026-01-01.csv"
-REEL_NIVEAUX = "data/agvch_niveaux_2026-01-01.csv"
-
-
-@pytest.fixture
-def snapshot(tmp_path):
-    chemin = tmp_path / "snapshot.csv"
-    chemin.write_text(SNAPSHOT, encoding="utf-8")
-    return str(chemin)
+REEL = "data/agvch_niveaux_2026-01-01.csv"
 
 
 @pytest.fixture
@@ -83,81 +42,78 @@ def niveaux(tmp_path):
 
 
 @pytest.mark.django_db
-def test_les_trois_niveaux_sont_importes(snapshot):
-    call_command("populate_commune", snapshot)
+def test_les_trois_niveaux_sont_importes(niveaux):
+    """Un district partagé par deux communes n'est créé qu'une fois."""
+    call_command("populate_commune", niveaux)
 
     assert Canton.objects.count() == 7
-    assert District.objects.count() == 9
-    assert Commune.objects.count() == 8
+    assert District.objects.count() == 8
+    assert Commune.objects.count() == 9
 
 
 @pytest.mark.django_db
-def test_hierarchie_chainee_par_historical_code_et_non_par_bfs_code(snapshot):
-    """`Steinmaur` porte le BfsCode 101, celui du `Bezirk Affoltern`.
-
-    Chaîner par BfsCode la rattacherait au mauvais district.
-    """
-    call_command("populate_commune", snapshot)
+def test_chaque_commune_rejoint_son_district_et_son_canton(niveaux):
+    call_command("populate_commune", niveaux)
 
     steinmaur = Commune.get_unique_commune_by_ofs(101)
     assert steinmaur.district.nom == "Bezirk Dielsdorf"
     assert steinmaur.canton.abreviation == "ZH"
 
-
-@pytest.mark.django_db
-def test_historical_code_partage_entre_un_district_et_une_commune(snapshot):
-    """10268 désigne à la fois `Wahlkreis Wil` et la commune `Wil (ZH)`.
-
-    Le `Parent` d'une commune se résout parmi les seules lignes de niveau 2 :
-    un dictionnaire global renverrait ici une commune comme district.
-    """
-    call_command("populate_commune", snapshot)
-
     wil_sg = Commune.get_unique_commune_by_ofs(3427)
     assert wil_sg.district.nom == "Wahlkreis Wil"
     assert wil_sg.canton.abreviation == "SG"
 
-    wil_zh = Commune.get_unique_commune_by_ofs(71)
-    assert wil_zh.district.nom == "Bezirk Bülach"
-    assert wil_zh.canton.abreviation == "ZH"
+
+@pytest.mark.django_db
+def test_le_district_porte_le_code_historique_de_l_ofs(niveaux):
+    """`levels` ne publie pas le numéro OFS du district, mais son `DistrictId`.
+
+    Le champ s'appelle donc `code_historique` : il rattache les communes à leur
+    district, rien de plus. Les résultats de votation sont rattachés à des
+    communes, jamais à des districts.
+    """
+    call_command("populate_commune", niveaux)
+
+    assert Commune.get_unique_commune_by_ofs(101).district.code_historique == 10080
+    assert Commune.get_unique_commune_by_ofs(3427).district.code_historique == 10268
 
 
 @pytest.mark.django_db
-def test_canton_sans_districts(snapshot):
-    """Uri n'est pas subdivisé : sa ligne de niveau 2 couvre le canton entier."""
-    call_command("populate_commune", snapshot)
+def test_canton_sans_districts(niveaux):
+    """Uri n'est pas subdivisé : son entrée de district couvre le canton entier."""
+    call_command("populate_commune", niveaux)
 
     spiringen = Commune.get_unique_commune_by_ofs(1218)
     assert spiringen.district.nom == "Kanton Uri"
-    assert spiringen.district.numero_ofs == 400
     assert spiringen.canton.abreviation == "UR"
 
 
 @pytest.mark.django_db
-def test_les_cantons_gardent_leurs_noms_francais(snapshot):
-    """AGVCH nomme les cantons dans leurs langues officielles ; le site est
-    francophone, et `peupler_demo` sème déjà ces noms-là."""
-    call_command("populate_commune", snapshot)
+def test_les_cantons_gardent_leurs_noms_francais(niveaux):
+    """AGVCH nomme les cantons dans toutes leurs langues officielles et ne
+    donne pas d'abréviation ; le site est francophone, et `peupler_demo` sème
+    déjà ces noms-là."""
+    call_command("populate_commune", niveaux)
 
     assert Canton.get_unique_canton_by_abreviation("GR").nom == "Grisons"
     assert Canton.get_unique_canton_by_abreviation("VS").nom == "Valais"
 
 
 @pytest.mark.django_db
-def test_reimport_ne_duplique_rien(snapshot):
+def test_reimport_ne_duplique_rien(niveaux):
     """La commande repart d'une table vide : elle est rejouable."""
-    call_command("populate_commune", snapshot)
-    call_command("populate_commune", snapshot)
+    call_command("populate_commune", niveaux)
+    call_command("populate_commune", niveaux)
 
     assert Canton.objects.count() == 7
-    assert District.objects.count() == 9
-    assert Commune.objects.count() == 8
+    assert District.objects.count() == 8
+    assert Commune.objects.count() == 9
 
 
 @pytest.mark.django_db
-def test_langue_et_urbanisation_traduites(snapshot, niveaux):
+def test_langue_et_urbanisation_traduites(niveaux):
     """Les codes numériques de l'OFS deviennent les étiquettes du site."""
-    call_command("populate_commune", snapshot)
+    call_command("populate_commune", niveaux)
     call_command("import_metadata_commune", niveaux)
 
     langues = {c.numero_ofs: c.langue for c in Commune.objects.all()}
@@ -173,11 +129,18 @@ def test_langue_et_urbanisation_traduites(snapshot, niveaux):
 
 
 @pytest.mark.django_db
-def test_commune_absente_de_la_base_est_ignoree(snapshot, niveaux, tmp_path, caplog):
-    """Une commune du fichier `levels` sans ligne en base ne fait pas tout échouer."""
-    call_command("populate_commune", snapshot)
+def test_commune_absente_de_la_base_est_ignoree(niveaux, tmp_path, caplog):
+    """Une commune du fichier sans ligne en base ne fait pas tout échouer.
+
+    Le cas se produit dès que le référentiel avance d'un millésime sans que
+    `populate_commune` soit rejoué.
+    """
+    call_command("populate_commune", niveaux)
     inconnue = tmp_path / "niveaux_inconnue.csv"
-    inconnue.write_text(NIVEAUX + "99999,9999,Commune inconnue,1,1\n", encoding="utf-8")
+    inconnue.write_text(
+        NIVEAUX + "99999,9999,Commune inconnue,1,Zürich,10080,Bezirk Dielsdorf,1,1\n",
+        encoding="utf-8",
+    )
 
     call_command("import_metadata_commune", str(inconnue))
 
@@ -188,13 +151,13 @@ def test_commune_absente_de_la_base_est_ignoree(snapshot, niveaux, tmp_path, cap
 @pytest.mark.lent
 @pytest.mark.django_db
 def test_le_repertoire_versionne_couvre_toute_la_suisse():
-    """Garde-fou sur les fichiers réellement commités dans `data/`.
+    """Garde-fou sur le fichier réellement commité dans `data/`.
 
-    Ce sont les valeurs par défaut des deux commandes : si l'un des deux
-    fichiers disparaît ou change de forme, c'est ici que ça se voit.
+    C'est la valeur par défaut des deux commandes : s'il disparaît ou change
+    de forme, c'est ici que ça se voit.
     """
-    call_command("populate_commune", REEL_SNAPSHOT)
-    call_command("import_metadata_commune", REEL_NIVEAUX)
+    call_command("populate_commune", REEL)
+    call_command("import_metadata_commune", REEL)
 
     assert Canton.objects.count() == 26
     assert District.objects.count() == 144

@@ -126,7 +126,7 @@ def add_foreigner(commune_voix, sujet_vote):
     name_district = f'{canton_abrev}-étranger'
     districts = District.objects.filter(nom=name_district)
     if len(districts) == 0:
-        district = District(nom=name_district, numero_ofs=n_ofs_distric_etrange[name_district], canton=canton)
+        district = District(nom=name_district, code_historique=n_ofs_distric_etrange[name_district], canton=canton)
     elif len(districts) == 1:
         district = districts[0]
     else:
