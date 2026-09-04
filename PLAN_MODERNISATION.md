@@ -387,17 +387,24 @@ future sans toucher au code** — seulement la config et les données.
 *Révisé le 2026-09-03 : la source retenue est le cube STAT-TAB de l'OFS, qui
 livre l'historique **déjà harmonisé sur les communes actuelles**. Voir Partie 6.*
 
-- [ ] `manage.py importer_historique` : reconstruire `ResultatCommunalHistorique`
+- [x] `manage.py importer_historique` : reconstruit `ResultatCommunalHistorique`
       depuis le cube STAT-TAB `px-x-1703030000_101` (« Votations populaires,
       résultats au niveau des communes depuis 1960 »), via l'API PX-Web JSON,
       sans clé. Appariement par **numéro OFS**, sur 4 chiffres avec zéros devant.
       Remplace `populate_voix` **et** le fichier `donnee_federale_v3.txt`, qui
       n'existe plus sur aucune machine.
-      Découper la requête par paquets d'objets : la limite est de 2,5 M cellules
-      par appel.
-- [ ] Choisir le nombre d'objets historiques à charger. Le cube en propose 511
-      depuis 1960 ; le code actuel en utilise 55. Plus d'objets = un profil de
-      commune plus fin, mais aussi plus de communes à couverture incomplète.
+      *Trouvé en passant* : la limite effective n'est pas les 2,5 M cellules
+      documentées mais le pare-feu de l'OFS, qui répond 403 dès 11 objets dans
+      une requête, quelle que soit la taille du corps — d'où `--lot 10` par défaut. Les pseudo-communes
+      « Suisses de l'étranger » (OFS 9xxx) sont créées à la volée, leur canton
+      lu dans le nom (`VD-CH de l'étranger`). Les valeurs `...` (commune sans
+      résultat pour cet objet) ne donnent pas de ligne : la commune est alors
+      écartée de l'ACP, comme avant.
+- [x] Choisir le nombre d'objets historiques à charger. Défaut provisoire
+      `--depuis 2010-01-01` (144 objets) : depuis 2010 la couverture est stable
+      (mêmes ~35 numéros OFS sans résultat, dont 28 pseudo-communes vides) ; avant,
+      les trous se multiplient (550 communes sans résultat en 1960). À ajuster
+      après la non-régression sur le 14 juin 2026 (Partie 6).
 
 ### B5. Communes dans le temps — fusions et mutations (voir Partie 6) **[2]**
 *Révisé le 2026-09-03 : ramené de « chantier structurant » à « conséquence de
@@ -594,6 +601,16 @@ toutes. L'appariement par numéro OFS suffit.
   pseudo-communes « étranger » hors carte mais **dans** l'extrapolation.
 - **Non-régression** : rejouer le scrutin du 14 juin 2026, dont le fichier
   complet est disponible, et comparer la projection au résultat connu.
+  *Premier essai le 2026-09-04* (historique STAT-TAB 2010 → mars 2026, ACP sur
+  2 111 communes, la moitié la plus petite des communes dépouillée, soit 11 %
+  des bulletins) : initiative « 10 millions » projetée à 45,9 % pour 45,2 %
+  réel, alors que le dépouillement partiel disait 55,0 % ; service civil
+  projeté à 53,6 % pour 52,5 % réel (partiel : 57,6 %). À automatiser en test.
+  *Constaté au passage* : 4 pseudo-communes « étranger » (FR, TG, VS, ZH) ont
+  un historique incomplet, donc pas de profil ACP, et `run_extrapolation`
+  s'arrête sur une exception dès qu'elles apparaissent dans le fichier du
+  jour J — c'est exactement le « jour J blindé » ci-dessus, à faire avant
+  le 27 septembre.
 
 ---
 

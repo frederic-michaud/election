@@ -17,9 +17,11 @@ leur historique, puis on prédit les communes non dépouillées à partir de cel
 le sont déjà.
 
 1. **Profil de commune par ACP** (`manage.py populate_pca`). On construit la matrice
-   commune × objet des % de oui sur **55 votations passées** (`ResultatCommunalHistorique`), et on la
-   réduit à **6 composantes principales** (`sklearn`), stockées dans `PCAResult`.
-   Une commune qui n'a pas exactement 55 `ResultatCommunalHistorique` est écartée de l'ACP.
+   commune × objet des % de oui sur les **votations passées** (`ResultatCommunalHistorique` :
+   55 dans la base fictive, tout ce que `importer_historique --depuis` a chargé
+   en réel), et on la réduit à **6 composantes principales** (`sklearn`),
+   stockées dans `PCAResult`. Une commune à qui il manque un seul objet
+   historique est écartée de l'ACP.
 2. **Régression le jour J** (`scrutin/extrapolation.py`). Sur les communes déjà
    comptabilisées, on ajuste par moindres carrés — **pondérés par le nombre de
    bulletins rentrés** — un modèle linéaire `% oui ≈ Σ aᵢ·composanteᵢ + b`
@@ -92,7 +94,7 @@ Amorçage, **dans cet ordre** (chaque étape dépend de la précédente) :
 ```
 populate_commune          # cantons, districts, communes
 import_metadata_commune   # langue, degré d'urbanisation
-populate_voix             # 55 votations historiques  (⚠ supprime tous les SujetVote)
+importer_historique       # votations passées depuis STAT-TAB (réseau, ⚠ crée les pseudo-communes 9xxx)
 set_nb_voix_commune       # Commune.nb_voix = électeurs de la dernière votation
 populate_pca              # ACP → PCAResult          (⚠ supprime tous les PCAResult)
 add_initial_scrutin_en_cours <json_du_scrutin>   # lignes vides du jour J
@@ -119,10 +121,21 @@ de test en rejouant d'anciens résultats sur 5 % des communes tirées au hasard 
 c'est le moyen de tester sans attendre un vrai dimanche de votation.
 
 ### Source des données
-JSON open data de la Confédération (`app-prod-static-voteinfo.s3…/ogd/`), format
+**Jour J** : JSON open data de la Confédération (`app-prod-static-voteinfo.s3…/ogd/`), format
 alémanique : `vorlagen`, `kantone`, `gemeinden`, `jaStimmenAbsolut`,
 `neinStimmenAbsolut`, `anzahlStimmberechtigte`, `eingelegteStimmzettel`.
 Les communes sont appariées par **numéro OFS** (`geoLevelnummer`).
+
+**Historique** : cube STAT-TAB de l'OFS `px-x-1703030000_101` (« Votations
+populaires, résultats au niveau des communes depuis 1960 »), API PX-Web JSON
+sans clé, **déjà harmonisé sur les communes actuelles** — une commune
+fusionnée porte les voix de ses prédécesseurs, l'appariement par numéro OFS
+suffit. `importer_historique` le charge par lots de 10 objets : au-delà, le
+pare-feu de l'OFS répond 403 (constaté le 2026-09-04, avant même la limite
+documentée de 2,5 M cellules). Les 12 pseudo-communes « Suisses de l'étranger »
+(OFS 9010…9250) sont créées à la volée, rattachées à leur canton. Les codes
+d'objet du cube sont les `vorlagenId` du jour J : un même objet est reconnu
+des deux côtés.
 
 ---
 
@@ -147,9 +160,10 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
 
 **Données**
 1. **Deux racines de données différentes.** Les scripts lisent `../data/…` (hors du
-   repo : `donnee_federale_v3.txt`, `communes/`, `votation_septembre_2022_*.json` —
-   **rien de tout ça n'est versionné**), alors que `carte/API.py` lit `data/…`
-   (dans le repo). Ne pas les confondre.
+   repo : `communes/`, `votation_septembre_2022_*.json` — **rien de tout ça
+   n'est versionné**), alors que `carte/API.py` lit `data/…` (dans le repo).
+   Ne pas les confondre. L'historique (`donnee_federale_v3.txt`, perdu) ne
+   vient plus d'un fichier mais de STAT-TAB.
 
 **Valeurs codées en dur** — **corrigées** (jalon 3, tâche B2)
 2. Le `55` de `ScrutinAPI` était en dur à deux endroits → `nb_sujets_historiques()`,
@@ -170,7 +184,7 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
     l'itération précédente.
 7. `ScrutinAPI.getVotationMatrixWithMetaInfo` utilisait `voixs` après la boucle
     (variable qui fuit) et appelait `Warning(…)` au lieu de `warnings.warn(…)`.
-8. `populate_voix.add_foreigner` testait `len(districts)` au lieu de
+8. `populate_voix.add_foreigner` (commande remplacée depuis par `importer_historique`) testait `len(districts)` au lieu de
     `len(communes)` ; le message d'erreur des sujets en double référençait une
     variable inexistante (`commune.Canton`).
 
