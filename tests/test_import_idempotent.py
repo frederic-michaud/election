@@ -113,8 +113,8 @@ def test_la_date_du_sujet_vient_du_json(communes, tmp_path):
 
 
 @pytest.mark.django_db
-def test_la_base_refuse_desormais_un_doublon(communes):
-    """L'invariant n'était tenu que par le code ; il l'est maintenant par la base."""
+def test_la_base_refuse_un_doublon(communes):
+    """Une seule ligne par commune et par objet peut entrer dans la base."""
     sujet = SujetVote.objects.create(nom="Objet", sujet_id=8000,
                                      date=datetime.date(2026, 9, 27))
     commune = Commune.objects.first()

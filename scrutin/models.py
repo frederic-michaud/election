@@ -110,9 +110,6 @@ class ResultatCommunalEnCours(models.Model):
     comptabilise = models.BooleanField(default=False)
 
     class Meta:
-        # L'invariant « une seule ligne par commune et par objet » n'était tenu
-        # que par le code : un doublon faisait compter la commune deux fois par
-        # l'extrapolation, une fois réelle et une fois à estimer.
         constraints = [
             models.UniqueConstraint(fields=["commune", "sujet_vote"],
                                     name="une_ligne_par_commune_et_objet"),

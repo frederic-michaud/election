@@ -1,7 +1,4 @@
-"""Une seule ligne de scrutin en cours par commune et par objet.
-
-L'invariant n'était tenu que par le code ; il l'est désormais par la base.
-"""
+"""Une seule ligne de scrutin en cours par commune et par objet."""
 
 from django.db import migrations, models
 
