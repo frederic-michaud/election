@@ -370,10 +370,8 @@ future sans toucher au code** — seulement la config et les données.
       la ligne vide, `update_scrutin_en_cours` en créait une **seconde** dès le
       premier import, et l'extrapolation comptait la commune deux fois (une
       réelle, une estimée).
-      *Reste ouvert* : aucune contrainte d'unicité en base sur
-      `(commune, sujet_vote)` — l'invariant n'est tenu que par le code et son
-      test. À ajouter si l'on accepte une migration qui échouera sur une base
-      contenant déjà des doublons.
+      *Fait* : contrainte d'unicité `(commune, sujet_vote)` en base
+      (migration `scrutin/0002`).
 - [x] Séparer « résultat extrapolé » et « résultat observé » : déjà porté par
       `ResultatCommunalEnCours.comptabilise`, auquel `run_extrapolation` ne touche
       pas. Ni champ dédié ni migration.

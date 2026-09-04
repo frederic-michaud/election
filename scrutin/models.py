@@ -108,6 +108,13 @@ class ResultatCommunalEnCours(models.Model):
     bulletins_rentres = models.IntegerField(null=True)
     electeur_election_precedente = models.IntegerField()
     comptabilise = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["commune", "sujet_vote"],
+                                    name="une_ligne_par_commune_et_objet"),
+        ]
+
     def __str__(self):
         return str(self.commune) + " " + str(self.sujet_vote)
     def get_pourcentage_oui(self):

@@ -111,8 +111,8 @@ scrutin.
 Les deux imports du jour J sont **idempotents** : `add_initial_scrutin_en_cours`
 sème les lignes vides (`get_or_create`), `update_scrutin_en_cours` les remplit
 (`update_or_create`). Il n'y a donc jamais qu'une ligne `ResultatCommunalEnCours` par
-commune et par objet — l'invariant n'est pas garanti par la base, seulement par
-le code et `tests/test_import_idempotent.py`.
+commune et par objet — invariant **garanti par la base** (contrainte
+`une_ligne_par_commune_et_objet`, migration `scrutin/0002`).
 
 `create_fake_json_input <json_du_scrutin> [<sortie>]` fabrique un JSON
 de test en rejouant d'anciens résultats sur 5 % des communes tirées au hasard :

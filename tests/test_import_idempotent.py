@@ -11,6 +11,7 @@ import datetime
 import json
 
 import pytest
+from django.db.utils import IntegrityError
 
 from scrutin.management.commands.add_initial_scrutin_en_cours import (
     import_votation as import_initial,
@@ -18,7 +19,7 @@ from scrutin.management.commands.add_initial_scrutin_en_cours import (
 from scrutin.management.commands.update_scrutin_en_cours import (
     import_votation as import_mise_a_jour,
 )
-from scrutin.models import Canton, Commune, District, ResultatCommunalEnCours
+from scrutin.models import Canton, Commune, District, ResultatCommunalEnCours, SujetVote
 
 OFS = [1001, 1002, 1003]
 
@@ -109,3 +110,17 @@ def test_la_date_du_sujet_vient_du_json(communes, tmp_path):
 
     ligne = ResultatCommunalEnCours.objects.first()
     assert ligne.sujet_vote.date == datetime.date(2026, 9, 27)
+
+
+@pytest.mark.django_db
+def test_la_base_refuse_un_doublon(communes):
+    """Une seule ligne par commune et par objet peut entrer dans la base."""
+    sujet = SujetVote.objects.create(nom="Objet", sujet_id=8000,
+                                     date=datetime.date(2026, 9, 27))
+    commune = Commune.objects.first()
+    ResultatCommunalEnCours.objects.create(commune=commune, sujet_vote=sujet,
+                                           electeur_election_precedente=10)
+
+    with pytest.raises(IntegrityError):
+        ResultatCommunalEnCours.objects.create(commune=commune, sujet_vote=sujet,
+                                               electeur_election_precedente=10)
