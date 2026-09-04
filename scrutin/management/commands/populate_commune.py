@@ -1,34 +1,7 @@
 """Crée cantons, districts et communes depuis le répertoire officiel de l'OFS.
 
-La liste des communes venait de `../data/communes/Communes_actuelles.csv`, un
-fichier hors dépôt et sans provenance connue. Elle vient maintenant de l'API
-AGVCH (Répertoire officiel des communes de Suisse), sans clé ni inscription,
-et le CSV est versionné dans `data/` :
-
-    curl -o data/agvch_niveaux_2026-01-01.csv \\
-      "https://www.agvchapp.bfs.admin.ch/api/communes/levels?date=01-01-2026"
-
-Une ligne par commune, la hiérarchie déjà jointe : `BfsCode` et `Name` pour la
-commune, `DistrictId` et `District` pour son district, `CantonId` et `Canton`
-pour son canton. Au 01.01.2026 : 26 cantons, 144 districts, 2 110 communes.
-C'est le même fichier que lit `import_metadata_commune`, qui y prend en plus la
-langue et le degré d'urbanisation.
-
-Deux colonnes manquent au fichier, sans conséquence :
-
-- l'**abréviation** du canton, reconstituée par `CANTONS` ci-dessous — le site
-  est francophone, et AGVCH nomme les cantons dans toutes leurs langues
-  officielles (« Bern / Berne », « Graubünden / Grigioni / Grischun ») ;
-- le **numéro OFS du district** : `DistrictId` est son identifiant
-  d'historisation. D'où `District.code_historique`, qui ne sert qu'à rattacher
-  les communes à leur district au moment de l'import. Les résultats de votation
-  sont rattachés à des communes, jamais à des districts.
-
 **Destructif** : la commande supprime tous les `Canton`, ce qui efface en
-cascade districts, communes, résultats historiques et scrutin en cours. C'est
-donc la **première** étape du pipeline d'amorçage, jamais une mise à jour à
-chaud — rejouer le reste de la chaîne derrière (voir CLAUDE.md, « Pipeline de
-données »).
+cascade districts, communes, résultats historiques et scrutin en cours.
 """
 
 import pandas as pd

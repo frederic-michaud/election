@@ -105,14 +105,6 @@ clé), versionné dans le dépôt. Une ligne par commune, la hiérarchie déjà 
 Les deux commandes gardent le chemin en argument optionnel ; l'URL de
 rafraîchissement est dans leurs docstrings.
 
-Deux colonnes manquent au fichier, sans conséquence : l'**abréviation** du
-canton (reconstituée depuis `CantonId` dans `populate_commune`, AGVCH nommant
-les cantons dans toutes leurs langues officielles) et le **numéro OFS du
-district** — `DistrictId` est son identifiant d'historisation, d'où le nom du
-champ `District.code_historique`. Les résultats de votation sont rattachés à
-des communes, jamais à des districts : la clé qui compte est
-`Commune.numero_ofs` (= `BfsCode` = `geoLevelnummer` du JSON du jour J).
-
 Puis, en boucle le jour du scrutin :
 `update_scrutin_en_cours <json_precedent> <json_courant>` →
 `run_extrapolation`. C'est ce que fait `download_data.sh`, qui dérive URL et noms

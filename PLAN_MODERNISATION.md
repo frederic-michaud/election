@@ -309,23 +309,9 @@ mise à jour à l'époque ; corrigé le 2026-08-30 en relisant le repo.)*
       nom, rafraîchissable par le `curl` inscrit dans les docstrings :
       `agvch_niveaux_2026-01-01.csv` (endpoint `levels`), lu par
       `populate_commune` **et** `import_metadata_commune`. Une ligne par
-      commune, la hiérarchie déjà jointe : ni chaînage à reconstituer, ni
-      collision de codes à contourner.
-      *L'export `snapshot` a d'abord été retenu en plus, puis abandonné* : il
-      n'apportait que le numéro OFS du district et l'abréviation du canton, au
-      prix d'un chaînage `Parent` → `HistoricalCode` où **aucun des deux codes
-      n'est unique en dehors de son niveau** (52 `BfsCode` et 11
-      `HistoricalCode` sont partagés par un district et une commune). Les
-      abréviations sont reconstituées depuis `CantonId`, et le district porte
-      désormais `code_historique` au lieu d'un `numero_ofs` que personne ne
-      lisait. Couvert par `tests/test_referentiel_communes.py`.
-- [ ] **Degré d'urbanisation : aligner `peupler_demo` [M]**. L'échelle
-      officielle `DEGURB2021` a trois degrés (urbain 135 / intermédiaire 959 /
-      rural 1 016) et `import_metadata_commune` les reprend tels quels ;
-      `peupler_demo` n'en écrit encore que deux (urbain/rural). Sans
-      conséquence aujourd'hui — le champ n'est affiché nulle part — mais les
-      deux jeux de données divergent, ce que la règle « un seul chemin de
-      code » n'aime pas. À reprendre le jour où un graphique s'en sert.
+      commune, la hiérarchie déjà jointe.
+- [ ] **Degré d'urbanisation : aligner `peupler_demo` [M]** — l'échelle
+      officielle `DEGURB2021` en a trois, `peupler_demo` n'en écrit que deux.
 - [ ] Documenter la provenance de `donnee_federale_v3.txt` (55 votations
       historiques) et le format attendu — c'est l'intrant de l'ACP, il est
       aujourd'hui irremplaçable s'il est perdu. **À vérifier : en existe-t-il

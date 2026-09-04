@@ -1,16 +1,7 @@
 """Renseigne langue et degré d'urbanisation depuis le répertoire de l'OFS.
 
-Ces métadonnées venaient de `../data/communes/commune_meta_info.txt`, hors
-dépôt et sans provenance connue. Elles viennent maintenant de l'API AGVCH,
-dont le CSV est versionné dans `data/` — le **même fichier** que lit
-`populate_commune`, qui y prend la hiérarchie des communes :
-
     curl -o data/agvch_niveaux_2026-01-01.csv \\
       "https://www.agvchapp.bfs.admin.ch/api/communes/levels?date=01-01-2026"
-
-Une ligne par commune, appariée par `BfsCode` — le `numero_ofs` de la base.
-À lancer après `populate_commune`, qui sème les communes que ce fichier
-complète.
 """
 
 import logging
@@ -24,8 +15,7 @@ logger = logging.getLogger(__name__)
 
 LANGUES = {1: "allemand", 2: "français", 3: "italien", 4: "romanche"}
 
-# Échelle officielle à trois degrés (DEGURB2021). peupler_demo n'en écrit
-# encore que deux (urbain/rural) — voir PLAN_MODERNISATION.md, A6.
+# Échelle officielle à trois degrés (DEGURB2021).
 DEGRES_URBANISATION = {1: "urbain", 2: "intermédiaire", 3: "rural"}
 
 
