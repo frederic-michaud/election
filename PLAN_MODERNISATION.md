@@ -302,8 +302,27 @@ mise à jour à l'époque ; corrigé le 2026-08-30 en relisant le repo.)*
       zones.
 
 ### A6. Données — **[I]** sourcing, **[M]** intégration
-- [ ] Rapatrier dans le repo (ou dans un `download_data` documenté) les petits
-      fichiers sources : liste des communes, méta-info (langue, urbanisation).
+- [x] Rapatrier dans le repo les petits fichiers sources : liste des communes,
+      méta-info (langue, urbanisation). Source retenue : le **répertoire
+      officiel des communes de l'OFS**, API AGVCH, sans clé ni inscription.
+      Deux exports versionnés dans `data/` (370 Ko à eux deux), millésimés dans
+      leur nom, rafraîchissables par le `curl` inscrit dans la docstring de
+      chaque commande : `agvch_communes_2026-01-01.csv` (`snapshot`) pour
+      `populate_commune`, `agvch_niveaux_2026-01-01.csv` (`levels`) pour
+      `import_metadata_commune`.
+      *Pièges rencontrés, tous couverts par `tests/test_referentiel_communes.py`* :
+      la hiérarchie se chaîne par `Parent` → `HistoricalCode`, jamais par
+      `BfsCode`, et **aucun des deux codes n'est unique en dehors de son
+      niveau** (52 `BfsCode` et 11 `HistoricalCode` sont partagés par un
+      district et une commune) ; les neuf cantons sans districts portent quand
+      même une ligne de niveau 2 qui les couvre en entier.
+- [ ] **Degré d'urbanisation : aligner `peupler_demo` [M]**. L'échelle
+      officielle `DEGURB2021` a trois degrés (urbain 135 / intermédiaire 959 /
+      rural 1 016) et `import_metadata_commune` les reprend tels quels ;
+      `peupler_demo` n'en écrit encore que deux (urbain/rural). Sans
+      conséquence aujourd'hui — le champ n'est affiché nulle part — mais les
+      deux jeux de données divergent, ce que la règle « un seul chemin de
+      code » n'aime pas. À reprendre le jour où un graphique s'en sert.
 - [ ] Documenter la provenance de `donnee_federale_v3.txt` (55 votations
       historiques) et le format attendu — c'est l'intrant de l'ACP, il est
       aujourd'hui irremplaçable s'il est perdu. **À vérifier : en existe-t-il
@@ -409,10 +428,11 @@ modèle nouveau ni logique de résolution : l'historique arrive déjà exprimé 
 les communes d'aujourd'hui, appariable par numéro OFS avec le fichier du jour J.
 
 Reste de B5, une fois B4 fait :
-- [ ] `import_metadata_commune` : lire langue et degré d'urbanisation depuis
+- [x] `import_metadata_commune` : lire langue et degré d'urbanisation depuis
       l'API AGVCH (`api/communes/levels`, CSV, sans clé) au lieu des fichiers
-      non versionnés de `../data`. Règle au passage le piège n° 1, les deux
-      racines de données.
+      non versionnés de `../data`. *Fait en A6*, avec `populate_commune`
+      (export `snapshot`) par la même occasion : le piège n° 1 ne concerne plus
+      que l'historique et les JSON du jour J.
 - [ ] Jour J blindé : commune sans profil ACP → repli sur le profil moyen du
       district + log, jamais une exception qui tue l'extrapolation.
 - [ ] **[I]** GeoJSON communal à jour — voir Partie 6.
