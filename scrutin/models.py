@@ -177,6 +177,7 @@ class ScrutinAPI:
             if not sujets:
                 sujets = [voix.sujet_vote.nom for voix in voixs]
         return (sujets, valid_communes), percentage_oui_all_commune
+
     def get_nb_inscrit():
         attendu = nb_sujets_historiques()
         resultats = resultats_historiques_par_commune()
