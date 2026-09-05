@@ -312,11 +312,14 @@ mise à jour à l'époque ; corrigé le 2026-08-30 en relisant le repo.)*
       commune, la hiérarchie déjà jointe.
 - [ ] **Degré d'urbanisation : aligner `peupler_demo` [M]** — l'échelle
       officielle `DEGURB2021` en a trois, `peupler_demo` n'en écrit que deux.
-- [ ] Documenter la provenance de `donnee_federale_v3.txt` (55 votations
-      historiques) et le format attendu — c'est l'intrant de l'ACP, il est
-      aujourd'hui irremplaçable s'il est perdu. **À vérifier : en existe-t-il
-      encore une copie quelque part ?** Sinon, prévoir un script de
-      reconstruction depuis opendata.swiss (B4).
+- [x] Documenter la provenance de `donnee_federale_v3.txt` (55 votations
+      historiques). **Il n'en reste aucune copie.** Son format, tel que
+      `populate_voix` le lit (séparateur `;`, communes préfixées par `......`,
+      `...` pour une valeur absente), est celui d'un export manuel du cube
+      STAT-TAB de l'OFS `px-x-1703030000_101` — la source même que B4
+      interroge par API. Le fichier n'était donc pas irremplaçable :
+      `importer_historique` (B4) le reconstruit, et `populate_voix` disparaît
+      avec lui.
 
 ---
 
