@@ -90,13 +90,20 @@ Le pipeline est fait de **management commands Django** (`scrutin/management/comm
 Amorçage, **dans cet ordre** (chaque étape dépend de la précédente) :
 
 ```
-populate_commune          # cantons, districts, communes
+populate_commune          # cantons, districts, communes (⚠ supprime tous les Canton, donc tout le reste en cascade)
 import_metadata_commune   # langue, degré d'urbanisation
 populate_voix             # 55 votations historiques  (⚠ supprime tous les SujetVote)
 set_nb_voix_commune       # Commune.nb_voix = électeurs de la dernière votation
 populate_pca              # ACP → PCAResult          (⚠ supprime tous les PCAResult)
 add_initial_scrutin_en_cours <json_du_scrutin>   # lignes vides du jour J
 ```
+
+Les deux premières étapes lisent le **même** fichier : `data/agvch_niveaux_2026-01-01.csv`,
+export `levels` du répertoire officiel des communes de l'OFS (API AGVCH, sans
+clé), versionné dans le dépôt. Une ligne par commune, la hiérarchie déjà jointe
+(`BfsCode`, `DistrictId`, `CantonId`) plus la langue et le degré d'urbanisation.
+Les deux commandes gardent le chemin en argument optionnel ; l'URL de
+rafraîchissement est dans leurs docstrings.
 
 Puis, en boucle le jour du scrutin :
 `update_scrutin_en_cours <json_precedent> <json_courant>` →
@@ -146,10 +153,12 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
 ## Pièges connus
 
 **Données**
-1. **Deux racines de données différentes.** Les scripts lisent `../data/…` (hors du
-   repo : `donnee_federale_v3.txt`, `communes/`, `votation_septembre_2022_*.json` —
-   **rien de tout ça n'est versionné**), alors que `carte/API.py` lit `data/…`
-   (dans le repo). Ne pas les confondre.
+1. **Deux racines de données différentes** — **en voie de disparition** (jalon 2,
+   tâche A6). Le référentiel des communes (`populate_commune`,
+   `import_metadata_commune`) lit désormais `data/agvch_niveaux_2026-01-01.csv`,
+   versionné, comme `carte/API.py`. Restent hors du dépôt, en attendant B4 :
+   `donnee_federale_v3.txt` (l'historique, dont plus aucune copie n'existe) et
+   les `votation_septembre_2022_*.json` du jour J.
 
 **Valeurs codées en dur** — **corrigées** (jalon 3, tâche B2)
 2. Le `55` de `ScrutinAPI` était en dur à deux endroits → `nb_sujets_historiques()`,

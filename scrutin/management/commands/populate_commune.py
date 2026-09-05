@@ -1,66 +1,64 @@
-import numpy as np
+"""Crée cantons, districts et communes depuis le répertoire officiel de l'OFS.
+
+**Destructif** : la commande supprime tous les `Canton`, ce qui efface en
+cascade districts, communes, résultats historiques et scrutin en cours.
+"""
+
 import pandas as pd
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
 from scrutin.models import Canton, Commune, District
 
-canton_par_abrev = {"ZH": "Zürich", "BE": "Berne", "LU": "Lucerne", "UR": "Uri", "SZ": "Schwytz", "OW": "Obwald",
-                    "NW": "Nidwald", "GL": "Glaris", "ZG": "Zoug", "FR": "Fribourg", "SO": "Soleure",
-                    "BS": "Bâle-Ville", "BL": "Bâle-Campagne", "SH": "Schaffhouse",
-                    "AR": "Appenzell Rhodes-Extérieures", "AI": "Appenzell Rhodes-Intérieures", "SG": "Saint-Gall",
-                    "GR": "Grisons", "AG": "Argovie", "TG": "Thurgovie", "TI": "Tessin", "VD": "Vaud", "VS": "Valais",
-                    "NE": "Neuchâtel", "GE": "Genève", "JU": "Jura"}
-
-def create_cantons(list_of_canton):
-    Canton.objects.all().delete()
-    for canton in list_of_canton:
-        canton = Canton(abreviation=canton,
-                        nom=canton_par_abrev[canton])
-        canton.save()
-
-def create_districts(districts_per_canton):
-    District.objects.all().delete()
-    for canton, districts_info in districts_per_canton.items():
-        canton = Canton.get_unique_canton_by_abreviation(canton)
-        for district_info in districts_info:
-            district = District(nom = district_info["nom"],
-                                numero_ofs = district_info["numero"],
-                                canton = canton)
-            district.save()
+# Numérotation OFS officielle des cantons (colonne `CantonId`), et les noms
+# français que sème déjà `peupler_demo`.
+CANTONS = {
+    1: ("ZH", "Zürich"), 2: ("BE", "Berne"), 3: ("LU", "Lucerne"),
+    4: ("UR", "Uri"), 5: ("SZ", "Schwytz"), 6: ("OW", "Obwald"),
+    7: ("NW", "Nidwald"), 8: ("GL", "Glaris"), 9: ("ZG", "Zoug"),
+    10: ("FR", "Fribourg"), 11: ("SO", "Soleure"), 12: ("BS", "Bâle-Ville"),
+    13: ("BL", "Bâle-Campagne"), 14: ("SH", "Schaffhouse"),
+    15: ("AR", "Appenzell Rhodes-Extérieures"),
+    16: ("AI", "Appenzell Rhodes-Intérieures"), 17: ("SG", "Saint-Gall"),
+    18: ("GR", "Grisons"), 19: ("AG", "Argovie"), 20: ("TG", "Thurgovie"),
+    21: ("TI", "Tessin"), 22: ("VD", "Vaud"), 23: ("VS", "Valais"),
+    24: ("NE", "Neuchâtel"), 25: ("GE", "Genève"), 26: ("JU", "Jura"),
+}
 
 
-def  import_commune(path_commune):
-    #load data
-    df_communes = pd.read_csv(path_commune, sep = ";")
-    #import canton
-    create_cantons(np.unique(df_communes['canton']))
-    # import district
-    district_by_canton = {}
-    for district_info_tuple, _ in df_communes.groupby(['district', 'district_id', 'canton']):
-        district_info = {"nom": district_info_tuple[0],"numero": district_info_tuple[1]}
-        canton_name = district_info_tuple[2]
-        if canton_name in district_by_canton.keys():
-            district_by_canton[canton_name].append(district_info)
-        else:
-            district_by_canton[canton_name] = [district_info]
-    create_districts(district_by_canton)
-    # import commune
-    for commune in df_communes.itertuples():
-        canton = Canton.get_unique_canton_by_abreviation(commune.canton)
-        district = District.get_unique_district_by_name(commune.district)
-        commune_db = Commune(nom=commune.nom,
-                             numero_ofs=commune.numero_ofs,
-                             canton=canton,
-                             district=district)
-        commune_db.save()
+def import_commune(path_niveaux):
+    df = pd.read_csv(path_niveaux)
 
+    with transaction.atomic():
+        Canton.objects.all().delete()  # cascade : districts, communes, historique
+
+        cantons = {}
+        for id_canton in sorted(df["CantonId"].unique()):
+            abreviation, nom = CANTONS[id_canton]
+            cantons[id_canton] = Canton.objects.create(nom=nom, abreviation=abreviation)
+
+        districts = {}
+        for district_row in df.drop_duplicates("DistrictId").itertuples():
+            districts[district_row.DistrictId] = District.objects.create(
+                nom=district_row.District,
+                code_historique=district_row.DistrictId,
+                canton=cantons[district_row.CantonId],
+            )
+
+        for commune_row in df.itertuples():
+            Commune.objects.create(
+                nom=commune_row.Name,
+                numero_ofs=commune_row.BfsCode,
+                district=districts[commune_row.DistrictId],
+                canton=cantons[commune_row.CantonId],
+            )
 
 
 class Command(BaseCommand):
-    help = "Crée cantons, districts et communes depuis le CSV des communes."
+    help = "Crée cantons, districts et communes depuis l'export levels de l'API AGVCH."
 
     def add_arguments(self, parser):
-        parser.add_argument("csv", nargs="?", default="../data/communes/Communes_actuelles.csv")
+        parser.add_argument("csv", nargs="?", default="data/agvch_niveaux_2026-01-01.csv")
 
     def handle(self, *args, **options):
         import_commune(options["csv"])

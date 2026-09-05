@@ -1,3 +1,9 @@
+"""Renseigne langue et degré d'urbanisation depuis le répertoire de l'OFS.
+
+    curl -o data/agvch_niveaux_2026-01-01.csv \\
+      "https://www.agvchapp.bfs.admin.ch/api/communes/levels?date=01-01-2026"
+"""
+
 import logging
 
 import pandas as pd
@@ -7,29 +13,31 @@ from scrutin.models import Commune
 
 logger = logging.getLogger(__name__)
 
+LANGUES = {1: "allemand", 2: "français", 3: "italien", 4: "romanche"}
 
-def  import_commune(path_commune):
-    #load data
+# Échelle officielle à trois degrés (DEGURB2021).
+DEGRES_URBANISATION = {1: "urbain", 2: "intermédiaire", 3: "rural"}
 
-    df_meta_donnee_commune = pd.read_csv(path_commune)
-    for row_commune in df_meta_donnee_commune.itertuples():
+
+def import_commune(path_niveaux):
+    df = pd.read_csv(path_niveaux)
+    for row_commune in df.itertuples():
         try:
-            commune_db = Commune.get_unique_commune_by_ofs(row_commune.CODE_OFS)
-            commune_db.langue = row_commune.HR_SPRGEB2016_Name_fr
-            commune_db.degre_urbanisation = row_commune.HR_GDETYP2012_L1_Name_fr
-            commune_db.save()
+            commune_db = Commune.get_unique_commune_by_ofs(row_commune.BfsCode)
         except Exception:
             logger.warning('unable to find info for %s with numero OFS %s',
-                           row_commune.Name_fr, row_commune.CODE_OFS)
-
-
+                           row_commune.Name, row_commune.BfsCode)
+            continue
+        commune_db.langue = LANGUES[row_commune.SPRGEB2020]
+        commune_db.degre_urbanisation = DEGRES_URBANISATION[row_commune.DEGURB2021]
+        commune_db.save()
 
 
 class Command(BaseCommand):
-    help = "Renseigne langue et degré d'urbanisation des communes."
+    help = "Renseigne langue et degré d'urbanisation depuis l'export levels de l'API AGVCH."
 
     def add_arguments(self, parser):
-        parser.add_argument("csv", nargs="?", default="../data/communes/commune_meta_info.txt")
+        parser.add_argument("csv", nargs="?", default="data/agvch_niveaux_2026-01-01.csv")
 
     def handle(self, *args, **options):
         import_commune(options["csv"])

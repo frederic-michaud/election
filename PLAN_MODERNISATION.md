@@ -302,8 +302,16 @@ mise à jour à l'époque ; corrigé le 2026-08-30 en relisant le repo.)*
       zones.
 
 ### A6. Données — **[I]** sourcing, **[M]** intégration
-- [ ] Rapatrier dans le repo (ou dans un `download_data` documenté) les petits
-      fichiers sources : liste des communes, méta-info (langue, urbanisation).
+- [x] Rapatrier dans le repo les petits fichiers sources : liste des communes,
+      méta-info (langue, urbanisation). Source retenue : le **répertoire
+      officiel des communes de l'OFS**, API AGVCH, sans clé ni inscription.
+      **Un seul export** versionné dans `data/` (268 Ko), millésimé dans son
+      nom, rafraîchissable par le `curl` inscrit dans les docstrings :
+      `agvch_niveaux_2026-01-01.csv` (endpoint `levels`), lu par
+      `populate_commune` **et** `import_metadata_commune`. Une ligne par
+      commune, la hiérarchie déjà jointe.
+- [ ] **Degré d'urbanisation : aligner `peupler_demo` [M]** — l'échelle
+      officielle `DEGURB2021` en a trois, `peupler_demo` n'en écrit que deux.
 - [ ] Documenter la provenance de `donnee_federale_v3.txt` (55 votations
       historiques) et le format attendu — c'est l'intrant de l'ACP, il est
       aujourd'hui irremplaçable s'il est perdu. **À vérifier : en existe-t-il
@@ -409,10 +417,11 @@ modèle nouveau ni logique de résolution : l'historique arrive déjà exprimé 
 les communes d'aujourd'hui, appariable par numéro OFS avec le fichier du jour J.
 
 Reste de B5, une fois B4 fait :
-- [ ] `import_metadata_commune` : lire langue et degré d'urbanisation depuis
+- [x] `import_metadata_commune` : lire langue et degré d'urbanisation depuis
       l'API AGVCH (`api/communes/levels`, CSV, sans clé) au lieu des fichiers
-      non versionnés de `../data`. Règle au passage le piège n° 1, les deux
-      racines de données.
+      non versionnés de `../data`. *Fait en A6* — et `populate_commune` lit le
+      même fichier, la hiérarchie y étant déjà jointe : le piège n° 1 ne
+      concerne plus que l'historique et les JSON du jour J.
 - [ ] Jour J blindé : commune sans profil ACP → repli sur le profil moyen du
       district + log, jamais une exception qui tue l'extrapolation.
 - [ ] **[I]** GeoJSON communal à jour — voir Partie 6.
@@ -578,8 +587,9 @@ toutes. L'appariement par numéro OFS suffit.
 
 ### Ce qui reste à faire
 
-- **Métadonnées commune [M]** : langue et urbanisation depuis l'API AGVCH
-  `levels`, au lieu des fichiers hors dépôt.
+- ~~**Métadonnées commune [M]** : langue et urbanisation depuis l'API AGVCH
+  `levels`, au lieu des fichiers hors dépôt.~~ *Fait en A6, avec tout le
+  référentiel des communes : les deux commandes lisent ce même export.*
 - **Jour J blindé [M]** : commune sans profil ACP → profil moyen de son district
   et un log, jamais une exception qui tue l'extrapolation.
 - **GeoJSON 2026 [I]** : l'actuel (mai 2022) manque 10 communes et porte 46
