@@ -157,7 +157,8 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
    tâche A6). Le référentiel des communes (`populate_commune`,
    `import_metadata_commune`) lit désormais `data/agvch_niveaux_2026-01-01.csv`,
    versionné, comme `carte/API.py`. Restent hors du dépôt, en attendant B4 :
-   `donnee_federale_v3.txt` (l'historique, dont plus aucune copie n'existe) et
+   `donnee_federale_v3.txt` (l'historique, dont plus aucune copie n'existe —
+   c'était un export manuel du cube STAT-TAB que B4 interroge par API) et
    les `votation_septembre_2022_*.json` du jour J.
 
 **Valeurs codées en dur** — **corrigées** (jalon 3, tâche B2)
