@@ -169,9 +169,9 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
 1. **Deux racines de données différentes** — **résorbées** (A6 puis B4). Le
    référentiel des communes (`populate_commune`, `import_metadata_commune`) lit
    `data/agvch_niveaux_2026-01-01.csv`, versionné, comme `carte/API.py`.
-   L'historique ne vient plus de `donnee_federale_v3.txt`, dont plus aucune
-   copie n'existe, mais de STAT-TAB (`importer_historique`). Ne restent hors du
-   dépôt que les JSON du jour J, téléchargés à chaque scrutin.
+   L'historique ne vient plus de `donnee_federale_v3.txt` — perdu, et de toute
+   façon simple export manuel du cube STAT-TAB — mais de ce cube directement
+   (`importer_historique`). Ne restent hors du dépôt que les JSON du jour J.
 
 **Valeurs codées en dur** — **corrigées** (jalon 3, tâche B2)
 2. Le `55` de `ScrutinAPI` était en dur à deux endroits → `nb_sujets_historiques()`,
