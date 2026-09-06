@@ -156,6 +156,25 @@ print('communes sans profil :', sans.count(), sorted(set(sans.values_list('commu
 
 La réponse attendue est `0`.
 
+## 7 bis. Les pages du menu
+
+`peupler_demo` sème les pages « Méthodes » et « Contact ». **Le pipeline réel ne
+les crée pas** : sur une base montée depuis les données officielles, le menu est
+vide et les deux adresses répondent 404. Les créer une fois, avec leur vrai
+contenu :
+
+```bash
+docker compose run --rm web python manage.py shell -c "
+from page_statique.models import PageStatique
+PageStatique.objects.get_or_create(url='methode', defaults={
+    'titre': 'Méthodes', 'ordre': 1, 'contenu': '<p>À rédiger.</p>'})
+PageStatique.objects.get_or_create(url='contact', defaults={
+    'titre': 'Contact', 'ordre': 2, 'contenu': '<p>À rédiger.</p>'})"
+```
+
+Le contenu est du HTML, modifiable ensuite sans toucher au code : ajouter une
+page en base ajoute un onglet au menu.
+
 ## 8. Ouvrir le site au public
 
 Le conteneur n'écoute qu'en local. C'est nginx, sur la machine hôte, qui reçoit
@@ -163,6 +182,8 @@ le trafic public — et surtout qui **répond depuis son cache**.
 
 ```bash
 sudo apt install -y nginx
+# nginx crée le dernier niveau du dossier de cache, pas ceux d'avant.
+sudo mkdir -p /var/cache/nginx
 sudo cp deploiement/nginx-politiques.conf /etc/nginx/sites-available/politiques
 sudo sed -i "s/politiques\.ch/$VOTRE_DOMAINE/" /etc/nginx/sites-available/politiques
 sudo ln -sf /etc/nginx/sites-available/politiques /etc/nginx/sites-enabled/
