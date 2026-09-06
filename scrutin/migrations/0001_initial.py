@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('nom', models.CharField(max_length=50)),
-                ('numero_ofs', models.IntegerField()),
+                ('code_historique', models.IntegerField()),
                 ('canton', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='scrutin.canton')),
             ],
         ),

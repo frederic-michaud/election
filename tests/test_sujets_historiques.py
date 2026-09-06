@@ -23,7 +23,7 @@ from scrutin.models import (
 
 def peupler(nb_sujets, nb_communes=3):
     canton = Canton.objects.create(nom="Vaud", abreviation="VD")
-    district = District.objects.create(nom="Lavaux-Oron", numero_ofs=1, canton=canton)
+    district = District.objects.create(nom="Lavaux-Oron", code_historique=1, canton=canton)
     communes = [
         Commune.objects.create(nom=f"Commune {i}", numero_ofs=1000 + i,
                                canton=canton, district=district)
