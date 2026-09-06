@@ -313,11 +313,9 @@ mise à jour à l'époque ; corrigé le 2026-08-30 en relisant le repo.)*
 - [x] **Degré d'urbanisation : aligner `peupler_demo` [M]** — les trois degrés
       de l'échelle officielle `DEGURB2021` (urbain / intermédiaire / rural),
       dans des proportions proches du réel.
-- [ ] Documenter la provenance de `donnee_federale_v3.txt` (55 votations
-      historiques) et le format attendu — c'est l'intrant de l'ACP, il est
-      aujourd'hui irremplaçable s'il est perdu. **À vérifier : en existe-t-il
-      encore une copie quelque part ?** Sinon, prévoir un script de
-      reconstruction depuis opendata.swiss (B4).
+- [x] Documenter la provenance de `donnee_federale_v3.txt`. **Il n'en reste
+      aucune copie**, sans conséquence : son format trahit un export manuel du
+      cube STAT-TAB, que B4 réinterroge directement par API.
 
 ---
 
