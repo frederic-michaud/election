@@ -133,16 +133,11 @@ alémanique : `vorlagen`, `kantone`, `gemeinden`, `jaStimmenAbsolut`,
 `neinStimmenAbsolut`, `anzahlStimmberechtigte`, `eingelegteStimmzettel`.
 Les communes sont appariées par **numéro OFS** (`geoLevelnummer`).
 
-**Historique** : cube STAT-TAB de l'OFS `px-x-1703030000_101` (« Votations
-populaires, résultats au niveau des communes depuis 1960 »), API PX-Web JSON
-sans clé, **déjà harmonisé sur les communes actuelles** — une commune
-fusionnée porte les voix de ses prédécesseurs, l'appariement par numéro OFS
-suffit. `importer_historique` le charge par lots de 10 objets : au-delà, le
-pare-feu de l'OFS répond 403 (constaté le 2026-09-04, avant même la limite
-documentée de 2,5 M cellules). Les 12 pseudo-communes « Suisses de l'étranger »
-(OFS 9010…9250) sont créées à la volée, rattachées à leur canton. Les codes
-d'objet du cube sont les `vorlagenId` du jour J : un même objet est reconnu
-des deux côtés.
+**Historique** : cube STAT-TAB de l'OFS `px-x-1703030000_101`, API PX-Web JSON
+sans clé, **déjà harmonisé sur les communes actuelles** — une commune fusionnée
+porte les voix de ses prédécesseurs, l'appariement par numéro OFS suffit. Les
+codes d'objet du cube sont les `vorlagenId` du jour J. `importer_historique`
+charge par lots de 10 : au-delà, l'OFS répond 403.
 
 ---
 
@@ -165,36 +160,25 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
 
 ## Pièges connus
 
-**Données**
-1. **Deux racines de données différentes** — **résorbées** (A6 puis B4). Le
-   référentiel des communes (`populate_commune`, `import_metadata_commune`) lit
-   `data/agvch_niveaux_2026-01-01.csv`, versionné, comme `carte/API.py`.
-   L'historique ne vient plus de `donnee_federale_v3.txt` — perdu, et de toute
-   façon simple export manuel du cube STAT-TAB — mais de ce cube directement
-   (`importer_historique`). Ne restent hors du dépôt que les JSON du jour J.
-
 **Valeurs codées en dur** — **corrigées** (jalon 3, tâche B2)
-2. Le `55` de `ScrutinAPI` était en dur à deux endroits → `nb_sujets_historiques()`,
+1. Le `55` de `ScrutinAPI` était en dur à deux endroits → `nb_sujets_historiques()`,
    déduit des `ResultatCommunalHistorique`. Une commune à l'historique incomplet est toujours écartée de
    l'ACP, mais avec un avertissement (le seuil de couverture est l'affaire de la
    Partie 6).
-3. `update_scrutin_en_cours.get_new_commune` bouclait sur `range(2)` : il ignorait
+2. `update_scrutin_en_cours.get_new_commune` bouclait sur `range(2)` : il ignorait
    les objets au-delà du deuxième et plantait sur un scrutin à objet unique.
-4. Les chemins `votation_septembre_2022_*` sont devenus des arguments, et `download_data.sh` dérive URL et fichiers de
+3. Les chemins `votation_septembre_2022_*` sont devenus des arguments, et `download_data.sh` dérive URL et fichiers de
    `DATE_SCRUTIN`.
 
 **Bugs latents repérés à la lecture** — **corrigés** (jalon 2, tâche A4)
-5. `Commune.get_last_nb_electeur_slow` triait une liste jetable (tri sans effet)
+4. `Commune.get_last_nb_electeur_slow` triait une liste jetable (tri sans effet)
     → `order_by('-sujet_vote__date').first()`.
-6. `add_initial_scrutin_en_cours` / `update_scrutin_en_cours` /
+5. `add_initial_scrutin_en_cours` / `update_scrutin_en_cours` /
     `create_fake_json_input` : le `except` autour de `get_unique_commune_by_ofs`
     ne faisait pas `continue` — la boucle réutilisait la `commune` de
     l'itération précédente.
-7. `ScrutinAPI.getVotationMatrixWithMetaInfo` utilisait `voixs` après la boucle
+6. `ScrutinAPI.getVotationMatrixWithMetaInfo` utilisait `voixs` après la boucle
     (variable qui fuit) et appelait `Warning(…)` au lieu de `warnings.warn(…)`.
-8. `populate_voix.add_foreigner` (commande remplacée depuis par `importer_historique`) testait `len(districts)` au lieu de
-    `len(communes)` ; le message d'erreur des sujets en double référençait une
-    variable inexistante (`commune.Canton`).
 
 Les `except:` nus ont été remplacés par des exceptions ciblées partout.
 

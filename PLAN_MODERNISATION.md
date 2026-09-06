@@ -400,13 +400,6 @@ livre l'historique **déjà harmonisé sur les communes actuelles**. Voir Partie
       sans clé. Appariement par **numéro OFS**, sur 4 chiffres avec zéros devant.
       Remplace `populate_voix` **et** le fichier `donnee_federale_v3.txt`, qui
       n'existe plus sur aucune machine.
-      *Trouvé en passant* : la limite effective n'est pas les 2,5 M cellules
-      documentées mais le pare-feu de l'OFS, qui répond 403 dès 11 objets dans
-      une requête, quelle que soit la taille du corps — d'où `--lot 10` par défaut. Les pseudo-communes
-      « Suisses de l'étranger » (OFS 9xxx) sont créées à la volée, leur canton
-      lu dans le nom (`VD-CH de l'étranger`). Les valeurs `...` (commune sans
-      résultat pour cet objet) ne donnent pas de ligne : la commune est alors
-      écartée de l'ACP, comme avant.
 - [x] Choisir le nombre d'objets historiques à charger. **Décision (Frédéric,
       2026-09-04) : ne garder que les objets récents, `--depuis 2014-11-30`**
       par défaut (~100 objets). Deux raisons :
@@ -436,8 +429,7 @@ Reste de B5, une fois B4 fait :
 - [x] `import_metadata_commune` : lire langue et degré d'urbanisation depuis
       l'API AGVCH (`api/communes/levels`, CSV, sans clé) au lieu des fichiers
       non versionnés de `../data`. *Fait en A6* — et `populate_commune` lit le
-      même fichier, la hiérarchie y étant déjà jointe : le piège n° 1 ne
-      concerne plus que l'historique et les JSON du jour J.
+      même fichier, la hiérarchie y étant déjà jointe.
 - [ ] Jour J blindé : commune sans profil ACP → repli sur le profil moyen du
       district + log, jamais une exception qui tue l'extrapolation.
 - [ ] **[I]** GeoJSON communal à jour — voir Partie 6.
@@ -620,29 +612,6 @@ toutes. L'appariement par numéro OFS suffit.
   pseudo-communes « étranger » hors carte mais **dans** l'extrapolation.
 - **Non-régression** : rejouer le scrutin du 14 juin 2026, dont le fichier
   complet est disponible, et comparer la projection au résultat connu.
-  *Fait à la main le 2026-09-04* : historique STAT-TAB de novembre 2014 à
-  mars 2026 (101 objets), ACP sur 2 115 communes, puis les communes les plus
-  petites dépouillées d'abord — comme un vrai dimanche. Résultat réel :
-  45,2 % pour l'initiative « 10 millions », 52,5 % pour le service civil.
-
-  | Communes dépouillées | Bulletins | Partiel (10 M / SC) | Projeté (10 M / SC) |
-  |---|---|---|---|
-  | 25 % | 3 % | 54,9 / 56,9 | 46,0 / 53,8 |
-  | 50 % | 11 % | 55,0 / 57,6 | 45,4 / 53,4 |
-  | 75 % | 28 % | 54,0 / 57,8 | 45,4 / 53,4 |
-
-  Dès 3 % des bulletins, la projection est à moins d'un point (10 M) ou 1,3
-  point (SC) du résultat, là où le dépouillement partiel se trompe de 5 à 10
-  points. Avec l'historique depuis 2010, c'était un peu moins bon (45,9 /
-  53,6 à 50 %) : la fenêtre courte est confirmée. Le biais résiduel sur le
-  service civil (+0,9) ne bouge pas avec l'avance — piste pour l'IC bootstrap
-  (D1). À automatiser en test, avec le fichier complet du 14 juin en fixture.
-  *Constaté au passage* : avant que la fenêtre ne démarre fin 2014, les
-  pseudo-communes « étranger » FR, TG, VS et ZH n'avaient pas de profil ACP
-  et `run_extrapolation` s'arrêtait sur une exception dès qu'elles
-  apparaissaient dans le fichier du jour J. Le « jour J blindé » ci-dessus
-  reste à faire avant le 27 septembre : il suffit d'une commune nouvelle
-  pour retomber dessus.
 
 ---
 

@@ -18,7 +18,9 @@ remplacés.
 
 Les pseudo-communes « Suisses de l'étranger » (numéros OFS 9xxx) n'existent
 que dans les résultats de votation, pas dans le répertoire des communes :
-l'import les crée à la volée, rattachées à leur canton.
+l'import les crée à la volée, rattachées à leur canton. Une valeur absente
+dans le cube (`...`) ne donne pas de ligne, et la commune est alors écartée
+de l'ACP.
 """
 
 import datetime
