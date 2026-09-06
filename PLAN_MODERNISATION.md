@@ -310,8 +310,9 @@ mise à jour à l'époque ; corrigé le 2026-08-30 en relisant le repo.)*
       `agvch_niveaux_2026-01-01.csv` (endpoint `levels`), lu par
       `populate_commune` **et** `import_metadata_commune`. Une ligne par
       commune, la hiérarchie déjà jointe.
-- [ ] **Degré d'urbanisation : aligner `peupler_demo` [M]** — l'échelle
-      officielle `DEGURB2021` en a trois, `peupler_demo` n'en écrit que deux.
+- [x] **Degré d'urbanisation : aligner `peupler_demo` [M]** — les trois degrés
+      de l'échelle officielle `DEGURB2021` (urbain / intermédiaire / rural),
+      dans des proportions proches du réel.
 - [ ] Documenter la provenance de `donnee_federale_v3.txt` (55 votations
       historiques) et le format attendu — c'est l'intrant de l'ACP, il est
       aujourd'hui irremplaçable s'il est perdu. **À vérifier : en existe-t-il

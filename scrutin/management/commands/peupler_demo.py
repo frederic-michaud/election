@@ -84,6 +84,15 @@ def sigmoide(x):
     return 1.0 / (1.0 + math.exp(-x))
 
 
+def degre_urbanisation(urbanite):
+    """Les trois degrés de DEGURB2021, dans des proportions proches du réel."""
+    if urbanite > 1.5:
+        return "urbain"
+    if urbanite > 0:
+        return "intermédiaire"
+    return "rural"
+
+
 class Command(BaseCommand):
     help = "Peuple la base avec des données fictives à l'échelle réelle."
 
@@ -183,7 +192,7 @@ class Command(BaseCommand):
                 canton=cantons[id_canton],
                 district=districts_db[p["bezkId"]],
                 langue="français" if latin else "allemand",
-                degre_urbanisation="urbain" if urbanite > 0.5 else "rural",
+                degre_urbanisation=degre_urbanisation(urbanite),
                 nb_voix=electeurs,
             ))
             profils[p["vogeId"]] = (urbanite, latin, electeurs)
