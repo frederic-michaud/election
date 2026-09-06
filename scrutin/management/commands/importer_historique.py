@@ -46,6 +46,14 @@ MANQUANT = "..."
 
 
 def requete(corps=None):
+    """L'API PX-Web a deux modes sur la même URL, selon qu'on envoie un corps.
+
+    Sans corps, c'est un GET : le cube décrit son contenu, la liste des objets
+    de votation et celle des communes. C'est ce que fait `lire_metadonnees`,
+    l'unique appel sans corps. Avec un corps, c'est un POST : le cube renvoie
+    les cellules demandées. urllib bascule de l'un à l'autre tout seul, selon
+    que `data` vaut None ou non.
+    """
     donnees = None if corps is None else json.dumps(corps).encode()
     req = urllib.request.Request(URL, data=donnees,
                                  headers={"Content-Type": "application/json"})
