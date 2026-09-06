@@ -109,6 +109,10 @@ python manage.py run_extrapolation
 
 À faire avant chaque votation réelle (voir `PLAN_MODERNISATION.md`, C3).
 
+## Déploiement en conteneur
+
+Pas à pas depuis une machine neuve : [`DEPLOIEMENT.md`](DEPLOIEMENT.md).
+
 ## Configuration
 
 Tout passe par l'environnement ou un fichier `.env` non versionné — voir

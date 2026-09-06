@@ -442,13 +442,38 @@ Objectif de sortie de phase : **un dimanche de votation se lance avec une seule
 commande, et le site survit à un pic de trafic.**
 
 ### C1. Conteneurisation **[M]**
-- [ ] Docker Compose à **deux services** : `web` (gunicorn) et `proxy`
-      (Caddy ou nginx, HTTPS automatique). Pas de service `db` — le fichier
-      SQLite vit dans un volume monté. Réutiliser les patterns éprouvés de
-      `quantinemo-frontend/infra` (même hébergeur, même gabarit de VPS).
-- [ ] Secrets par `.env` non versionné + `.env.example` ; sauvegarde =
-      **copie datée du fichier SQLite** (`VACUUM INTO`, sûr à chaud),
-      quotidienne — l'historique `ResultatCommunalHistorique` est le bien précieux du projet.
+- [x] Docker Compose à **un seul service** : `web`, gunicorn. Décidé le
+      2026-09-04, contre les deux services prévus. Le service `proxy` n'a de
+      sens que si la production sert Django en direct, ce que C2 n'a pas
+      tranché ; en attendant, le serveur web déjà présent sur l'hôte garde le
+      trafic public et le conteneur ne publie son port que sur `127.0.0.1`.
+      Pas de service `db` : le fichier SQLite vit dans `./var`, monté **au même
+      chemin relatif des deux côtés** pour que `download_data.sh` puisse passer
+      ses chemins à des commandes exécutées dans le conteneur.
+      *Trouvé en passant* : avec `DEBUG=0`, Django ne sert pas `/static/` — le
+      site tournait sous gunicorn sans CSS ni logo. Corrigé par whitenoise et
+      un `collectstatic` à la construction de l'image.
+- [x] Secrets par `.env` non versionné + `.env.example`, déjà en place depuis le
+      jalon 1 ; `compose.yaml` les lit par `env_file`.
+- [ ] Sauvegarde = **copie datée du fichier SQLite** (`VACUUM INTO`, sûr à
+      chaud), quotidienne — l'historique `ResultatCommunalHistorique` est le
+      bien précieux du projet. Reste à faire : `./var` la rend triviale, mais
+      rien ne la déclenche encore.
+- [x] Image construite et lancée le 2026-09-04 : 4 min 51 s, 819 Mo, le site
+      répond et sert ses fichiers statiques. Deux réglages ajoutés après coup,
+      chacun issu d'un vrai échec : le conteneur tourne sous l'utilisateur de
+      l'hôte, sans quoi la base SQLite appartient à root et n'est plus
+      sauvegardable sans `sudo` ; et le port publié est configurable, 8000
+      étant souvent déjà pris.
+- [x] Premier rendu : réglé. La page d'accueil coûtait **60 s au premier appel
+      de chaque worker**, au-delà des 30 s après lesquelles gunicorn tue le
+      sien. Onze secondes d'imports (Django 3,5 s, plotly et pandas 8 s) plus
+      une vingtaine pour le premier rendu, plotly chargeant ses entrailles à la
+      première figure. `--preload` fait payer tout cela une fois dans le maître
+      avant le fork : **3,2 s au premier appel**, moins de 2 s ensuite.
+      `--timeout 120` reste comme garde-fou.
+- [x] Tutoriel de déploiement depuis une machine vierge : `DEPLOIEMENT.md`,
+      chaque commande exécutée pour de vrai, durées mesurées.
 
 ### C2. Remplacer la boucle `wget --recursive` **[M]**
 Le principe statique est bon ; l'implémentation est fragile. Deux options :
