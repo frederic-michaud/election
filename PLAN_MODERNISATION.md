@@ -452,11 +452,17 @@ commande, et le site survit à un pic de trafic.**
       chaud), quotidienne — l'historique `ResultatCommunalHistorique` est le
       bien précieux du projet. Reste à faire : `./var` la rend triviale, mais
       rien ne la déclenche encore.
-- [ ] **Non vérifié** : l'image n'a jamais été construite, faute de Docker sur
-      la machine de développement. Ce qui est testé, c'est la configuration
-      d'exécution — gunicorn avec `DEBUG=0`, `collectstatic`, whitenoise, les
-      pages et les fichiers statiques. À construire une fois sur le VPS avant
-      d'y compter.
+- [x] Image construite et lancée le 2026-09-04 : 4 min 51 s, 819 Mo, le site
+      répond et sert ses fichiers statiques. Deux réglages ajoutés après coup,
+      chacun issu d'un vrai échec : le conteneur tourne sous l'utilisateur de
+      l'hôte, sans quoi la base SQLite appartient à root et n'est plus
+      sauvegardable sans `sudo` ; et le port publié est configurable, 8000
+      étant souvent déjà pris.
+- [ ] **Défaut connu, à corriger avant de s'en servir** : la page d'accueil met
+      **22 s au premier rendu** et gunicorn tue son worker au bout de 30 s par
+      défaut. Elle retombe à 2,6 s ensuite, les vues suivantes étant servies
+      chaud. Il faut relever `--timeout` et baisser `--workers`, la machine
+      n'ayant qu'un cœur et 2 Go.
 
 ### C2. Remplacer la boucle `wget --recursive` **[M]**
 Le principe statique est bon ; l'implémentation est fragile. Deux options :

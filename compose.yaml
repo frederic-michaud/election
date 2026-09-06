@@ -15,9 +15,14 @@ services:
     build: .
     restart: unless-stopped
     env_file: .env
+    # Sinon le conteneur tourne en root et la base SQLite appartient à root sur
+    # l'hôte : plus moyen de la sauvegarder ni de lancer une commande hors
+    # conteneur sans sudo. Surchargeable si l'utilisateur de l'hôte n'est pas 1000.
+    user: "${UID:-1000}:${GID:-1000}"
     environment:
       DB_PATH: /app/var/votation.sqlite3
     volumes:
       - ./var:/app/var
+    # Le port de l'hôte est configurable : 8000 est souvent déjà pris.
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:${PORT_WEB:-8000}:8000"
