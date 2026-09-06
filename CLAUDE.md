@@ -141,21 +141,31 @@ charge par lots de 10 : au-delà, l'OFS répond 403.
 
 ---
 
-## Déploiement (`download_data.sh`)
+## Déploiement
 
-Approche volontairement rustique : une boucle `while true` qui, à chaque tour,
-télécharge le JSON fédéral, met à jour la base, relance l'extrapolation, **puis
-aspire tout le site Django avec `wget --recursive` pour en faire un mirroir HTML
-statique** copié dans `/srv/html/` (servi par Apache).
+**La production fait tourner Django**, derrière un cache nginx. Le miroir HTML
+aspiré par `wget --recursive` et recopié dans `/srv/html/` a disparu avec C2 :
+il servait à encaisser la charge, le cache le fait mieux et sans décalage.
 
-Conséquence importante : **la production ne fait pas tourner Django**. Le site en
-ligne est une photo statique régénérée en boucle — ce qui le rend insensible à la
-charge un soir de votation. Toute modification doit rester compatible avec cette
-aspiration (pas de contenu dépendant d'une requête utilisateur, pas de POST).
+Trois pièces, montées sur la machine hôte, décrites dans
+[`DEPLOIEMENT.md`](DEPLOIEMENT.md) et versionnées dans `deploiement/` :
 
-Le script ne contient plus de valeurs codées en dur : tout se surcharge par
-l'environnement (`DATE_SCRUTIN`, `DOSSIER_HTML`, `HOTE_DJANGO`, `MANAGE`,
-`CADENCE`).
+- **nginx** (`nginx-politiques.conf`) reçoit tout le trafic public et répond
+  depuis son cache. Validité de 30 s, mais **personne n'attend jamais ce
+  délai** : `proxy_cache_use_stale updating` sert la version périmée pendant
+  que `proxy_cache_background_update` fabrique la suivante. Mesuré : quelques
+  millisecondes par requête même quand le rendu Django prend une minute. Un
+  seul visiteur atteint Django à la fois (`proxy_cache_lock`), et une version
+  périmée est servie si Django est en train de redémarrer.
+- **`download_data.sh`** fait *un* tour : télécharger, mettre à jour, relancer
+  l'extrapolation. Plus de `while true`, plus d'état entre deux appels — il
+  retrouve l'instantané précédent par sa date de modification.
+- **le timer systemd** (`politiques-scrutin.timer`) le rappelle toutes les cinq
+  minutes, survit à la déconnexion ssh et au redémarrage, et journalise chaque
+  passage dans journald.
+
+Contrainte qui demeure : le site doit rester **cachable**, donc sans contenu
+dépendant du visiteur et sans POST.
 
 ### Le conteneur (C1)
 
@@ -183,9 +193,8 @@ Deux points de conception qui expliquent le reste :
   servir `/static/`, et le site sortirait sans CSS ni logo. `collectstatic` est
   lancé à la construction de l'image.
 
-Ce qui n'est **pas** dans C1, volontairement : pas de service proxy, pas de
-HTTPS, pas de systemd. Ces choix dépendent de C2 (micro-cache devant Django ou
-export statique), qui n'est pas tranché.
+nginx, HTTPS et le timer vivent sur l'hôte, pas dans un conteneur : le
+conteneur ne publie son port que sur `127.0.0.1`.
 
 ---
 

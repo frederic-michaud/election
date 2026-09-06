@@ -475,22 +475,31 @@ commande, et le site survit à un pic de trafic.**
 - [x] Tutoriel de déploiement depuis une machine vierge : `DEPLOIEMENT.md`,
       chaque commande exécutée pour de vrai, durées mesurées.
 
-### C2. Remplacer la boucle `wget --recursive` **[M]**
-Le principe statique est bon ; l'implémentation est fragile. Deux options :
+### C2. Remplacer la boucle `wget --recursive` **[M]** — *fait*
+*Décision (Frédéric, 2026-09-06) : micro-cache nginx devant Django, option 1.*
 
-- **Option 1 (recommandée) — micro-cache nginx devant Django** : `proxy_cache`
-  30–60 s sur toutes les pages. Django tourne en continu, le VPS 1 vCPU tient
-  n'importe quel pic (quelques requêtes/minute atteignent réellement Django).
-  Plus simple : plus de mirroir, plus de copie, le site est toujours à jour.
-- **Option 2 — export statique propre** : une management command
-  `manage.py export_site` qui rend les vues en HTML (`render_to_string`) vers un
-  dossier servi par le proxy. Même garantie que l'actuel wget, sans wget.
-
-Dans les deux cas :
-- [ ] La boucle du jour J devient un **timer systemd** (ou boucle supervisée) :
-      `fetch JSON → update → extrapolation → (export)`, toutes les 2–5 min,
-      avec logs et reprise sur erreur — plus de `while true` dans un terminal SSH.
-- [ ] Chemins, URL du scrutin et cadence en config, plus rien en dur.
+- [x] **Micro-cache nginx** (`deploiement/nginx-politiques.conf`). Validité de
+      30 s, mais personne n'attend jamais ce délai : `proxy_cache_use_stale
+      updating` + `proxy_cache_background_update` servent la version périmée
+      pendant que la suivante se fabrique. `proxy_cache_lock` limite Django à
+      un visiteur à la fois. Mesuré sur une machine saturée où le rendu prenait
+      une minute : **3 ms par requête**, du premier au dernier appel.
+      *Trouvé en passant* : sans `proxy_ignore_headers ... Set-Cookie Vary`,
+      rien n'est mis en cache — Django annonce des en-têtes de session que
+      nginx respecte au pied de la lettre.
+- [x] Le miroir statique disparaît. Plus de `wget --recursive`, plus de copie
+      dans `/srv/html/`, plus de décalage entre le calcul et ce qui est servi.
+- [x] La boucle du jour J devient un **timer systemd**
+      (`deploiement/politiques-scrutin.{service,timer}`), toutes les cinq
+      minutes, avec journalisation dans journald et reprise au redémarrage.
+      `download_data.sh` ne fait plus qu'un tour et ne garde aucun état : il
+      retrouve l'instantané précédent par sa date de modification, ce qui rend
+      le timer possible. Téléchargement sous un nom temporaire, pour qu'un
+      fichier tronqué ne devienne pas la référence du tour suivant.
+- [x] Chemins, URL du scrutin et cadence en config, plus rien en dur.
+- [ ] **Reste à faire** : rien n'a été éprouvé sous une vraie charge. Le cache
+      rend la question théorique côté Django, mais nginx sur un VPS à un cœur
+      n'a pas été mesuré. À voir en C3, pendant la répétition générale.
 
 ### C3. Répétition générale **[2]**
 - [ ] Procédure écrite de « dry run » avec `create_fake_json_input` : simuler une

@@ -1,0 +1,19 @@
+# Un tour de la boucle du jour de scrutin. Appelé par le timer du même nom.
+#
+#   sudo cp deploiement/politiques-scrutin.* /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now politiques-scrutin.timer
+#
+# Adapter DATE_SCRUTIN, User et WorkingDirectory à la machine.
+
+[Unit]
+Description=Politiques.ch — mise à jour du dépouillement et de la projection
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/election
+Environment=DATE_SCRUTIN=20260927
+ExecStart=/home/ubuntu/election/download_data.sh

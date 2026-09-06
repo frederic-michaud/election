@@ -1,61 +1,47 @@
 #!/bin/bash
-# Boucle du jour de scrutin : télécharger le JSON fédéral, mettre à jour la
-# base, relancer l'extrapolation, puis régénérer le mirroir statique.
+# Un tour de la boucle du jour de scrutin : télécharger le fichier fédéral,
+# mettre à jour la base, recalculer la projection.
 #
-# Tout ce qui change d'un scrutin à l'autre est en haut, ou surchargeable par
-# l'environnement :
 #   DATE_SCRUTIN=20260927 ./download_data.sh
+#
+# Le script ne boucle plus et n'aspire plus le site : il fait une passe et rend
+# la main. C'est `deploiement/politiques-scrutin.timer` qui le rappelle toutes
+# les cinq minutes, et nginx qui encaisse le trafic
+# (`deploiement/nginx-politiques.conf`).
 
-set -u
+set -eu
 
 DATE_SCRUTIN="${DATE_SCRUTIN:?à définir, ex. DATE_SCRUTIN=20260927}"
 # Sous ./var, donc visible à l'identique dans le conteneur (voir compose.yaml).
 DOSSIER_DATA="${DOSSIER_DATA:-var/scrutins}"
-# Le conteneur ne publie son port que sur l'adresse locale.
-HOTE_DJANGO="${HOTE_DJANGO:-127.0.0.1:8000}"
-DOSSIER_HTML="${DOSSIER_HTML:-/srv/html/}"
 # Comment exécuter les commandes Django. Par défaut dans le conteneur ; pour
 # tourner sans Docker, activer un venv puis MANAGE="python manage.py".
 MANAGE="${MANAGE:-docker compose run --rm web python manage.py}"
-CADENCE="${CADENCE:-0}"
 
 URL_SCRUTIN="https://app-prod-static-voteinfo.s3.eu-central-1.amazonaws.com/v1/ogd/sd-t-17-02-${DATE_SCRUTIN}-eidgAbstimmung.json"
-PREFIXE="${DOSSIER_DATA}/votation_${DATE_SCRUTIN}"
 
 mkdir -p "${DOSSIER_DATA}"
 
-# Avant de lancer le script, s'assurer d'avoir un instantané initial — celui
-# d'avant toute donnée disponible :
-#   wget "$URL_SCRUTIN" -O "${PREFIXE}_0.json"
-# puis, une fois la base peuplée :
-#   docker compose run --rm web python manage.py add_initial_scrutin_en_cours "${PREFIXE}_0.json"
+# L'instantané le plus récent sert de référence : `update_scrutin_en_cours` ne
+# réimporte que les communes dépouillées depuis lui. Le script ne garde donc
+# aucun état entre deux appels, ce qui permet à un timer de l'appeler.
+PRECEDENT=$(ls -1t "${DOSSIER_DATA}"/votation_"${DATE_SCRUTIN}"_*.json 2>/dev/null | head -1 || true)
+if [ -z "${PRECEDENT}" ]; then
+  cat >&2 <<MSG
+Aucun instantané de départ dans ${DOSSIER_DATA}. Amorcer d'abord :
 
-i=2
-while true;
-do
-  #récupérer les données des dépouillements partiels (stockage incrémentiel)
-((i=i+1));
-curl --output "${PREFIXE}_${i}.json.gz" "${URL_SCRUTIN}";
+  curl -o ${DOSSIER_DATA}/votation_${DATE_SCRUTIN}_0.json "${URL_SCRUTIN}"
+  ${MANAGE} add_initial_scrutin_en_cours ${DOSSIER_DATA}/votation_${DATE_SCRUTIN}_0.json
+MSG
+  exit 1
+fi
 
-gunzip "${PREFIXE}_${i}.json.gz";
+# Téléchargement sous un nom temporaire : un fichier tronqué ou une page
+# d'erreur ne doit pas devenir la référence du tour suivant.
+COURANT="${DOSSIER_DATA}/votation_${DATE_SCRUTIN}_$(date +%H%M%S).json"
+curl -fsS -o "${COURANT}.partiel" "${URL_SCRUTIN}"
+mv "${COURANT}.partiel" "${COURANT}"
 
-  #mettre les données récupérées ci-dessus dans la base de donnée du site
-((j=i-1))
-${MANAGE} update_scrutin_en_cours "${PREFIXE}_${j}.json" "${PREFIXE}_${i}.json"
-
-echo "--------scrutin en cours mis à jour ---------"
-
-  #fabriquer l'extrapolation sur la base des dépouillements partiels
+echo "instantané ${COURANT}, précédent ${PRECEDENT}"
+${MANAGE} update_scrutin_en_cours "${PRECEDENT}" "${COURANT}"
 ${MANAGE} run_extrapolation
-echo " ** extrapolation terminée ** "
-
-  #copier le site dans le dossier où apache saura le trouver
-wget      --recursive      --no-clobber      --page-requisites      --html-extension      --convert-links      --restrict-file-names=windows                    "${HOTE_DJANGO}"  -P politiques
-
-echo "!!!! site téléchargé !!!!";
-
-cp -r "politiques/${HOTE_DJANGO/:/+}"/* "${DOSSIER_HTML}"
-echo "** ** **"
-
-sleep "${CADENCE}";
-done
