@@ -497,9 +497,6 @@ commande, et le site survit à un pic de trafic.**
       le timer possible. Téléchargement sous un nom temporaire, pour qu'un
       fichier tronqué ne devienne pas la référence du tour suivant.
 - [x] Chemins, URL du scrutin et cadence en config, plus rien en dur.
-- [ ] **Reste à faire** : rien n'a été éprouvé sous une vraie charge. Le cache
-      rend la question théorique côté Django, mais nginx sur un VPS à un cœur
-      n'a pas été mesuré. À voir en C3, pendant la répétition générale.
 
 ### C3. Répétition générale **[2]**
 - [ ] Procédure écrite de « dry run » avec `create_fake_json_input` : simuler une

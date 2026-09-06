@@ -3,11 +3,6 @@
 # mettre à jour la base, recalculer la projection.
 #
 #   DATE_SCRUTIN=20260927 ./download_data.sh
-#
-# Le script ne boucle plus et n'aspire plus le site : il fait une passe et rend
-# la main. C'est `deploiement/politiques-scrutin.timer` qui le rappelle toutes
-# les cinq minutes, et nginx qui encaisse le trafic
-# (`deploiement/nginx-politiques.conf`).
 
 set -eu
 

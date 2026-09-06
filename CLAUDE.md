@@ -143,26 +143,9 @@ charge par lots de 10 : au-delà, l'OFS répond 403.
 
 ## Déploiement
 
-**La production fait tourner Django**, derrière un cache nginx. Le miroir HTML
-aspiré par `wget --recursive` et recopié dans `/srv/html/` a disparu avec C2 :
-il servait à encaisser la charge, le cache le fait mieux et sans décalage.
-
-Trois pièces, montées sur la machine hôte, décrites dans
-[`DEPLOIEMENT.md`](DEPLOIEMENT.md) et versionnées dans `deploiement/` :
-
-- **nginx** (`nginx-politiques.conf`) reçoit tout le trafic public et répond
-  depuis son cache. Validité de 30 s, mais **personne n'attend jamais ce
-  délai** : `proxy_cache_use_stale updating` sert la version périmée pendant
-  que `proxy_cache_background_update` fabrique la suivante. Mesuré : quelques
-  millisecondes par requête même quand le rendu Django prend une minute. Un
-  seul visiteur atteint Django à la fois (`proxy_cache_lock`), et une version
-  périmée est servie si Django est en train de redémarrer.
-- **`download_data.sh`** fait *un* tour : télécharger, mettre à jour, relancer
-  l'extrapolation. Plus de `while true`, plus d'état entre deux appels — il
-  retrouve l'instantané précédent par sa date de modification.
-- **le timer systemd** (`politiques-scrutin.timer`) le rappelle toutes les cinq
-  minutes, survit à la déconnexion ssh et au redémarrage, et journalise chaque
-  passage dans journald.
+**La production fait tourner Django**, derrière un cache nginx. Le cache, le
+script du jour J et le timer systemd sont versionnés dans `deploiement/` et
+décrits pas à pas dans [`DEPLOIEMENT.md`](DEPLOIEMENT.md).
 
 Contrainte qui demeure : le site doit rester **cachable**, donc sans contenu
 dépendant du visiteur et sans POST.

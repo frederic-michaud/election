@@ -176,16 +176,6 @@ même la version périmée, instantanément, et va chercher la suivante en
 arrière-plan. Un seul visiteur à la fois atteint Django. Si Django redémarre ou
 tombe, la dernière version connue continue d'être servie.
 
-Vérifier que le cache mord, l'en-tête le dit :
-
-```bash
-curl -s -o /dev/null -D - http://127.0.0.1/ | grep -i x-cache
-```
-
-`MISS` au premier appel, puis `HIT`, `UPDATING` ou `STALE`. Mesuré sur une
-machine chargée où le rendu Django prenait une minute : **3 millisecondes par
-requête**.
-
 Puis le certificat HTTPS, gratuit et renouvelé tout seul :
 
 ```bash
