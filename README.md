@@ -111,6 +111,9 @@ python manage.py run_extrapolation
 
 ## Déploiement en conteneur
 
+Pas à pas depuis une machine neuve : [`DEPLOIEMENT.md`](DEPLOIEMENT.md).
+
+
 Une image, un service. Elle sert le site *et* exécute les commandes du
 pipeline, puisqu'elle embarque la pile scientifique.
 

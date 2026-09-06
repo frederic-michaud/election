@@ -465,11 +465,15 @@ commande, et le site survit à un pic de trafic.**
       l'hôte, sans quoi la base SQLite appartient à root et n'est plus
       sauvegardable sans `sudo` ; et le port publié est configurable, 8000
       étant souvent déjà pris.
-- [ ] **Défaut connu, à corriger avant de s'en servir** : la page d'accueil met
-      **22 s au premier rendu** et gunicorn tue son worker au bout de 30 s par
-      défaut. Elle retombe à 2,6 s ensuite, les vues suivantes étant servies
-      chaud. Il faut relever `--timeout` et baisser `--workers`, la machine
-      n'ayant qu'un cœur et 2 Go.
+- [x] Premier rendu : réglé. La page d'accueil coûtait **60 s au premier appel
+      de chaque worker**, au-delà des 30 s après lesquelles gunicorn tue le
+      sien. Onze secondes d'imports (Django 3,5 s, plotly et pandas 8 s) plus
+      une vingtaine pour le premier rendu, plotly chargeant ses entrailles à la
+      première figure. `--preload` fait payer tout cela une fois dans le maître
+      avant le fork : **3,2 s au premier appel**, moins de 2 s ensuite.
+      `--timeout 120` reste comme garde-fou.
+- [x] Tutoriel de déploiement depuis une machine vierge : `DEPLOIEMENT.md`,
+      chaque commande exécutée pour de vrai, durées mesurées.
 
 ### C2. Remplacer la boucle `wget --recursive` **[M]**
 Le principe statique est bon ; l'implémentation est fragile. Deux options :

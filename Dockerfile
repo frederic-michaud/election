@@ -19,4 +19,11 @@ COPY . .
 RUN DEBUG=1 python manage.py collectstatic --noinput
 
 EXPOSE 8000
-CMD ["gunicorn", "election.wsgi", "--bind", "0.0.0.0:8000", "--workers", "3"]
+# --timeout : la page d'accueil calcule trois cartes choroplèthes sur 2 100
+# communes. Mesuré à 22 s au premier rendu, 3 s ensuite ; les 30 s par défaut
+# de gunicorn tuaient le worker avant qu'il ait fini.
+# --workers : le VPS a un cœur, et chaque worker charge numpy, scipy et plotly.
+# --preload : importer Django et plotly coûte 11 s, payés une fois dans le
+# maître avant le fork au lieu d'une fois par worker.
+CMD ["gunicorn", "election.wsgi", "--bind", "0.0.0.0:8000", \
+     "--workers", "2", "--timeout", "120", "--preload"]
