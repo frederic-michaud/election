@@ -1,6 +1,3 @@
-# Un seul service. Pas de base de données : SQLite est un fichier, posé dans
-# ./var côté hôte pour que la sauvegarde reste une copie de fichier.
-#
 #   docker compose up -d --build          démarre le site
 #   docker compose run --rm web python manage.py run_extrapolation
 #
