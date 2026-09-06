@@ -17,9 +17,11 @@ leur historique, puis on prédit les communes non dépouillées à partir de cel
 le sont déjà.
 
 1. **Profil de commune par ACP** (`manage.py populate_pca`). On construit la matrice
-   commune × objet des % de oui sur **55 votations passées** (`ResultatCommunalHistorique`), et on la
-   réduit à **6 composantes principales** (`sklearn`), stockées dans `PCAResult`.
-   Une commune qui n'a pas exactement 55 `ResultatCommunalHistorique` est écartée de l'ACP.
+   commune × objet des % de oui sur les **votations passées** (`ResultatCommunalHistorique` :
+   55 dans la base fictive, tout ce que `importer_historique --depuis` a chargé
+   en réel), et on la réduit à **6 composantes principales** (`sklearn`),
+   stockées dans `PCAResult`. Une commune à qui il manque un seul objet
+   historique est écartée de l'ACP.
 2. **Régression le jour J** (`scrutin/extrapolation.py`). Sur les communes déjà
    comptabilisées, on ajuste par moindres carrés — **pondérés par le nombre de
    bulletins rentrés** — un modèle linéaire `% oui ≈ Σ aᵢ·composanteᵢ + b`
@@ -92,7 +94,7 @@ Amorçage, **dans cet ordre** (chaque étape dépend de la précédente) :
 ```
 populate_commune          # cantons, districts, communes (⚠ supprime tous les Canton, donc tout le reste en cascade)
 import_metadata_commune   # langue, degré d'urbanisation
-populate_voix             # 55 votations historiques  (⚠ supprime tous les SujetVote)
+importer_historique       # votations passées depuis STAT-TAB (réseau, ⚠ crée les pseudo-communes 9xxx)
 set_nb_voix_commune       # Commune.nb_voix = électeurs de la dernière votation
 populate_pca              # ACP → PCAResult          (⚠ supprime tous les PCAResult)
 add_initial_scrutin_en_cours <json_du_scrutin>   # lignes vides du jour J
@@ -126,10 +128,16 @@ de test en rejouant d'anciens résultats sur 5 % des communes tirées au hasard 
 c'est le moyen de tester sans attendre un vrai dimanche de votation.
 
 ### Source des données
-JSON open data de la Confédération (`app-prod-static-voteinfo.s3…/ogd/`), format
+**Jour J** : JSON open data de la Confédération (`app-prod-static-voteinfo.s3…/ogd/`), format
 alémanique : `vorlagen`, `kantone`, `gemeinden`, `jaStimmenAbsolut`,
 `neinStimmenAbsolut`, `anzahlStimmberechtigte`, `eingelegteStimmzettel`.
 Les communes sont appariées par **numéro OFS** (`geoLevelnummer`).
+
+**Historique** : cube STAT-TAB de l'OFS `px-x-1703030000_101`, API PX-Web JSON
+sans clé, **déjà harmonisé sur les communes actuelles** — une commune fusionnée
+porte les voix de ses prédécesseurs, l'appariement par numéro OFS suffit. Les
+codes d'objet du cube sont les `vorlagenId` du jour J. `importer_historique`
+charge par lots de 10 : au-delà, l'OFS répond 403.
 
 ---
 
@@ -152,37 +160,25 @@ Le script contient des valeurs codées en dur : `192.168.1.20:8000`, `/srv/html/
 
 ## Pièges connus
 
-**Données**
-1. **Deux racines de données différentes** — **en voie de disparition** (jalon 2,
-   tâche A6). Le référentiel des communes (`populate_commune`,
-   `import_metadata_commune`) lit désormais `data/agvch_niveaux_2026-01-01.csv`,
-   versionné, comme `carte/API.py`. Restent hors du dépôt, en attendant B4 :
-   `donnee_federale_v3.txt` (l'historique, perdu — mais c'était un export
-   manuel du cube STAT-TAB que B4 réinterroge) et les
-   `votation_septembre_2022_*.json` du jour J.
-
 **Valeurs codées en dur** — **corrigées** (jalon 3, tâche B2)
-2. Le `55` de `ScrutinAPI` était en dur à deux endroits → `nb_sujets_historiques()`,
+1. Le `55` de `ScrutinAPI` était en dur à deux endroits → `nb_sujets_historiques()`,
    déduit des `ResultatCommunalHistorique`. Une commune à l'historique incomplet est toujours écartée de
    l'ACP, mais avec un avertissement (le seuil de couverture est l'affaire de la
    Partie 6).
-3. `update_scrutin_en_cours.get_new_commune` bouclait sur `range(2)` : il ignorait
+2. `update_scrutin_en_cours.get_new_commune` bouclait sur `range(2)` : il ignorait
    les objets au-delà du deuxième et plantait sur un scrutin à objet unique.
-4. Les chemins `votation_septembre_2022_*` sont devenus des arguments, et `download_data.sh` dérive URL et fichiers de
+3. Les chemins `votation_septembre_2022_*` sont devenus des arguments, et `download_data.sh` dérive URL et fichiers de
    `DATE_SCRUTIN`.
 
 **Bugs latents repérés à la lecture** — **corrigés** (jalon 2, tâche A4)
-5. `Commune.get_last_nb_electeur_slow` triait une liste jetable (tri sans effet)
+4. `Commune.get_last_nb_electeur_slow` triait une liste jetable (tri sans effet)
     → `order_by('-sujet_vote__date').first()`.
-6. `add_initial_scrutin_en_cours` / `update_scrutin_en_cours` /
+5. `add_initial_scrutin_en_cours` / `update_scrutin_en_cours` /
     `create_fake_json_input` : le `except` autour de `get_unique_commune_by_ofs`
     ne faisait pas `continue` — la boucle réutilisait la `commune` de
     l'itération précédente.
-7. `ScrutinAPI.getVotationMatrixWithMetaInfo` utilisait `voixs` après la boucle
+6. `ScrutinAPI.getVotationMatrixWithMetaInfo` utilisait `voixs` après la boucle
     (variable qui fuit) et appelait `Warning(…)` au lieu de `warnings.warn(…)`.
-8. `populate_voix.add_foreigner` testait `len(districts)` au lieu de
-    `len(communes)` ; le message d'erreur des sujets en double référençait une
-    variable inexistante (`commune.Canton`).
 
 Les `except:` nus ont été remplacés par des exceptions ciblées partout.
 

@@ -394,17 +394,27 @@ future sans toucher au code** — seulement la config et les données.
 *Révisé le 2026-09-03 : la source retenue est le cube STAT-TAB de l'OFS, qui
 livre l'historique **déjà harmonisé sur les communes actuelles**. Voir Partie 6.*
 
-- [ ] `manage.py importer_historique` : reconstruire `ResultatCommunalHistorique`
+- [x] `manage.py importer_historique` : reconstruit `ResultatCommunalHistorique`
       depuis le cube STAT-TAB `px-x-1703030000_101` (« Votations populaires,
       résultats au niveau des communes depuis 1960 »), via l'API PX-Web JSON,
       sans clé. Appariement par **numéro OFS**, sur 4 chiffres avec zéros devant.
       Remplace `populate_voix` **et** le fichier `donnee_federale_v3.txt`, qui
       n'existe plus sur aucune machine.
-      Découper la requête par paquets d'objets : la limite est de 2,5 M cellules
-      par appel.
-- [ ] Choisir le nombre d'objets historiques à charger. Le cube en propose 511
-      depuis 1960 ; le code actuel en utilise 55. Plus d'objets = un profil de
-      commune plus fin, mais aussi plus de communes à couverture incomplète.
+- [x] Choisir le nombre d'objets historiques à charger. **Décision (Frédéric,
+      2026-09-04) : ne garder que les objets récents, `--depuis 2014-11-30`**
+      par défaut (~100 objets). Deux raisons :
+      - *dérive démographique* : une commune qui a grossi ou changé de
+        population ne vote plus comme il y a vingt ans ; un historique long
+        gagne des colonnes mais brouille le profil actuel, et c'est le profil
+        actuel qui sert le jour J ;
+      - *couverture* : les cantons ont commencé un à un à publier séparément
+        leurs Suisses de l'étranger (TG septembre 2010, VS mars 2012, FR
+        septembre 2012, ZH novembre 2014). Depuis le 30 novembre 2014, les
+        douze pseudo-communes sont complètes, donc dans l'ACP — 59 000
+        électeurs, dont 37 000 pour ZH, qu'on aurait sinon dû traiter à part.
+      Avant 2010 les trous se multiplient (550 communes sans résultat en 1960).
+      La commande purge l'historique antérieur à la fenêtre : un rejeu avec une
+      date plus récente ne mélange pas deux fenêtres.
 
 ### B5. Communes dans le temps — fusions et mutations (voir Partie 6) **[2]**
 *Révisé le 2026-09-03 : ramené de « chantier structurant » à « conséquence de
@@ -419,8 +429,7 @@ Reste de B5, une fois B4 fait :
 - [x] `import_metadata_commune` : lire langue et degré d'urbanisation depuis
       l'API AGVCH (`api/communes/levels`, CSV, sans clé) au lieu des fichiers
       non versionnés de `../data`. *Fait en A6* — et `populate_commune` lit le
-      même fichier, la hiérarchie y étant déjà jointe : le piège n° 1 ne
-      concerne plus que l'historique et les JSON du jour J.
+      même fichier, la hiérarchie y étant déjà jointe.
 - [ ] Jour J blindé : commune sans profil ACP → repli sur le profil moyen du
       district + log, jamais une exception qui tue l'extrapolation.
 - [ ] **[I]** GeoJSON communal à jour — voir Partie 6.
