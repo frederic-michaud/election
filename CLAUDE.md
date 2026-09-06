@@ -141,21 +141,14 @@ charge par lots de 10 : au-delà, l'OFS répond 403.
 
 ---
 
-## Déploiement (`download_data.sh`)
+## Déploiement
 
-Approche volontairement rustique : une boucle `while true` qui, à chaque tour,
-télécharge le JSON fédéral, met à jour la base, relance l'extrapolation, **puis
-aspire tout le site Django avec `wget --recursive` pour en faire un mirroir HTML
-statique** copié dans `/srv/html/` (servi par Apache).
+**La production fait tourner Django**, derrière un cache nginx. Le cache, le
+script du jour J et le timer systemd sont versionnés dans `deploiement/` et
+décrits pas à pas dans [`DEPLOIEMENT.md`](DEPLOIEMENT.md).
 
-Conséquence importante : **la production ne fait pas tourner Django**. Le site en
-ligne est une photo statique régénérée en boucle — ce qui le rend insensible à la
-charge un soir de votation. Toute modification doit rester compatible avec cette
-aspiration (pas de contenu dépendant d'une requête utilisateur, pas de POST).
-
-Le script ne contient plus de valeurs codées en dur : tout se surcharge par
-l'environnement (`DATE_SCRUTIN`, `DOSSIER_HTML`, `HOTE_DJANGO`, `MANAGE`,
-`CADENCE`).
+Contrainte qui demeure : le site doit rester **cachable**, donc sans contenu
+dépendant du visiteur et sans POST.
 
 ### Le conteneur (C1)
 
@@ -183,9 +176,8 @@ Deux points de conception qui expliquent le reste :
   servir `/static/`, et le site sortirait sans CSS ni logo. `collectstatic` est
   lancé à la construction de l'image.
 
-Ce qui n'est **pas** dans C1, volontairement : pas de service proxy, pas de
-HTTPS, pas de systemd. Ces choix dépendent de C2 (micro-cache devant Django ou
-export statique), qui n'est pas tranché.
+nginx, HTTPS et le timer vivent sur l'hôte, pas dans un conteneur : le
+conteneur ne publie son port que sur `127.0.0.1`.
 
 ---
 

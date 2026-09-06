@@ -1,0 +1,19 @@
+# Rappelle le service toutes les cinq minutes. Remplace la boucle `while true`
+# lancée à la main dans un terminal ssh : le timer survit à la déconnexion, au
+# redémarrage de la machine, et journalise chaque passage.
+#
+#   systemctl list-timers politiques-scrutin.timer   # quand le prochain tour
+#   journalctl -u politiques-scrutin.service -f      # ce qu'il a fait
+
+[Unit]
+Description=Politiques.ch — relance la projection toutes les cinq minutes
+
+[Timer]
+OnBootSec=2min
+# Depuis la fin du tour précédent, jamais en parallèle : deux imports
+# simultanés écriraient dans la même base SQLite.
+OnUnitActiveSec=5min
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target

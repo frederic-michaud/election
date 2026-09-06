@@ -158,29 +158,23 @@ La réponse attendue est `0`.
 
 ## 8. Ouvrir le site au public
 
-Le conteneur n'écoute qu'en local. C'est le serveur web de la machine qui reçoit
-le trafic public et le lui transmet.
+Le conteneur n'écoute qu'en local. C'est nginx, sur la machine hôte, qui reçoit
+le trafic public — et surtout qui **répond depuis son cache**.
 
 ```bash
 sudo apt install -y nginx
-sudo tee /etc/nginx/sites-available/politiques >/dev/null <<'EOF'
-server {
-    listen 80;
-    server_name politiques.ch;
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        # La page d'accueil calcule des cartes : lui laisser le temps.
-        proxy_read_timeout 180s;
-    }
-}
-EOF
+sudo cp deploiement/nginx-politiques.conf /etc/nginx/sites-available/politiques
+sudo sed -i "s/politiques\.ch/$VOTRE_DOMAINE/" /etc/nginx/sites-available/politiques
 sudo ln -sf /etc/nginx/sites-available/politiques /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
 ```
+
+Ce que fait ce cache, et pourquoi il compte : une page reste valable 30 s, mais
+**aucun visiteur n'attend jamais ce délai**. Passé les 30 s, nginx sert quand
+même la version périmée, instantanément, et va chercher la suivante en
+arrière-plan. Un seul visiteur à la fois atteint Django. Si Django redémarre ou
+tombe, la dernière version connue continue d'être servie.
 
 Puis le certificat HTTPS, gratuit et renouvelé tout seul :
 
@@ -199,30 +193,36 @@ sudo ufw enable
 
 ## 9. Le dimanche de scrutin
 
-Toutes les quelques minutes : télécharger le nouveau fichier, mettre à jour la
-base, recalculer la projection.
+Un timer systemd rappelle le script toutes les cinq minutes : il télécharge le
+nouveau fichier, met à jour la base et recalcule la projection.
 
 ```bash
-DATE=20260927
-URL="https://app-prod-static-voteinfo.s3.eu-central-1.amazonaws.com/v1/ogd/sd-t-17-02-${DATE}-eidgAbstimmung.json"
-i=0
-while true; do
-  j=$i; i=$((i+1))
-  curl -s -o "var/scrutins/votation_${DATE}_${i}.json" "$URL"
-  docker compose run --rm web python manage.py update_scrutin_en_cours \
-      "var/scrutins/votation_${DATE}_${j}.json" "var/scrutins/votation_${DATE}_${i}.json"
-  docker compose run --rm web python manage.py run_extrapolation
-  sleep 300
-done
+sudo cp deploiement/politiques-scrutin.service deploiement/politiques-scrutin.timer \
+        /etc/systemd/system/
+sudo sed -i "s/20260927/$DATE/" /etc/systemd/system/politiques-scrutin.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now politiques-scrutin.timer
 ```
 
-Chaque instantané est conservé : on garde la trace de la soirée, et la mise à
-jour ne réimporte que les communes nouvellement dépouillées.
+Adapter aussi `User` et `WorkingDirectory` dans le fichier `.service` si le
+dépôt n'est pas dans `/home/ubuntu/election`.
 
-Le dépôt fournit `download_data.sh`, qui fait la même chose **et** aspire le
-site en HTML statique pour qu'Apache le serve. C'est la variante insensible à
-la charge, utilisée jusqu'ici en production. Elle reste à trancher (voir C2
-dans `PLAN_MODERNISATION.md`).
+Surveiller la soirée :
+
+```bash
+systemctl list-timers politiques-scrutin.timer     # le prochain tour
+journalctl -u politiques-scrutin.service -f        # ce qu'il fait
+```
+
+Chaque instantané téléchargé est conservé sous `var/scrutins`, ce qui garde la
+trace de la soirée et permet de tout rejouer. La mise à jour ne réimporte que
+les communes dépouillées depuis l'instantané précédent.
+
+Pour lancer un tour à la main, sans attendre le timer :
+
+```bash
+DATE_SCRUTIN=20260927 ./download_data.sh
+```
 
 ## 10. Sauvegarder
 
