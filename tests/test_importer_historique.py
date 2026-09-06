@@ -44,7 +44,7 @@ def cube(monkeypatch):
 @pytest.fixture
 def lausanne():
     canton = Canton.objects.create(nom="Vaud", abreviation="VD")
-    district = District.objects.create(nom="Lausanne", numero_ofs=2225, canton=canton)
+    district = District.objects.create(nom="Lausanne", code_historique=10277, canton=canton)
     return Commune.objects.create(nom="Lausanne", numero_ofs=5586, district=district, canton=canton)
 
 
@@ -93,7 +93,7 @@ def test_cree_les_pseudo_communes_de_l_etranger(cube, lausanne):
     etranger = Commune.objects.get(numero_ofs=9220)
     assert etranger.nom == "VD-CH de l'étranger"
     assert etranger.canton.abreviation == "VD"
-    assert etranger.district.numero_ofs == 9220
+    assert etranger.district.code_historique == 9220
 
 
 def test_relancable_sans_doublon_et_avec_mise_a_jour(cube, lausanne):

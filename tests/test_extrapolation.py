@@ -123,7 +123,7 @@ def peupler_base_lineaire(nb_communes, nb_comptees):
     Renvoie le sujet et le total réel (oui, non) sur *toutes* les communes.
     """
     canton = Canton.objects.create(nom="Vaud", abreviation="VD")
-    district = District.objects.create(nom="Lavaux-Oron", numero_ofs=1, canton=canton)
+    district = District.objects.create(nom="Lavaux-Oron", code_historique=1, canton=canton)
     sujet = SujetVote.objects.create(
         nom="Objet synthétique", sujet_id=1, date=datetime.date(2026, 9, 27)
     )

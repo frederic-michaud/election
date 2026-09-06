@@ -81,7 +81,10 @@ def lire_resultats(codes_objets):
 def creer_pseudo_commune(numero_ofs, nom):
     """« VD-CH de l'étranger » → une commune du canton VD, dans son propre district."""
     canton = Canton.objects.get(abreviation=nom[:2])
-    district, _ = District.objects.get_or_create(numero_ofs=numero_ofs, canton=canton,
+    # `code_historique` porte normalement le code du répertoire de l'OFS ; ces
+    # districts-là n'existent pas dans le répertoire, on y met le numéro OFS de
+    # la pseudo-commune, qui est unique et ne peut entrer en collision.
+    district, _ = District.objects.get_or_create(code_historique=numero_ofs, canton=canton,
                                                  defaults={"nom": nom})
     return Commune.objects.create(nom=nom, numero_ofs=numero_ofs, canton=canton,
                                   district=district)

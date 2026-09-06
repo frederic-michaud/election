@@ -84,6 +84,15 @@ def sigmoide(x):
     return 1.0 / (1.0 + math.exp(-x))
 
 
+def degre_urbanisation(urbanite):
+    """Les trois degrés de DEGURB2021, dans des proportions proches du réel."""
+    if urbanite > 1.5:
+        return "urbain"
+    if urbanite > 0:
+        return "intermédiaire"
+    return "rural"
+
+
 class Command(BaseCommand):
     help = "Peuple la base avec des données fictives à l'échelle réelle."
 
@@ -146,10 +155,10 @@ class Command(BaseCommand):
         }
 
         District.objects.bulk_create([
-            District(nom=nom, numero_ofs=id_, canton=cantons[id_canton])
+            District(nom=nom, code_historique=id_, canton=cantons[id_canton])
             for id_, (nom, id_canton) in districts.items()
         ])
-        districts_db = {d.numero_ofs: d for d in District.objects.all()}
+        districts_db = {d.code_historique: d for d in District.objects.all()}
 
         # Une composante par district : les profils voisins se ressemblent,
         # sinon la carte serait du poivre et sel et ne dirait rien.
@@ -183,7 +192,7 @@ class Command(BaseCommand):
                 canton=cantons[id_canton],
                 district=districts_db[p["bezkId"]],
                 langue="français" if latin else "allemand",
-                degre_urbanisation="urbain" if urbanite > 0.5 else "rural",
+                degre_urbanisation=degre_urbanisation(urbanite),
                 nb_voix=electeurs,
             ))
             profils[p["vogeId"]] = (urbanite, latin, electeurs)
