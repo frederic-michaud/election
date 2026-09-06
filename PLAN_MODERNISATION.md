@@ -310,16 +310,12 @@ mise à jour à l'époque ; corrigé le 2026-08-30 en relisant le repo.)*
       `agvch_niveaux_2026-01-01.csv` (endpoint `levels`), lu par
       `populate_commune` **et** `import_metadata_commune`. Une ligne par
       commune, la hiérarchie déjà jointe.
-- [ ] **Degré d'urbanisation : aligner `peupler_demo` [M]** — l'échelle
-      officielle `DEGURB2021` en a trois, `peupler_demo` n'en écrit que deux.
-- [x] Documenter la provenance de `donnee_federale_v3.txt` (55 votations
-      historiques). **Il n'en reste aucune copie.** Son format, tel que
-      `populate_voix` le lit (séparateur `;`, communes préfixées par `......`,
-      `...` pour une valeur absente), est celui d'un export manuel du cube
-      STAT-TAB de l'OFS `px-x-1703030000_101` — la source même que B4
-      interroge par API. Le fichier n'était donc pas irremplaçable :
-      `importer_historique` (B4) le reconstruit, et `populate_voix` disparaît
-      avec lui.
+- [x] **Degré d'urbanisation : aligner `peupler_demo` [M]** — les trois degrés
+      de l'échelle officielle `DEGURB2021` (urbain / intermédiaire / rural),
+      dans des proportions proches du réel.
+- [x] Documenter la provenance de `donnee_federale_v3.txt`. **Il n'en reste
+      aucune copie**, sans conséquence : son format trahit un export manuel du
+      cube STAT-TAB, que B4 réinterroge directement par API.
 
 ---
 
