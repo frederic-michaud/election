@@ -33,8 +33,6 @@ def import_votation(path_votation):
                     logger.warning('Commune not found: %s: %s',
                                    data_commune["geoLevelnummer"], data_commune["geoLevelname"])
                     continue
-                if (commune.nom in ['Rüti bei Lyssach', 'Jaberg']):
-                    continue
                 ResultatCommunalEnCours.objects.get_or_create(
                     commune=commune,
                     sujet_vote=sujet,
