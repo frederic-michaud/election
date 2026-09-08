@@ -123,9 +123,9 @@ tout le monde voit exactement le même site.
       `tests/test_contrat.py`) et validé en PR à deux. `views.py` et la carte
       consomment le contrat (`resultats_par_commune` vit dans
       `scrutin/donnees.py`, pas besoin d'un `carte/donnees.py` à part). Le
-      Plotly de l'histogramme attend encore son déménagement de `views.py`
-      vers `graphiques.py` **[I]**, celui de la carte de `carte/API.py` vers
-      `carte/figure.py` **[I]**.
+      Plotly de l'histogramme a déménagé de `views.py` vers
+      `scrutin/graphiques.py` **[I]** ; celui de la carte attend encore son
+      passage de `carte/API.py` vers `carte/figure.py` **[I]**.
 
 **Conséquence sur le parallélisme** : la voie I ne démarre qu'une fois le
 jalon 0 franchi (A1–A3 + `peupler_demo`, ≈ 1 jour côté M) au lieu de démarrer
