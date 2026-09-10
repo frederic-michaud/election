@@ -302,6 +302,15 @@ ses frontières explicites, et l'interdiction de toucher la zone de l'autre.
 
 Détail complet et découpage des tâches par voie : [`PLAN_MODERNISATION.md`](PLAN_MODERNISATION.md) Partie 0.
 
+### Refonte graphique : la maquette d'abord
+
+Le design ne part pas d'une charte abstraite : on itère sur une **page HTML
+statique** dans `maquette/` (voie I), qui embarque les **vraies figures
+Plotly en JSON** — produites par les mêmes fonctions que le site, jamais
+dessinées à la main — et un bloc de réglages `charte.js`. Une fois une
+variante validée à deux, la charte CSS et `charte.py` en sont *extraites*,
+puis transposées dans les gabarits Django. Détail : Partie 7 du plan.
+
 ## Conventions
 
 Domaine et modèles en **français** (`Commune`, `SujetVote`, `ResultatCommunalHistorique`, `nombre_oui`,

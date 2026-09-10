@@ -44,7 +44,7 @@ forme du contrat (ci-dessous), méthode statistique, priorités. Seule la
 | `election/settings.py`, `Dockerfile`, `compose.yaml`, CI | **M** |
 | `carte/donnees.py` | **M** |
 | `templates/`, `*/static/` (CSS, JS, logo) | **I** |
-| `scrutin/charte.py`, `scrutin/graphiques.py`, `carte/figure.py` | **I** |
+| `scrutin/charte.py`, `scrutin/graphiques.py`, `carte/figure.py`, `maquette/` | **I** |
 | `*/views.py` | **commun** — doit rester minuscule (voir couture) |
 | `tests/test_contrat.py` | **commun** — fige la forme du contrat |
 | `CLAUDE.md`, `PLAN_MODERNISATION.md` | **commun** |
@@ -192,8 +192,8 @@ qui protège dans les deux cas.
 2. **Voie M seule** : A1–A3 + `peupler_demo` — au bout, `manage.py peupler_demo`
    puis `runserver` donnent un site complet depuis un clone frais. C'est le
    jalon qui débloque la voie I.
-3. **En parallèle** : voie M sur A4–A5 (bugs, tests), voie I sur la charte CSS
-   puis `charte.py`, histogramme, carte.
+3. **En parallèle** : voie M sur A4–A5 (bugs, tests), voie I sur la maquette
+   statique (Partie 7.1–7.2), dont la charte sera extraite ensuite.
 
 ---
 
@@ -580,8 +580,8 @@ Généraliser du binaire oui/non au multi-candidats :
 |---|---|---|
 | **0. Contrat** *(à deux, en premier)* | forme du dict + couture `donnees`/`graphiques` | idem |
 | **1. Le repo démarre** | A1–A3 + `peupler_demo` — **débloque la voie I** | (attend le jalon 1) |
-| **2. Base saine** | A4–A5 : bugs, tests, CI | P7 : charte CSS, `charte.py`, histogramme, carte |
-| **3. Prêt pour un scrutin** | B1–B4 : Django 5.2, dé-harcodage, pipeline | P7 : chiffre héro, a11y, hygiène |
+| **2. Base saine** | A4–A5 : bugs, tests, CI | P7.1–7.2 : maquette statique (figures Plotly en JSON), itérations |
+| **3. Prêt pour un scrutin** | B1–B4 : Django 5.2, dé-harcodage, pipeline | P7.3–7.4 : charte extraite de la maquette, transposition Django |
 | **4. Communes à jour** | B4 : `importer_historique` depuis STAT-TAB | GeoJSON 2026, contrôle qualité |
 | **5. En production** | C1–C2 : Compose, cache, timer systemd | C3 : contrôle visuel du dry run |
 | **6. Produit** | D1 : IC bootstrap, données de convergence | D1 : réel/estimé, courbe, page Méthodes |
@@ -618,11 +618,11 @@ extrapolation qui tourne, site consultable. La conteneurisation peut suivre.
 5. Corrections des bugs latents (petites PR séparées).
 6. Tests de `extrapolation.py` + CI.
 
-*Puis voie I* :
-1. Charte en variables CSS + fonte unique + contrastes corrigés.
-2. `charte.py` (template Plotly partagé), puis histogramme (ligne des 50 %),
-   puis carte (divergente ancrée à 50 %).
-3. Chiffre héro, tableaux de valeurs, hygiène (SVG, favicon, Plotly vendoré).
+*Puis voie I* (Partie 7, dans cet ordre) :
+1. Figures exportables + `maquette/figures.js` + plotly.js vendoré (7.1).
+2. Maquette HTML statique, variantes d'agencement, itérations à deux (7.2).
+3. Charte CSS et `charte.py` extraites de la variante retenue (7.3), puis
+   transposition dans les gabarits Django (7.4).
 
 ---
 
@@ -687,7 +687,118 @@ au backend. Alimente D1.
 - Bon point à préserver : `white-bg` sans tuiles externes → compatible avec le
   mirroir statique, aucune dépendance à un serveur de cartes.
 
-### Refonte proposée **[I]**
+### Démarche retenue : la maquette d'abord **[2]** — *décidé le 2026-09-10*
+
+La liste ci-dessous (« Cible visuelle ») a été écrite **sans jamais voir une
+page** : des codes hexa, une fonte, une échelle de carte. Or les vrais
+arbitrages de ce site sont des questions de mise en page — où va le chiffre
+héro, combien d'objets tiennent côte à côte, la carte prend-elle toute la
+largeur ou vit-elle à côté de l'histogramme, que voit-on sur un téléphone à
+18 h le dimanche. Ça ne se tranche qu'en regardant. On inverse donc l'ordre :
+**on itère sur une page HTML statique jusqu'à être contents, puis on en
+extrait la charte**, et non l'inverse.
+
+Ce n'est **pas un mode maquette du site** (Partie 0 : un seul chemin de code) :
+c'est un dossier `maquette/` **[I]**, un fichier HTML qu'on ouvre en `file://`,
+qui vit à côté de Django et ne s'exécute jamais en production.
+
+**Les figures Plotly y sont embarquées telles quelles, pas en image.** Une
+carte Plotly est un JSON (données + GeoJSON + layout) plus un appel à
+`Plotly.newPlot` : collé dans la page statique, elle reste interactive
+(survol, zoom) et **tout son look and feel est éditable en clair** — échelle de
+couleurs, bornes, opacité, marges, survol, barre d'outils. Un PNG ou un SVG
+figerait justement ce qu'on veut faire varier. Le PNG ne sert qu'à discuter
+d'une variante par message.
+
+#### 7.1 Extraire les figures **[I]**, un export **[M]**
+
+- [ ] **[M]** `manage.py exporter_vue_accueil [sortie]` : écrit le contrat de
+      vue (`construire_vue_accueil()`) en JSON. Cinq lignes — le dict est déjà
+      sérialisable (`test_contrat`). Sur la base fictive :
+      `maquette/vue.json`.
+- [ ] **[I]** `graphiques.py` et `carte/API.py` renvoient une **figure**
+      (`go.Figure`) ; l'enrobage en `<div>` devient une fonction à part. Le
+      site n'y voit rien, mais la figure est alors exportable.
+- [ ] **[I]** `maquette/construire.py` : lit `vue.json`, appelle **les mêmes
+      fonctions que le site**, et écrit `maquette/figures.js`
+      (`window.FIGURES = {histogramme: …, cartes: {id: …}}` via
+      `fig.to_json()`). Un `<script src>` local marche en `file://`, un
+      `fetch` non — d'où du JS et pas du JSON.
+- [ ] **[I]** `maquette/plotly.min.js` copié depuis le paquet Python
+      (`plotly/package_data/`). *Constat au passage* : `base.html` charge
+      plotly.js **2.11 (2022) depuis le CDN** alors que le Python est en
+      Plotly 6, qui émet du plotly.js 3 — une figure jugée bonne en maquette
+      pourrait casser dans Django. Le vendorage prévu en « Hygiène » règle les
+      deux problèmes ; il remonte ici.
+- [ ] **[I]** GeoJSON communal **simplifié** pour la maquette (1,6 Mo recopié
+      dans chaque carte → trois objets = 5 Mo de HTML). Un facteur 5 à 10 sur
+      les contours ne se voit pas à l'échelle du pays, et le site en profitera
+      aussi (la page d'accueil pèse aujourd'hui autant que le GeoJSON × objets).
+
+#### 7.2 La maquette, et les itérations **[2]**
+
+- [ ] **[I]** `maquette/accueil.html` : la page d'accueil, avec les champs du
+      contrat de vue en dur (date, avance, par objet : nom, % connu,
+      % extrapolé) et les figures de `figures.js`. **Deux ou trois variantes
+      d'agencement** (`accueil-a.html`, `-b.html`…) plutôt qu'une seule :
+      on compare, on ne devine pas.
+- [ ] **[I]** `maquette/charte.js` : **un seul bloc de réglages de design**
+      (couleurs, échelle de carte ancrée à 50 %, marges, fonte, survol,
+      modebar), appliqué **par-dessus** le JSON des figures au moment du
+      `newPlot`. Changer l'apparence = changer une valeur ici et recharger ;
+      on ne touche jamais aux données. Ce fichier est le brouillon de
+      `charte.py`.
+- [ ] **[2]** Itérations à deux sur le HTML — Claude Design ou à la main,
+      peu importe — **y compris la largeur téléphone**. Ce qu'on regarde à
+      chaque tour : le chiffre héro se lit-il d'un coup d'œil ? la ligne des
+      50 % est-elle là ? la carte dit-elle « penche oui / penche non » sans
+      légende ? ça tient-il en une hauteur d'écran ?
+- [ ] **[2]** Faire figurer dans la maquette **un graphe réellement produit
+      par Plotly**, pas un dessin de ce qu'on aimerait : c'est le point de
+      départ 7.1, et la garantie qu'on ne se promet pas un rendu que Plotly ne
+      donnera pas. Si un choix de design exige autre chose que Plotly, on le
+      décide là, en connaissance de cause.
+- [ ] **Critère d'arrêt** : une variante retenue, validée par les deux, sur
+      grand écran et sur téléphone, avec la palette validée ci-dessous ou une
+      palette **revalidée** par `validate_palette.js`. Tant que ce n'est pas
+      coché, rien de 7.3 ne commence.
+
+#### 7.3 Extraire la charte de la maquette **[I]**
+
+- [ ] Variables CSS de `style.css` = transcription de la maquette retenue
+      (`--surface`, `--encre-1/2`, `--bleu-450`…), une seule fonte.
+- [ ] `scrutin/charte.py` = transcription de `charte.js` : mêmes clés, mêmes
+      valeurs, template Plotly partagé appliqué à *tous* les graphes. Un test
+      compare les deux — ou `construire.py` régénère `charte.js` depuis
+      `charte.py`, et la maquette devient l'*aval* de la charte, plus son
+      brouillon.
+- [ ] Mettre à jour la « Cible visuelle » ci-dessous avec ce qui a réellement
+      été retenu (plutôt que de la laisser mentir).
+
+#### 7.4 Transposer dans Django **[I]**
+
+- [ ] `home.html` / `base.html` reproduisent la variante retenue : mêmes
+      blocs, mêmes classes, valeurs du contrat à la place des constantes.
+- [ ] Histogramme, carte, chiffre héro, tableaux de valeurs, hygiène — les
+      points de la cible visuelle, **dans l'ordre où la maquette les a
+      tranchés**.
+- [ ] **Contrôle** : `peupler_demo` + `runserver` à côté de `accueil.html`
+      dans le navigateur. Les deux doivent être indiscernables — les figures
+      sortent du même code, seule la mise en page peut diverger.
+
+#### 7.5 Vie de la maquette après coup
+
+La maquette **reste** comme laboratoire de design : `construire.py` la
+régénère depuis la base fictive, avec les fonctions du site. Son seul risque
+est la dérive (une maquette qui promet ce que le site ne fait plus) ; le
+garde-fou est que ses figures **ne sont jamais écrites à la main** — elles
+viennent de `graphiques.py` et `carte/`, comme celles du site.
+
+### Cible visuelle (à confirmer par la maquette) **[I]**
+
+Ce qui suit est l'hypothèse de départ de 7.2, **pas un cahier des charges** :
+la maquette peut l'infirmer, et 7.3 la réécrit avec ce qui a été retenu.
+
 1. **Mini-charte en variables CSS** (`--surface`, `--encre-1/2`, `--bleu-450`…,
    valeurs de la palette validée ci-dessous) ; **une seule fonte** : la sans
    système (`system-ui, …`) partout — Garamond peut survivre dans le seul
@@ -710,7 +821,8 @@ au backend. Alimente D1.
    sans-couleur + copiable), `lang="fr"`, alt/aria sur la nav.
 7. **Hygiène** : icône ☰ en SVG inline (supprimer Font Awesome), favicon,
    liens réparés, **vendorer `plotly.min.js`** (le CDN casse le mirroir wget
-   hors-ligne et fige la version), année du footer dynamique.
+   hors-ligne et fige la version — et voir 7.1 pour le décalage de version),
+   année du footer dynamique.
 
 Palettes validées (`validate_palette.js`, surface `#fcfcfb`) :
 - `#2a78d6` + `#eb6834` : tous contrôles PASS (ΔE daltonien 24,7 ; normal 33,6).
