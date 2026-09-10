@@ -28,6 +28,7 @@ import json
 import os
 import shutil
 import sys
+from datetime import datetime
 from pathlib import Path
 
 ICI = Path(__file__).resolve().parent
@@ -86,6 +87,12 @@ def main():
 
     source_js = Path(plotly.__file__).parent / "package_data" / "plotly.min.js"
     shutil.copyfile(source_js, ICI / "plotly.min.js")
+
+    # Témoin léger : `index.html` le charge pour savoir si la maquette est
+    # prête, sans avoir à tirer les 1,8 Mo de figures.js.
+    (ICI / "pret.js").write_text(
+        f'window.MAQUETTE_PRETE = "{datetime.now().strftime("%d.%m.%Y %H:%M")}";\n',
+        encoding="utf-8")
 
     print(f"GeoJSON allégé : {avant} → {apres} points, "
           f"{geojson_leger.stat().st_size / 1e6:.1f} Mo\n"

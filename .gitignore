@@ -39,3 +39,4 @@ politiques/          # sortie de wget --recursive
 maquette/figures.js
 maquette/plotly.min.js
 maquette/communes-simplifie.geojson
+maquette/pret.js

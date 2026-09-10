@@ -10,11 +10,22 @@ figerait ce qu'on veut faire varier.
 > production. Ce qui remonte dans `master`, c'est la *transposition* du design
 > retenu dans les gabarits Django, réécrite à la main. Voir Partie 7 du plan.
 
+## Avant d'ouvrir quoi que ce soit
+
+**Les pages sont vides tant que `construire.py` n'a pas tourné.** `figures.js`
+et `plotly.min.js` sont générés, donc absents d'un clone frais — sans eux la
+page s'arrête à sa première ligne de script. Depuis la racine du dépôt :
+
 ```bash
+python manage.py migrate             # SQLite, une fois
 python manage.py peupler_demo        # base fictive, une fois
-python maquette/construire.py        # écrit figures.js, allège le GeoJSON
+python maquette/construire.py        # écrit figures.js, copie plotly.js
 xdg-open maquette/index.html         # ou double-clic
 ```
+
+Si vous tombez quand même sur une page vide, elle vous le dira : un bandeau
+nomme le fichier manquant et la commande à lancer (`verifier.js`). Le sommaire
+affiche de son côté la date de la dernière construction.
 
 ## Les cinq propositions
 
@@ -38,11 +49,13 @@ sépare est un choix, pas un hasard.
 | `simplifier_geojson.py` | allège les contours communaux (Douglas-Peucker + arrondi) | oui |
 | `charte.js` | **les réglages de design**, appliqués par-dessus les figures au chargement | oui |
 | `topojson-stub.js` | évite que Plotly aille chercher un fond de carte mondial sur le réseau | oui |
+| `verifier.js` | affiche un bandeau lisible quand les fichiers générés manquent | oui |
 | `accueil-*.html`, `index.html` | les variantes et leur sommaire | oui |
 | `capture.mjs` | capture PNG d'une variante (Playwright), pour discuter par message | oui |
 | `figures.js` | contrat de vue + figures en JSON (`window.VUE`, `FIGURES`, `GEOJSON`) | **non** (généré, 1,8 Mo) |
 | `plotly.min.js` | plotly.js, copié du paquet Python — la version qui a produit les figures | **non** (généré) |
 | `communes-simplifie.geojson` | contours allégés | **non** (généré) |
+| `pret.js` | témoin de construction, lu par le sommaire | **non** (généré) |
 
 Pour changer l'apparence d'un graphe, on édite `charte.js` (ou la surcharge
 `THEME` en tête de chaque variante) et on recharge. **On n'édite jamais

@@ -127,7 +127,9 @@ tbody tr:last-child td { border-bottom: 0; }
 <script src="topojson-stub.js"></script>
 <script src="charte.js"></script>
 <script src="figures.js"></script>
+<script src="verifier.js"></script>
 <script>
+if (!maquettePrete()) throw new Error("maquette incomplète — voir la bannière");
 const THEME = {
   surface: "#ffffff", bleu: "#1c5cab", rouge: "#b3372c", neutre: "#e8e7e2",
   carte: { hauteur: 84, barreCouleur: false, demiEtendue: 18, contour: 0, opacite: 1 },

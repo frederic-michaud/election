@@ -87,7 +87,9 @@ footer a { color: var(--oui); }
 <script src="topojson-stub.js"></script>
 <script src="charte.js"></script>
 <script src="figures.js"></script>
+<script src="verifier.js"></script>
 <script>
+if (!maquettePrete()) throw new Error("maquette incomplète — voir la bannière");
 const THEME = {
   surface: "#171c25", encre1: "#eef1f6", encre2: "#8d97a8",
   bleu: "#58a0f7", rouge: "#f0705f", neutre: "#39414f",

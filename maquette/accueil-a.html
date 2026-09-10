@@ -98,7 +98,9 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--filet)
 <script src="topojson-stub.js"></script>
 <script src="charte.js"></script>
 <script src="figures.js"></script>
+<script src="verifier.js"></script>
 <script>
+if (!maquettePrete()) throw new Error("maquette incomplète — voir la bannière");
 const THEME = {
   surface: "#ffffff", encre1: "#1a1a17", encre2: "#6b6a62",
   bleu: "#1c5cab", rouge: "#ab3226", neutre: "#eceae3",

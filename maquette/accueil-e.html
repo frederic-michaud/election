@@ -95,7 +95,9 @@ header nav a { color: var(--encre-2); text-decoration: none; margin-left: 16px; 
 <script src="topojson-stub.js"></script>
 <script src="charte.js"></script>
 <script src="figures.js"></script>
+<script src="verifier.js"></script>
 <script>
+if (!maquettePrete()) throw new Error("maquette incomplète — voir la bannière");
 const THEME = {
   surface: "#ffffff", bleu: "#1c5cab", rouge: "#b3372c", neutre: "#eeece7",
   carte: { hauteur: 150, barreCouleur: false, demiEtendue: 18, contour: 0 },
