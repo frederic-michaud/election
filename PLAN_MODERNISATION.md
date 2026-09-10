@@ -710,30 +710,44 @@ couleurs, bornes, opacité, marges, survol, barre d'outils. Un PNG ou un SVG
 figerait justement ce qu'on veut faire varier. Le PNG ne sert qu'à discuter
 d'une variante par message.
 
-#### 7.1 Extraire les figures **[I]**, un export **[M]**
+#### 7.1 Extraire les figures **[I]** — *fait le 2026-09-10*
 
-- [ ] **[M]** `manage.py exporter_vue_accueil [sortie]` : écrit le contrat de
-      vue (`construire_vue_accueil()`) en JSON. Cinq lignes — le dict est déjà
-      sérialisable (`test_contrat`). Sur la base fictive :
-      `maquette/vue.json`.
-- [ ] **[I]** `graphiques.py` et `carte/API.py` renvoient une **figure**
-      (`go.Figure`) ; l'enrobage en `<div>` devient une fonction à part. Le
-      site n'y voit rien, mais la figure est alors exportable.
-- [ ] **[I]** `maquette/construire.py` : lit `vue.json`, appelle **les mêmes
-      fonctions que le site**, et écrit `maquette/figures.js`
-      (`window.FIGURES = {histogramme: …, cartes: {id: …}}` via
-      `fig.to_json()`). Un `<script src>` local marche en `file://`, un
-      `fetch` non — d'où du JS et pas du JSON.
-- [ ] **[I]** `maquette/plotly.min.js` copié depuis le paquet Python
-      (`plotly/package_data/`). *Constat au passage* : `base.html` charge
+Pas de commande d'export séparée : **on part de la sortie de Django**, mais
+de ses fonctions Python plutôt que de son HTML. `maquette/construire.py`
+amorce Django, appelle `construire_vue_accueil()` puis les mêmes fonctions de
+figures que les vues, et écrit le tout en JS. Récupérer la page rendue par
+`runserver` aurait aussi marché, mais chaque figure y est un bloc de 1 Mo au
+milieu du gabarit, avec ses réglages figés dans l'appel `Plotly.newPlot` :
+impossible d'itérer sur la mise en page sans naviguer dans ces blocs, ni
+d'appliquer `charte.js` sans réanalyser le HTML. Séparer les données
+(générées) de la page (écrite à la main) est tout l'intérêt.
+
+- [x] **[I]** `graphiques.py` et `carte/API.py` exposent la **figure**
+      (`figure_histogramme`, `figure_carte`) ; `en_div` l'enrobe pour les
+      gabarits. Les vues n'ont pas changé.
+- [x] **[I]** `maquette/construire.py` écrit `maquette/figures.js`
+      (`window.VUE`, `window.FIGURES`) via `plotly.io.to_json`. Un
+      `<script src>` local marche en `file://`, un `fetch` non — d'où du JS et
+      pas du JSON. Non versionné (3,4 Mo pour trois cartes).
+- [x] **[I]** `maquette/plotly.min.js` copié depuis le paquet Python
+      (Plotly 6.9 → plotly.js 3). *Constat au passage* : `base.html` charge
       plotly.js **2.11 (2022) depuis le CDN** alors que le Python est en
-      Plotly 6, qui émet du plotly.js 3 — une figure jugée bonne en maquette
-      pourrait casser dans Django. Le vendorage prévu en « Hygiène » règle les
-      deux problèmes ; il remonte ici.
+      Plotly 6 — une figure jugée bonne en maquette pourrait casser dans
+      Django. Le vendorage prévu en « Hygiène » règle les deux problèmes ; il
+      remonte en 7.4.
+- [x] **[I]** `maquette/accueil.html`, variante 0 : le squelette qui prouve
+      la chaîne (héro, histogramme, trois cartes), vérifié dans Chromium via
+      `maquette/capture.mjs`. Les cartes Mapbox exigent WebGL et du vrai
+      temps : en headless, un rendu logiciel et quelques secondes d'attente.
 - [ ] **[I]** GeoJSON communal **simplifié** pour la maquette (1,6 Mo recopié
-      dans chaque carte → trois objets = 5 Mo de HTML). Un facteur 5 à 10 sur
-      les contours ne se voit pas à l'échelle du pays, et le site en profitera
-      aussi (la page d'accueil pèse aujourd'hui autant que le GeoJSON × objets).
+      dans chaque carte). Un facteur 5 à 10 sur les contours ne se voit pas à
+      l'échelle du pays, et le site en profitera aussi (la page d'accueil pèse
+      aujourd'hui autant que le GeoJSON × objets).
+- [ ] **[2]** Question ouverte par la vérification : `choropleth_mapbox` est
+      déprécié et exige WebGL, pour un fond `white-bg` qui n'apporte rien.
+      `px.choropleth` (projection SVG, `fitbounds="locations"`) rendrait la
+      même carte sans WebGL, imprimable et capturable partout. À trancher
+      pendant 7.2, en regardant les deux.
 
 #### 7.2 La maquette, et les itérations **[2]**
 
@@ -742,7 +756,7 @@ d'une variante par message.
       % extrapolé) et les figures de `figures.js`. **Deux ou trois variantes
       d'agencement** (`accueil-a.html`, `-b.html`…) plutôt qu'une seule :
       on compare, on ne devine pas.
-- [ ] **[I]** `maquette/charte.js` : **un seul bloc de réglages de design**
+- [x] **[I]** `maquette/charte.js` : **un seul bloc de réglages de design**
       (couleurs, échelle de carte ancrée à 50 %, marges, fonte, survol,
       modebar), appliqué **par-dessus** le JSON des figures au moment du
       `newPlot`. Changer l'apparence = changer une valeur ici et recharger ;

@@ -1,12 +1,16 @@
 import statistics
 
 import geojson
-import plotly
 import plotly.express as px
 
+from scrutin.graphiques import en_div
 
-def generate_carte_plot(communes):
-    """``communes`` : le dict ``sujet["communes"]`` du contrat de vue."""
+
+def figure_carte(communes):
+    """``communes`` : le dict ``sujet["communes"]`` du contrat de vue.
+
+    Renvoie la figure Plotly ; ``generate_carte_plot`` l'enrobe en ``<div>``.
+    """
     with open("data/K4voge_20220501_gf.geojson") as f:
         gj = geojson.load(f)
     all_cities = []
@@ -30,24 +34,25 @@ def generate_carte_plot(communes):
     else:
         deciles = statistics.quantiles(valeurs_pour_couleur, n=10)
         lower_bound_color, upper_bound_color = deciles[0], deciles[-1]
-    div_containing_plot = plotly.offline.plot(px.choropleth_mapbox(dict_properties,
-                                                                   geojson=gj,
-                                                                   locations='name',
-                                                                   color='results',
-                                                                   center={"lat": 46.92, "lon": 8.22},
-                                                                   zoom=6,
-                                                                   # 20 is extremly zoomed... 10 still too much. 7 slightly too much
-                                                                   color_continuous_scale="RdYlGn",
-                                                                   featureidkey="properties.vogeName",
-                                                                   range_color=(lower_bound_color, upper_bound_color),
-                                                                   mapbox_style="white-bg",
-                                                                   opacity=0.5,
-                                                                   labels={'results_formated': 'Resultat',
-                                                                           'name': 'Nom'},
-                                                                   hover_data={'name': True, 'results_formated': True,
-                                                                               'results': False}
-                                                                   ),
-                                              include_plotlyjs=False,
-                                              output_type='div')
-    return div_containing_plot
+    return px.choropleth_mapbox(dict_properties,
+                               geojson=gj,
+                               locations='name',
+                               color='results',
+                               center={"lat": 46.92, "lon": 8.22},
+                               zoom=6,
+                               # 20 is extremly zoomed... 10 still too much. 7 slightly too much
+                               color_continuous_scale="RdYlGn",
+                               featureidkey="properties.vogeName",
+                               range_color=(lower_bound_color, upper_bound_color),
+                               mapbox_style="white-bg",
+                               opacity=0.5,
+                               labels={'results_formated': 'Resultat',
+                                       'name': 'Nom'},
+                               hover_data={'name': True, 'results_formated': True,
+                                           'results': False}
+                               )
+
+
+def generate_carte_plot(communes):
+    return en_div(figure_carte(communes))
 
