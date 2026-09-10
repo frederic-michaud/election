@@ -38,7 +38,7 @@ Le sommaire affiche la date de la dernière construction. Et si un fichier
 généré venait à manquer, la page le dit au lieu de s'afficher vide
 (`verifier.js`).
 
-## Les cinq propositions
+## Les cinq propositions (et une déclinaison)
 
 | | Variante | Parti pris |
 |---|---|---|
@@ -46,6 +46,7 @@ généré venait à manquer, la page le dit au lieu de s'afficher vide
 | **B** | Tableau de bord | Aucun objet privilégié, tout en un écran. Une ligne par objet, dot plot dépouillé → projeté. |
 | **C** | Cartes d'abord | La carte plein cadre, onglets, chiffre en surimpression. La seule en carte Mapbox. |
 | **D** | Soirée électorale | Fond sombre, chiffres énormes, pensée pour être projetée ou regardée de loin. |
+| **D′** | Soirée électorale, fond clair | La même page que D sur fond blanc, avec la palette validée sur fond clair. Pour trancher sombre / clair. |
 | **E** | Écart à la majorité | « À 3,1 points » plutôt que « 46,9 % ». Axe centré sur 50 %, la correction de l'extrapolation rendue visible. |
 
 `index.html` les liste ; chaque fichier porte son parti pris en commentaire en
