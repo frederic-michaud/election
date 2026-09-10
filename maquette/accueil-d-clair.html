@@ -33,8 +33,7 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .logo { height: 48px; width: auto; display: block; }
 .logo .pays { fill: var(--gris); opacity: .72; }
 .logo .barres rect, .logo .points circle { fill: var(--oui); }
-.direct { display: flex; align-items: center; gap: 9px; font-size: .78rem;
-  letter-spacing: .12em; text-transform: uppercase; color: var(--gris); }
+.contexte { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gris); }
 .point { width: 9px; height: 9px; border-radius: 50%; background: var(--non);
   box-shadow: 0 0 0 0 rgba(201,53,43,.5); animation: pulse 2.2s infinite; }
 @keyframes pulse { 70% { box-shadow: 0 0 0 10px rgba(201,53,43,0); } 100% { box-shadow: 0 0 0 0 rgba(201,53,43,0); } }
@@ -46,7 +45,7 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .avancement .rail { flex: 1 1 220px; min-width: 160px; height: 10px;
   background: var(--neutre); border-radius: 5px; overflow: hidden; }
 .avancement .rail i { display: block; height: 100%; background: linear-gradient(90deg, var(--oui-clair), var(--oui)); }
-.avancement .note { font-size: .84rem; color: var(--gris); }
+.avancement .note { display: flex; align-items: center; gap: 9px; font-size: .84rem; color: var(--gris); }
 
 .mur { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 18px; margin-top: 18px; }
@@ -85,7 +84,7 @@ footer a { color: var(--oui); }
     </svg>
     <span class="mot">Politiques<span>.ch</span></span>
   </div>
-  <div class="direct"><i class="point"></i> Dépouillement en cours · <span id="heure"></span></div>
+  <div class="contexte">Votation fédérale du <span id="date"></span></div>
 </header>
 
 <div class="avancement">
@@ -94,7 +93,7 @@ footer a { color: var(--oui); }
     <div class="v" id="avance"></div>
   </div>
   <div class="rail"><i id="jauge"></i></div>
-  <div class="note">Votation fédérale du <span id="date"></span></div>
+  <div class="note"><i class="point"></i><span>Dépouillement en cours · <span id="heure"></span></span></div>
 </div>
 
 <section class="mur" id="mur"></section>

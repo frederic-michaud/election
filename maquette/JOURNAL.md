@@ -43,6 +43,13 @@ avant des changements plus profonds.
   conservé, « Politiques.ch » est posé à côté, en romain, le « .ch » en bleu
   comme avant.
 
+**Puis, dans la foulée : date et direct permutés.** « Votation fédérale du
+10 septembre 2026 » monte dans l'en-tête, « Dépouillement en cours · heure »
+descend dans la barre d'avancement. Les styles, eux, ne bougent pas : capitales
+espacées à l'en-tête, petit texte gris dans la barre. Le point rouge qui pulse
+suit le direct, puisque c'est lui qu'il signale — à reprendre si on le voulait
+à l'en-tête.
+
 **Ce qu'on a vu.** À 48 px de haut, l'emblème se lit : la carte, les barres,
 les trois points. Le trou du lac de Neuchâtel est un détail qu'on devine plus
 qu'on ne le voit — c'est bien.
