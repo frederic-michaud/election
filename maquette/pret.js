@@ -1,0 +1,1 @@
+window.MAQUETTE_PRETE = "10.09.2026 16:45";

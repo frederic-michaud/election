@@ -35,8 +35,10 @@ politiques/          # sortie de wget --recursive
 # Données de production montées dans le conteneur (base SQLite).
 /var/
 
-# Maquette statique : générés par maquette/construire.py
-maquette/figures.js
-maquette/plotly.min.js
+# Maquette statique. `figures.js`, `plotly.min.js` et `pret.js` sont bien
+# générés, mais **versionnés quand même** : la maquette doit s'ouvrir d'un
+# double-clic sur une machine sans Python ni rien d'installé. C'est le sens de
+# cette branche, qui ne va jamais dans master. Seul l'intermédiaire de
+# construction reste ignoré — il ne sert qu'à fabriquer figures.js, qui
+# embarque déjà les contours.
 maquette/communes-simplifie.geojson
-maquette/pret.js

@@ -1,0 +1,5 @@
+# Fichiers fabriqués par construire.py : versionnés pour que la maquette
+# s'ouvre sans rien installer, mais inutiles à lire en diff.
+figures.js    -diff linguist-generated
+plotly.min.js -diff linguist-generated
+pret.js       -diff

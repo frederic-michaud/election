@@ -10,22 +10,33 @@ figerait ce qu'on veut faire varier.
 > production. Ce qui remonte dans `master`, c'est la *transposition* du design
 > retenu dans les gabarits Django, réécrite à la main. Voir Partie 7 du plan.
 
-## Avant d'ouvrir quoi que ce soit
+## Ouvrir les maquettes
 
-**Les pages sont vides tant que `construire.py` n'a pas tourné.** `figures.js`
-et `plotly.min.js` sont générés, donc absents d'un clone frais — sans eux la
-page s'arrête à sa première ligne de script. Depuis la racine du dépôt :
+**Rien à installer.** Ouvrez `maquette/index.html` d'un double-clic, puis
+cliquez une variante. Aucun serveur, aucun réseau, pas de Python : les figures
+et la bibliothèque de graphes sont versionnées avec les pages.
+
+C'est le seul endroit du dépôt où on verse des fichiers générés (6,4 Mo). Ça se
+défend ici et nulle part ailleurs : cette branche existe pour être *regardée*,
+souvent depuis une machine où l'on n'installe rien, et elle ne va jamais dans
+`master`. En contrepartie, on ne les régénère pas à chaque broutille — ces
+fichiers ne se compressent pas en diff, chaque reconstruction pèse son poids
+dans l'historique.
+
+## Régénérer les figures
+
+Seulement quand les données ou le code des figures ont changé. Depuis la racine
+du dépôt :
 
 ```bash
 python manage.py migrate             # SQLite, une fois
 python manage.py peupler_demo        # base fictive, une fois
-python maquette/construire.py        # écrit figures.js, copie plotly.js
-xdg-open maquette/index.html         # ou double-clic
+python maquette/construire.py        # réécrit figures.js et pret.js
 ```
 
-Si vous tombez quand même sur une page vide, elle vous le dira : un bandeau
-nomme le fichier manquant et la commande à lancer (`verifier.js`). Le sommaire
-affiche de son côté la date de la dernière construction.
+Le sommaire affiche la date de la dernière construction. Et si un fichier
+généré venait à manquer, la page le dit au lieu de s'afficher vide
+(`verifier.js`).
 
 ## Les cinq propositions
 
@@ -52,10 +63,10 @@ sépare est un choix, pas un hasard.
 | `verifier.js` | affiche un bandeau lisible quand les fichiers générés manquent | oui |
 | `accueil-*.html`, `index.html` | les variantes et leur sommaire | oui |
 | `capture.mjs` | capture PNG d'une variante (Playwright), pour discuter par message | oui |
-| `figures.js` | contrat de vue + figures en JSON (`window.VUE`, `FIGURES`, `GEOJSON`) | **non** (généré, 1,8 Mo) |
-| `plotly.min.js` | plotly.js, copié du paquet Python — la version qui a produit les figures | **non** (généré) |
-| `communes-simplifie.geojson` | contours allégés | **non** (généré) |
-| `pret.js` | témoin de construction, lu par le sommaire | **non** (généré) |
+| `figures.js` | contrat de vue + figures en JSON (`window.VUE`, `FIGURES`, `GEOJSON`) | oui (généré, 1,8 Mo) |
+| `plotly.min.js` | plotly.js, copié du paquet Python — la version qui a produit les figures | oui (généré, 4,6 Mo) |
+| `communes-simplifie.geojson` | contours allégés, intermédiaire de construction | **non** (généré) |
+| `pret.js` | date de construction, affichée par le sommaire | oui (généré) |
 
 Pour changer l'apparence d'un graphe, on édite `charte.js` (ou la surcharge
 `THEME` en tête de chaque variante) et on recharge. **On n'édite jamais
