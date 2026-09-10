@@ -287,7 +287,8 @@ sauvegarde = copie du fichier). Pas de Postgres, pas de `psycopg`.
 ### Deux agents en parallèle
 
 Les deux voies existent aussi comme **agents Claude**, définis dans
-`.claude/agents/` : `moteur` et `interface`. Chacun a la liste de ses fichiers,
+`.claude/agents/` : `moteur` et `interface` — plus `passeur`, qui fait
+traverser le design de la branche `maquette` (voir plus bas). Chacun a la liste de ses fichiers,
 ses frontières explicites, et l'interdiction de toucher la zone de l'autre.
 
 - **Un agent par voie, un clone (ou un worktree) par agent.** Deux agents dans le
@@ -302,14 +303,21 @@ ses frontières explicites, et l'interdiction de toucher la zone de l'autre.
 
 Détail complet et découpage des tâches par voie : [`PLAN_MODERNISATION.md`](PLAN_MODERNISATION.md) Partie 0.
 
-### Refonte graphique : la maquette d'abord
+### Refonte graphique : la maquette d'abord, sur sa propre branche
 
-Le design ne part pas d'une charte abstraite : on itère sur une **page HTML
-statique** dans `maquette/` (voie I), qui embarque les **vraies figures
-Plotly en JSON** — produites par les mêmes fonctions que le site, jamais
-dessinées à la main — et un bloc de réglages `charte.js`. Une fois une
-variante validée à deux, la charte CSS et `charte.py` en sont *extraites*,
-puis transposées dans les gabarits Django. Détail : Partie 7 du plan.
+Le design ne part pas d'une charte abstraite : on itère sur des **pages HTML
+statiques** qui embarquent les **vraies figures Plotly en JSON** — produites
+par les mêmes fonctions que le site, jamais dessinées à la main — et un bloc
+de réglages `charte.js`. Une fois une variante retenue, la charte CSS et
+`charte.py` en sont *extraites*, puis transposées dans les gabarits Django.
+
+Tout ce chantier vit sur la branche **`maquette`**, qui n'est **jamais
+fusionnée dans `master`** : c'est un travail de conception, utile une fois,
+qui encombrerait la branche principale pour des années. La synchronisation va
+dans un seul sens, `master` → `maquette`. Le passage en production est une
+**réécriture**, confiée à un troisième agent, `passeur`, seul à lire les deux
+branches. Détail : Partie 7 du plan (7.0 pour les branches, 7.4 pour le
+passage).
 
 ## Conventions
 

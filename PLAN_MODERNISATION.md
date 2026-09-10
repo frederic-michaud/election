@@ -176,6 +176,15 @@ ses frontières — un agent refuse d'éditer la zone de l'autre.
 Découpage identique pour deux personnes ou deux agents — c'est le même contrat
 qui protège dans les deux cas.
 
+### Un troisième agent : le passeur
+
+`moteur` et `interface` travaillent chacun dans `master`. Le design, lui, se
+fait sur la branche `maquette` (Partie 7.0), et il faut bien que quelqu'un
+fasse traverser le résultat. C'est le rôle de l'agent **`passeur`**
+(`.claude/agents/passeur.md`) : il lit la branche `maquette`, écrit dans
+`master`, et **réécrit** — il ne fusionne jamais. C'est le seul agent qui voit
+les deux côtés, d'où des frontières écrites noir sur blanc.
+
 ### Rythme et intégration
 
 - Chacun son clone, chacun sa branche, **petites PR relues par l'autre** (c'est
@@ -580,8 +589,8 @@ Généraliser du binaire oui/non au multi-candidats :
 |---|---|---|
 | **0. Contrat** *(à deux, en premier)* | forme du dict + couture `donnees`/`graphiques` | idem |
 | **1. Le repo démarre** | A1–A3 + `peupler_demo` — **débloque la voie I** | (attend le jalon 1) |
-| **2. Base saine** | A4–A5 : bugs, tests, CI | P7.1–7.2 : maquette statique (figures Plotly en JSON), itérations |
-| **3. Prêt pour un scrutin** | B1–B4 : Django 5.2, dé-harcodage, pipeline | P7.3–7.4 : charte extraite de la maquette, transposition Django |
+| **2. Base saine** | A4–A5 : bugs, tests, CI | P7.0–7.2 : branche `maquette`, cinq variantes, itérations |
+| **3. Prêt pour un scrutin** | B1–B4 : Django 5.2, dé-harcodage, pipeline | P7.3–7.4 : charte extraite, passage en production |
 | **4. Communes à jour** | B4 : `importer_historique` depuis STAT-TAB | GeoJSON 2026, contrôle qualité |
 | **5. En production** | C1–C2 : Compose, cache, timer systemd | C3 : contrôle visuel du dry run |
 | **6. Produit** | D1 : IC bootstrap, données de convergence | D1 : réel/estimé, courbe, page Méthodes |
@@ -619,10 +628,11 @@ extrapolation qui tourne, site consultable. La conteneurisation peut suivre.
 6. Tests de `extrapolation.py` + CI.
 
 *Puis voie I* (Partie 7, dans cet ordre) :
-1. Figures exportables + `maquette/figures.js` + plotly.js vendoré (7.1).
-2. Maquette HTML statique, variantes d'agencement, itérations à deux (7.2).
+1. ~~Figures exportables, `figures.js`, plotly.js vendoré~~ (7.1, fait sur la
+   branche `maquette`).
+2. Choisir parmi les cinq variantes, itérer à deux, trancher Mapbox ou SVG (7.2).
 3. Charte CSS et `charte.py` extraites de la variante retenue (7.3), puis
-   transposition dans les gabarits Django (7.4).
+   passage en production par l'agent `passeur` (7.4).
 
 ---
 
@@ -699,8 +709,8 @@ largeur ou vit-elle à côté de l'histogramme, que voit-on sur un téléphone �
 extrait la charte**, et non l'inverse.
 
 Ce n'est **pas un mode maquette du site** (Partie 0 : un seul chemin de code) :
-c'est un dossier `maquette/` **[I]**, un fichier HTML qu'on ouvre en `file://`,
-qui vit à côté de Django et ne s'exécute jamais en production.
+ce sont des fichiers HTML qu'on ouvre en `file://`, sur une **branche à part**
+(7.0), qui ne s'exécutent jamais en production et ne sont jamais fusionnés.
 
 **Les figures Plotly y sont embarquées telles quelles, pas en image.** Une
 carte Plotly est un JSON (données + GeoJSON + layout) plus un appel à
@@ -710,58 +720,115 @@ couleurs, bornes, opacité, marges, survol, barre d'outils. Un PNG ou un SVG
 figerait justement ce qu'on veut faire varier. Le PNG ne sert qu'à discuter
 d'une variante par message.
 
-#### 7.1 Extraire les figures **[I]**, un export **[M]**
+#### 7.0 Où vit la maquette : une branche, pas `master` **[2]** — *décidé le 2026-09-10*
 
-- [ ] **[M]** `manage.py exporter_vue_accueil [sortie]` : écrit le contrat de
-      vue (`construire_vue_accueil()`) en JSON. Cinq lignes — le dict est déjà
-      sérialisable (`test_contrat`). Sur la base fictive :
-      `maquette/vue.json`.
-- [ ] **[I]** `graphiques.py` et `carte/API.py` renvoient une **figure**
-      (`go.Figure`) ; l'enrobage en `<div>` devient une fonction à part. Le
-      site n'y voit rien, mais la figure est alors exportable.
-- [ ] **[I]** `maquette/construire.py` : lit `vue.json`, appelle **les mêmes
-      fonctions que le site**, et écrit `maquette/figures.js`
-      (`window.FIGURES = {histogramme: …, cartes: {id: …}}` via
-      `fig.to_json()`). Un `<script src>` local marche en `file://`, un
-      `fetch` non — d'où du JS et pas du JSON.
-- [ ] **[I]** `maquette/plotly.min.js` copié depuis le paquet Python
-      (`plotly/package_data/`). *Constat au passage* : `base.html` charge
-      plotly.js **2.11 (2022) depuis le CDN** alors que le Python est en
-      Plotly 6, qui émet du plotly.js 3 — une figure jugée bonne en maquette
-      pourrait casser dans Django. Le vendorage prévu en « Hygiène » règle les
-      deux problèmes ; il remonte ici.
-- [ ] **[I]** GeoJSON communal **simplifié** pour la maquette (1,6 Mo recopié
-      dans chaque carte → trois objets = 5 Mo de HTML). Un facteur 5 à 10 sur
-      les contours ne se voit pas à l'échelle du pays, et le site en profitera
-      aussi (la page d'accueil pèse aujourd'hui autant que le GeoJSON × objets).
+Le générateur de maquette et les variantes **ne sont pas fusionnés dans
+`master`**. C'est un chantier de conception, utile une fois : le laisser dans
+la branche principale l'encombrerait pour des années — un dossier que plus
+personne n'ouvre, des dépendances de rendu, un `.gitignore` qui grossit, et un
+générateur qu'il faudra maintenir en état de marche à chaque changement de
+modèle.
 
-#### 7.2 La maquette, et les itérations **[2]**
+| | `master` | branche `maquette` |
+|---|---|---|
+| Contenu | le site, et **ce plan** | `maquette/` : générateur, `charte.js`, variantes, capture, allègement du GeoJSON |
+| Y reçoit aussi | la transposition du design retenu (7.4) | le petit refactor des fonctions de figures qui rend la maquette possible |
+| Durée de vie | permanente | tant que le design bouge |
 
-- [ ] **[I]** `maquette/accueil.html` : la page d'accueil, avec les champs du
-      contrat de vue en dur (date, avance, par objet : nom, % connu,
-      % extrapolé) et les figures de `figures.js`. **Deux ou trois variantes
-      d'agencement** (`accueil-a.html`, `-b.html`…) plutôt qu'une seule :
-      on compare, on ne devine pas.
-- [ ] **[I]** `maquette/charte.js` : **un seul bloc de réglages de design**
-      (couleurs, échelle de carte ancrée à 50 %, marges, fonte, survol,
-      modebar), appliqué **par-dessus** le JSON des figures au moment du
-      `newPlot`. Changer l'apparence = changer une valeur ici et recharger ;
-      on ne touche jamais aux données. Ce fichier est le brouillon de
-      `charte.py`.
-- [ ] **[2]** Itérations à deux sur le HTML — Claude Design ou à la main,
-      peu importe — **y compris la largeur téléphone**. Ce qu'on regarde à
-      chaque tour : le chiffre héro se lit-il d'un coup d'œil ? la ligne des
-      50 % est-elle là ? la carte dit-elle « penche oui / penche non » sans
-      légende ? ça tient-il en une hauteur d'écran ?
-- [ ] **[2]** Faire figurer dans la maquette **un graphe réellement produit
-      par Plotly**, pas un dessin de ce qu'on aimerait : c'est le point de
-      départ 7.1, et la garantie qu'on ne se promet pas un rendu que Plotly ne
-      donnera pas. Si un choix de design exige autre chose que Plotly, on le
-      décide là, en connaissance de cause.
+Deux règles :
+
+- **La branche `maquette` n'est jamais fusionnée dans `master`.** Aucune PR,
+  aucun *fast-forward*. Ce qui remonte est **réécrit** dans les gabarits
+  Django (7.4), pas transporté.
+- **La synchronisation va dans un seul sens : `master` → `maquette`**,
+  régulièrement, pour que la maquette continue de se construire sur le code
+  courant.
+
+Coût assumé : la maquette touche `graphiques.py` et `carte/API.py` (elle a
+besoin de la figure, pas du `<div>`). Un conflit est donc possible quand la
+voie I y travaille dans `master`. On garde cette empreinte sur le code de
+production **aussi petite que possible** — c'est le seul endroit où les deux
+branches se recouvrent.
+
+#### 7.1 Extraire les figures **[I]** — *fait (branche `maquette`)*
+
+Pas de commande d'export séparée : **on part de la sortie de Django**, mais de
+ses fonctions Python plutôt que de son HTML. `maquette/construire.py` amorce
+Django, appelle `construire_vue_accueil()` puis les mêmes fonctions de figures
+que les vues, et écrit le tout en JS. Récupérer la page rendue par
+`runserver` aurait aussi marché, mais chaque figure y est un bloc d'un
+mégaoctet au milieu du gabarit, avec ses réglages figés dans l'appel
+`Plotly.newPlot` : impossible d'itérer sur la mise en page sans naviguer dans
+ces blocs, ni d'appliquer `charte.js` sans réanalyser le HTML. Séparer les
+données (générées) de la page (écrite à la main) est tout l'intérêt.
+
+- [x] `graphiques.py` et `carte/API.py` exposent la **figure**
+      (`figure_histogramme`, `figure_carte`) ; `en_div` l'enrobe pour les
+      gabarits. Les vues n'ont pas changé.
+- [x] `construire.py` écrit `figures.js` (`window.VUE`, `FIGURES`, `GEOJSON`).
+      Un `<script src>` local marche en `file://`, un `fetch` non — d'où du JS
+      et pas du JSON.
+- [x] `plotly.min.js` copié depuis le paquet Python (Plotly 6.9 → plotly.js 3).
+      *Constat au passage* : `base.html` charge plotly.js **2.11 (2022) depuis
+      le CDN**. Une figure jugée bonne en maquette pourrait casser dans
+      Django. Le vendorage prévu en « Hygiène » règle les deux problèmes ; il
+      remonte en 7.4.
+- [x] **Poids divisé par six.** Plotly recopie le GeoJSON dans *chaque*
+      figure : il est désormais écrit une seule fois et rebranché au
+      chargement (6,0 → 1,8 Mo). Et `simplifier_geojson.py` allège les
+      contours — l'essentiel du gain vient de l'arrondi des coordonnées, qui
+      traînaient seize décimales, pas de Douglas-Peucker : le fichier de
+      l'OFS est déjà généralisé. **Le site gagnerait la même chose.**
+- [x] **`figure_carte_svg`** : la même carte en projection SVG
+      (`px.choropleth`), candidate au remplacement de `choropleth_mapbox`,
+      déprécié. Les deux variantes sont exportées, les maquettes les comparent.
+
+Ce que la comparaison a déjà donné, à verser au débat de 7.2 :
+
+| | Mapbox (aujourd'hui) | Projection SVG |
+|---|---|---|
+| WebGL | exigé | non |
+| Cadrage | zoom figé à la construction, à recalculer à chaque taille de cadre | `fitbounds` cadre tout seul |
+| Réseau | aucun (`white-bg`) | va chercher un fond de carte mondial sur le CDN, **sauf** si on lui en fournit un vide (`topojson-stub.js`) |
+| Interaction | zoom et déplacement à la souris | figée |
+| Impression, capture | aléatoire | fidèle |
+
+#### 7.2 Les variantes, et les itérations **[2]** — *en cours*
+
+- [x] **Cinq propositions**, sur les mêmes données et les mêmes figures : ce
+      qui les sépare est un choix, pas un hasard. Chacune porte son parti pris
+      en commentaire en tête ; `maquette/index.html` les liste.
+
+      | | Variante | Parti pris |
+      |---|---|---|
+      | **A** | La une | Un objet domine, comme un quotidien. Serif de titrage, filets, pas d'histogramme. |
+      | **B** | Tableau de bord | Aucun objet privilégié, tout en un écran. Dot plot dépouillé → projeté. |
+      | **C** | Cartes d'abord | Carte plein cadre, onglets, chiffre en surimpression. La seule en Mapbox. |
+      | **D** | Soirée électorale | Fond sombre, chiffres énormes, pour être projetée ou vue de loin. |
+      | **E** | Écart à la majorité | « À 3,1 points » plutôt que « 46,9 % ». La correction de l'extrapolation rendue visible. |
+
+- [x] `charte.js` : **un seul bloc de réglages de design**, surchargé par
+      variante. Changer l'apparence = changer une valeur et recharger ; on ne
+      touche jamais aux données. C'est le brouillon de `charte.py`.
+- [ ] **[2]** Itérations à deux, **y compris en largeur téléphone**. Ce qu'on
+      regarde à chaque tour : le chiffre héro se lit-il d'un coup d'œil ? la
+      ligne des 50 % est-elle là ? la carte dit-elle « penche oui / penche
+      non » sans légende ? ça tient-il en une hauteur d'écran ?
+- [ ] **[2]** Trancher **Mapbox ou SVG** (tableau en 7.1). Les deux sont sous
+      les yeux : C en Mapbox, les autres en SVG.
+- [ ] **[2]** Revalider la palette **sur fond sombre** si D est retenue : la
+      palette actuelle a été validée sur fond clair, les contrastes n'y sont
+      pas transposables.
 - [ ] **Critère d'arrêt** : une variante retenue, validée par les deux, sur
-      grand écran et sur téléphone, avec la palette validée ci-dessous ou une
-      palette **revalidée** par `validate_palette.js`. Tant que ce n'est pas
-      coché, rien de 7.3 ne commence.
+      grand écran et sur téléphone, avec une palette validée par
+      `validate_palette.js`. Tant que ce n'est pas coché, rien de 7.3 ne
+      commence.
+
+**Ce qu'une variante a le droit de demander.** E propose une figure que le
+site ne produit pas (l'axe centré sur la majorité). C'est légitime, et même le
+but : la maquette sert à découvrir ce qu'il faut construire. La figure sera
+alors **ajoutée à `graphiques.py`**, jamais bricolée dans `figures.js` ; une
+donnée absente du contrat de vue passe par la voie Moteur et son test.
 
 #### 7.3 Extraire la charte de la maquette **[I]**
 
@@ -775,24 +842,48 @@ d'une variante par message.
 - [ ] Mettre à jour la « Cible visuelle » ci-dessous avec ce qui a réellement
       été retenu (plutôt que de la laisser mentir).
 
-#### 7.4 Transposer dans Django **[I]**
+#### 7.4 Le passage de la maquette à la production **[2]**
 
-- [ ] `home.html` / `base.html` reproduisent la variante retenue : mêmes
-      blocs, mêmes classes, valeurs du contrat à la place des constantes.
-- [ ] Histogramme, carte, chiffre héro, tableaux de valeurs, hygiène — les
-      points de la cible visuelle, **dans l'ordre où la maquette les a
-      tranchés**.
-- [ ] **Contrôle** : `peupler_demo` + `runserver` à côté de `accueil.html`
-      dans le navigateur. Les deux doivent être indiscernables — les figures
-      sortent du même code, seule la mise en page peut diverger.
+C'est l'étape que la séparation en deux branches rend explicite : **on ne
+fusionne pas, on transpose.** La maquette est la référence visuelle ; le site
+est réécrit pour lui ressembler.
 
-#### 7.5 Vie de la maquette après coup
+Les deux arbres côte à côte, un seul dépôt :
 
-La maquette **reste** comme laboratoire de design : `construire.py` la
-régénère depuis la base fictive, avec les fonctions du site. Son seul risque
-est la dérive (une maquette qui promet ce que le site ne fait plus) ; le
-garde-fou est que ses figures **ne sont jamais écrites à la main** — elles
-viennent de `graphiques.py` et `carte/`, comme celles du site.
+```bash
+git worktree add ../election-maquette maquette
+```
+
+**Un agent `passeur`** (`.claude/agents/passeur.md`) est défini pour ce
+travail : il lit la branche `maquette` et écrit dans `master`, dans la seule
+zone Interface. C'est le seul agent qui voit les deux côtés — d'où des
+frontières écrites noir sur blanc.
+
+- [ ] Variables CSS de `style.css` = transcription de la variante retenue.
+- [ ] `scrutin/charte.py` = transcription de `charte.js` : mêmes clés, mêmes
+      valeurs, template Plotly partagé appliqué à *tous* les graphes.
+- [ ] `home.html` / `base.html` reproduisent la structure de la variante :
+      mêmes blocs, mêmes classes, valeurs du contrat à la place des constantes.
+- [ ] Ce que la variante réclamait de neuf est **demandé, pas contourné** :
+      figure ajoutée à `graphiques.py`, champ ajouté au contrat par la voie M.
+- [ ] Les gains techniques trouvés en maquette remontent ici : GeoJSON allégé,
+      GeoJSON sorti des figures, `plotly.min.js` vendoré à la bonne version,
+      et la carte SVG si elle est retenue (avec son fond de carte vide).
+- [ ] **Contrôle** : `peupler_demo` + `runserver` d'un côté, la variante de
+      l'autre, deux captures à 1200 et 400 px. Les figures sortent du même
+      code : seule la mise en page peut diverger.
+
+#### 7.5 Vie de la branche après coup
+
+La branche `maquette` **reste**, comme laboratoire : `construire.py` la
+régénère depuis la base fictive, avec les fonctions du site. On y remet
+`master` de temps en temps pour qu'elle continue de se construire.
+
+Son seul risque est la dérive — une maquette qui promet ce que le site ne fait
+plus. Deux garde-fous : ses figures ne sont jamais écrites à la main, et elle
+n'a aucune autorité sur `master` tant qu'un passage (7.4) n'a pas été relu.
+Le jour où le design se stabilise, la branche peut être abandonnée sans rien
+perdre : le site en porte le résultat.
 
 ### Cible visuelle (à confirmer par la maquette) **[I]**
 

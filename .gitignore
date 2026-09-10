@@ -22,6 +22,16 @@ media/
 .pytest_cache/
 .ruff_cache/
 
+# Le chantier de maquette vit sur la branche `maquette`, jamais dans master
+# (PLAN_MODERNISATION.md, Partie 7.0). Ses fichiers *générés* sont listés ici
+# aussi : un aller-retour entre les deux branches les laisse dans l'arbre de
+# travail, et un `git add -A` distrait les ferait entrer dans master. Ignorer
+# le dossier entier serait pire — la règle reviendrait dans la branche
+# `maquette` à la première resynchronisation et y masquerait les sources.
+maquette/figures.js
+maquette/plotly.min.js
+maquette/communes-simplifie.geojson
+
 # Artefacts
 cache.pickle
 votation_matrix.csv

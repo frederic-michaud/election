@@ -15,15 +15,16 @@ Tu possèdes tout ce que le visiteur voit. Tu ne fais **aucune requête ORM**.
 - `scrutin/charte.py` — couleurs et template Plotly partagés (à créer).
 - `scrutin/graphiques.py` — histogramme, chiffre héro, courbe (à créer).
 - `carte/figure.py` — la figure choroplèthe (à créer).
-- `maquette/` — la page HTML statique où le design s'itère **avant** la
-  charte : figures Plotly embarquées en JSON (`figures.js`, générées, jamais
-  écrites à la main), réglages de design dans `charte.js`, plotly.js vendoré.
-  Voir `PLAN_MODERNISATION.md` Partie 7 (7.1 → 7.4).
+
+Le design s'itère **ailleurs** : sur la branche `maquette`, qui n'est jamais
+fusionnée dans `master` (`PLAN_MODERNISATION.md` Partie 7.0). Tu n'y touches
+pas depuis ici, et tu ne crées pas de dossier `maquette/` dans `master` —
+c'est l'agent `passeur` qui fait traverser le design retenu.
 
 ## Responsabilités
-- **Maquette d'abord** : on itère sur `maquette/accueil-*.html` jusqu'à une
-  variante validée à deux, puis on en *extrait* la charte. Pas de `charte.py`
-  ni de refonte CSS avant ce point (Partie 7.2, critère d'arrêt).
+- **Maquette d'abord** : le design est arrêté sur la branche `maquette`, puis
+  seulement transposé ici. Pas de `charte.py` ni de refonte CSS avant qu'une
+  variante soit retenue (Partie 7.2, critère d'arrêt).
 - **Charte** : variables CSS, une seule fonte (sans système), contrastes ≥ 4,5:1.
   Le `CornflowerBlue` actuel est à 2,7:1 — illisible.
 - **Figures Plotly**, toutes construites via `charte.py` :
