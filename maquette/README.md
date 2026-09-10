@@ -60,6 +60,7 @@ sépare est un choix, pas un hasard.
 | `JOURNAL.md` | **le journal de bord** : ce qu'on a essayé, décidé, et pourquoi — une entrée par séance | oui |
 | `construire.py` | génère tout ce qui suit depuis la base fictive, avec les fonctions du site | oui |
 | `simplifier_geojson.py` | allège les contours communaux (Douglas-Peucker + arrondi) | oui |
+| `logo.py` | tire la silhouette du logo SVG des contours communaux, à coller dans la page | oui |
 | `charte.js` | **les réglages de design**, appliqués par-dessus les figures au chargement | oui |
 | `topojson-stub.js` | évite que Plotly aille chercher un fond de carte mondial sur le réseau | oui |
 | `verifier.js` | affiche un bandeau lisible quand les fichiers générés manquent | oui |

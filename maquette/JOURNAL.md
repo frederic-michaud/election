@@ -9,6 +9,48 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-10, plus tard — D′ retenue ; fonds inversés, logo, moins de texte
+
+**Point de départ.** D′ est la variante qui plaît le plus : c'est désormais la
+base de travail, les autres restent en comparaison. Trois retouches demandées
+avant des changements plus profonds.
+
+**Ce qu'on a fait.**
+
+- *Fonds inversés.* La page passe en crème (`#fcfcfb`), les panneaux en blanc
+  pur. La surface des figures suit les panneaux (`THEME.surface`), donc le
+  filet entre communes est blanc lui aussi.
+- *Le logo revient.* L'emblème du site (`scrutin/static/scrutin/logo.png`) est
+  un PNG gris et bleu ciel : la Suisse, quatre barres qui en sortent, des
+  points, « Politiques.ch » à la verticale. La maquette en refait une version
+  SVG en ligne, dans sa palette, posée à gauche du nom dans l'en-tête.
+- *Le résumé « 1 objet accepté sur 3 » est retiré* de la barre d'avancement,
+  qui ne dit plus que la date de la votation.
+
+**Décisions.**
+
+- *Un SVG plutôt que le PNG.* Il suit les variables CSS (le gris des encres,
+  le bleu des oui), reste net à toute taille, et pèse 3 Ko en ligne dans la
+  page — pas de fichier à part, pas de binaire.
+- *La silhouette vient des données, pas d'un dessin.* `logo.py` prend le
+  contour extérieur des communes de `data/K4voge_*.geojson` (les arêtes qui ne
+  bordent qu'une commune), le projette et le simplifie avec le Douglas-Peucker
+  de `simplifier_geojson.py`. Aucune dépendance. Les lacs, qui ne sont pas des
+  communes, ressortent d'eux-mêmes : Neuchâtel en trou, Léman et Constance en
+  échancrures ; les petits lacs sont ignorés (moins de 0,4 % du pays).
+- *L'idée est gardée, la typographie non.* Le mot à la verticale du PNG ne
+  tient pas dans un en-tête d'une ligne : l'emblème (carte, barres, points) est
+  conservé, « Politiques.ch » est posé à côté, en romain, le « .ch » en bleu
+  comme avant.
+
+**Ce qu'on a vu.** À 48 px de haut, l'emblème se lit : la carte, les barres,
+les trois points. Le trou du lac de Neuchâtel est un détail qu'on devine plus
+qu'on ne le voit — c'est bien.
+
+**Ouvert.** Le PNG d'origine reste disponible si l'on préfère : une balise
+`<img src="../scrutin/static/scrutin/logo.png">` à la place du SVG. Le neutre
+des cartes, désormais sur blanc, reste à revoir (voir plus bas).
+
 ## 2026-09-10 — D′, la soirée électorale sur fond clair
 
 **Point de départ.** La variante D (« Soirée électorale ») plaît. La question
