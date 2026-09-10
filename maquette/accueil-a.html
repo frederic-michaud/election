@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A — La une · maquette Politiques.ch</title>
+<style>
+/* ═══ Variante A — « La une » ══════════════════════════════════════════════
+   Parti pris : un objet domine la page, comme la une d'un quotidien. Le
+   lecteur du dimanche soir veut UNE réponse, pas trois. Les autres objets
+   suivent, plus petits. Pas d'histogramme groupé : chaque objet porte sa
+   propre barre de majorité, où l'on voit d'un coup le dépouillé et le projeté.
+   Typo : une serif de titrage pour les chiffres, la sans système pour le reste.
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --papier: #fbfaf7; --encre: #1a1a17; --encre-2: #6b6a62; --filet: #dddbd2;
+  --bleu: #1c5cab; --bleu-clair: #86b6ef; --rouge: #ab3226; --neutre: #eceae3;
+  --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--papier); color: var(--encre); font: 16px/1.55 var(--sans); }
+body { margin: 0 auto; max-width: 1060px; padding: 0 20px 64px; }
+
+.bandeau { display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; padding: 20px 0 12px; border-bottom: 2px solid var(--encre); }
+.marque { font: 700 1.5rem/1 var(--serif); letter-spacing: -.01em; }
+.marque span { color: var(--bleu); }
+.bandeau nav { font-size: .9rem; }
+.bandeau nav a { color: var(--encre-2); text-decoration: none; margin-left: 18px; }
+.bandeau nav a:hover { color: var(--bleu); text-decoration: underline; }
+
+.chapeau { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap;
+  padding: 14px 0; border-bottom: 1px solid var(--filet); font-size: .9rem; color: var(--encre-2); }
+.chapeau strong { color: var(--encre); font-weight: 600; }
+.jauge-avance { flex: 1 1 160px; height: 6px; min-width: 120px;
+  background: var(--neutre); border-radius: 3px; overflow: hidden; }
+.jauge-avance i { display: block; height: 100%; background: var(--bleu); }
+
+.une { display: grid; grid-template-columns: 1fr 400px; gap: 40px;
+  align-items: center; padding: 36px 0 32px; border-bottom: 1px solid var(--filet); }
+.kicker { font: 600 .8rem/1 var(--sans); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--encre-2); margin-bottom: 12px; }
+.une h1 { font: 400 1.55rem/1.25 var(--serif); margin: 0 0 20px; max-width: 22ch; }
+.enorme { font: 700 clamp(4rem, 11vw, 6.5rem)/.9 var(--serif);
+  letter-spacing: -.03em; margin: 0 0 4px; }
+.oui { color: var(--bleu); } .non { color: var(--rouge); }
+.verdict { font-size: 1.15rem; font-weight: 600; margin-bottom: 24px; }
+.verdict em { font-weight: 400; font-style: normal; color: var(--encre-2); }
+
+/* La barre de majorité : l'échelle 0–100 avec le seuil, le dépouillé et le projeté. */
+.majorite { max-width: 460px; }
+.piste { position: relative; height: 30px; background: var(--neutre); border-radius: 4px; }
+.piste .part { position: absolute; inset: 0 auto 0 0; border-radius: 4px 0 0 4px; opacity: .9; }
+.piste .seuil { position: absolute; top: -6px; bottom: -6px; left: 50%; width: 2px; background: var(--encre); }
+.piste .connu { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(0,0,0,.45); }
+.legende-piste { display: flex; justify-content: space-between; font-size: .78rem;
+  color: var(--encre-2); margin-top: 7px; }
+.carte-une { border: 1px solid var(--filet); border-radius: 4px; background: #fff; }
+
+.secondaires { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; padding-top: 28px; }
+.secondaire h2 { font: 400 1.05rem/1.35 var(--serif); margin: 0 0 12px; min-height: 2.7em; }
+.grand { font: 700 3.2rem/.95 var(--serif); letter-spacing: -.02em; }
+.secondaire .verdict { font-size: .95rem; margin: 6px 0 16px; }
+.carte-petite { border: 1px solid var(--filet); border-radius: 4px; background: #fff; margin-top: 16px; }
+
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--filet);
+  font-size: .82rem; color: var(--encre-2); }
+@media (max-width: 860px) {
+  .une { grid-template-columns: 1fr; gap: 24px; }
+  .secondaires { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<header class="bandeau">
+  <div class="marque">Politiques<span>.ch</span></div>
+  <nav><a href="#">Accueil</a><a href="#">Cartes</a><a href="#">Méthodes</a><a href="#">Contact</a></nav>
+</header>
+
+<div class="chapeau">
+  <span>Votation fédérale du <strong id="date"></strong></span>
+  <span>·</span>
+  <span><strong id="avance"></strong> du dépouillement</span>
+  <div class="jauge-avance"><i id="jauge"></i></div>
+</div>
+
+<section class="une" id="une"></section>
+<section class="secondaires" id="secondaires"></section>
+
+<footer>
+  Projections calculées à partir des communes déjà dépouillées, corrigées du profil de vote
+  historique de chaque commune. <a href="#">La méthode en détail</a>.
+  <br>Maquette — données fictives.
+</footer>
+
+<script src="plotly.min.js"></script>
+<script src="topojson-stub.js"></script>
+<script src="charte.js"></script>
+<script src="figures.js"></script>
+<script>
+const THEME = {
+  surface: "#ffffff", encre1: "#1a1a17", encre2: "#6b6a62",
+  bleu: "#1c5cab", rouge: "#ab3226", neutre: "#eceae3",
+  carte: { hauteur: 300, barreCouleur: false, demiEtendue: 18, contour: 0.25 },
+};
+const pct = (v, d = 1) => (100 * v).toLocaleString("fr-CH", { minimumFractionDigits: d, maximumFractionDigits: d }) + " %";
+const dateLongue = new Date(VUE.date).toLocaleDateString("fr-CH", { day: "numeric", month: "long", year: "numeric" });
+
+document.getElementById("date").textContent = dateLongue;
+document.getElementById("avance").textContent = pct(VUE.avance);
+document.getElementById("jauge").style.width = (100 * VUE.avance) + "%";
+
+function barreMajorite(s) {
+  const gagne = s.oui_extrapole >= 0.5;
+  return `<div class="majorite">
+    <div class="piste">
+      <i class="part" style="width:${100 * s.oui_extrapole}%;background:${gagne ? "var(--bleu)" : "var(--rouge)"}"></i>
+      <i class="connu" style="left:${100 * s.oui_connu}%" title="dépouillé"></i>
+      <i class="seuil"></i>
+    </div>
+    <div class="legende-piste">
+      <span>oui projetés : <strong>${pct(s.oui_extrapole)}</strong></span>
+      <span>dépouillé à ce stade : ${pct(s.oui_connu)}</span>
+    </div>
+  </div>`;
+}
+
+const [principal, ...autres] = VUE.sujets;
+const gagne = principal.oui_extrapole >= 0.5;
+document.getElementById("une").innerHTML = `
+  <div>
+    <div class="kicker">L'objet le plus disputé</div>
+    <h1>${principal.nom}</h1>
+    <div class="enorme ${gagne ? "oui" : "non"}">${pct(principal.oui_extrapole)}</div>
+    <div class="verdict">${gagne ? "Accepté" : "Refusé"} <em>— projection</em></div>
+    ${barreMajorite(principal)}
+  </div>
+  <div class="carte-une" id="carte-une"></div>`;
+tracer("carte-une", FIGURES.cartes_svg[principal.id], "carte_svg", THEME);
+
+document.getElementById("secondaires").innerHTML = autres.map((s, i) => {
+  const g = s.oui_extrapole >= 0.5;
+  return `<article class="secondaire">
+    <h2>${s.nom}</h2>
+    <div class="grand ${g ? "oui" : "non"}">${pct(s.oui_extrapole)}</div>
+    <div class="verdict">${g ? "Accepté" : "Refusé"} <em>— projection</em></div>
+    ${barreMajorite(s)}
+    <div class="carte-petite" id="carte-${i}"></div>
+  </article>`;
+}).join("");
+autres.forEach((s, i) => tracer("carte-" + i, FIGURES.cartes_svg[s.id], "carte_svg",
+  Object.assign({}, THEME, { carte: Object.assign({}, THEME.carte, { hauteur: 230 }) })));
+</script>
+</body>
+</html>

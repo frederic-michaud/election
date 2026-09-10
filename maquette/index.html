@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquettes — Politiques.ch</title>
+<style>
+:root { --fond: #f7f7f5; --encre: #1b1e22; --encre-2: #6d7178; --bord: #e4e3de; --bleu: #1c5cab; }
+* { box-sizing: border-box; }
+html { background: var(--fond); color: var(--encre);
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+body { margin: 0 auto; max-width: 880px; padding: 40px 20px 64px; }
+h1 { font-size: 1.5rem; margin: 0 0 6px; letter-spacing: -.01em; }
+.sous { color: var(--encre-2); margin: 0 0 28px; }
+ol { list-style: none; padding: 0; margin: 0; counter-reset: v; }
+li { background: #fff; border: 1px solid var(--bord); border-radius: 10px;
+  padding: 18px 20px; margin-bottom: 12px; }
+li a { font-size: 1.08rem; font-weight: 650; color: var(--bleu); text-decoration: none; }
+li a:hover { text-decoration: underline; }
+.lettre { display: inline-block; width: 26px; height: 26px; line-height: 26px; text-align: center;
+  border-radius: 6px; background: #eef1f5; color: var(--encre-2); font-weight: 700;
+  font-size: .82rem; margin-right: 10px; }
+p.desc { margin: 8px 0 0; color: var(--encre-2); font-size: .93rem; }
+.tags { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: .74rem; color: var(--encre-2); border: 1px solid var(--bord);
+  border-radius: 999px; padding: 2px 9px; }
+.note { margin-top: 28px; color: var(--encre-2); font-size: .88rem; }
+code { background: #eeeeea; padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+</style>
+</head>
+<body>
+<h1>Maquettes de la page d'accueil</h1>
+<p class="sous">Cinq partis pris à comparer, sur les mêmes données fictives et les mêmes
+figures Plotly. À regarder aussi en fenêtre étroite.</p>
+
+<ol>
+  <li>
+    <a href="accueil-a.html"><span class="lettre">A</span>La une</a>
+    <p class="desc">Un objet domine la page, comme la une d'un quotidien : le lecteur du
+    dimanche soir veut une réponse, pas trois. Serif de titrage, filets, pas d'histogramme —
+    chaque objet porte sa propre barre de majorité.</p>
+    <div class="tags"><span class="tag">éditorial</span><span class="tag">hiérarchie forte</span><span class="tag">carte SVG</span></div>
+  </li>
+  <li>
+    <a href="accueil-b.html"><span class="lettre">B</span>Tableau de bord</a>
+    <p class="desc">Le parti pris inverse : aucun objet privilégié, tout tient en un écran.
+    Une ligne par objet, colonnes alignées, et un « dot plot » qui montre le trajet du
+    dépouillé vers le projeté sur l'échelle 0–100.</p>
+    <div class="tags"><span class="tag">dense</span><span class="tag">comparatif</span><span class="tag">sobre</span></div>
+  </li>
+  <li>
+    <a href="accueil-c.html"><span class="lettre">C</span>Cartes d'abord</a>
+    <p class="desc">La carte est le sujet, pas l'illustration : plein cadre, onglets pour
+    changer d'objet, chiffre en surimpression. Seule variante à utiliser la carte Mapbox
+    (zoom à la souris) — c'est elle qui sert de point de comparaison.</p>
+    <div class="tags"><span class="tag">immersif</span><span class="tag">interactif</span><span class="tag">carte Mapbox</span></div>
+  </li>
+  <li>
+    <a href="accueil-d.html"><span class="lettre">D</span>Soirée électorale</a>
+    <p class="desc">Faite pour être regardée de loin, projetée ou posée sur un second écran :
+    fond sombre, chiffres énormes, horloge et barre d'avancement. Un mur de résultats.</p>
+    <div class="tags"><span class="tag">sombre</span><span class="tag">grand écran</span><span class="tag">contrastes à revalider</span></div>
+  </li>
+  <li>
+    <a href="accueil-e.html"><span class="lettre">E</span>Écart à la majorité</a>
+    <p class="desc">Un parti pris d'information : non pas « 46,9 % de oui » mais « à 3,1 points
+    de la majorité ». Axe centré sur 50 %, et deux barres par objet qui donnent à voir la
+    correction apportée par l'extrapolation.</p>
+    <div class="tags"><span class="tag">axe divergent</span><span class="tag">montre la méthode</span><span class="tag">demande une figure nouvelle</span></div>
+  </li>
+</ol>
+
+<p class="note">Les pages sont vides tant que <code>python maquette/construire.py</code>
+n'a pas tourné : il fabrique <code>figures.js</code> depuis la base fictive.
+Voir <code>README.md</code>.</p>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B — Tableau de bord · maquette Politiques.ch</title>
+<style>
+/* ═══ Variante B — « Tableau de bord » ═════════════════════════════════════
+   Parti pris inverse de A : aucun objet n'est privilégié, tout tient dans un
+   seul écran. Une ligne par objet, colonnes alignées, chiffres tabulaires.
+   L'histogramme groupé disparaît au profit d'un « dot plot » : sur une même
+   échelle 0–100, un trait pour le dépouillé, une pastille pour le projeté, et
+   le seuil de 50 % comme repère fixe. On lit le mouvement, pas seulement l'état.
+   Sobriété assumée : c'est un instrument de lecture, pas une affiche.
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --fond: #f6f6f4; --carte-fond: #fff; --encre: #22252a; --encre-2: #71757c;
+  --bord: #e3e3df; --bleu: #1c5cab; --bleu-clair: #86b6ef; --rouge: #b3372c; --neutre: #e8e7e2;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--fond); color: var(--encre); font: 15px/1.5 var(--sans); }
+body { margin: 0 auto; max-width: 1180px; padding: 0 20px 40px; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  flex-wrap: wrap; padding: 16px 0; }
+.marque { font-weight: 700; font-size: 1.05rem; letter-spacing: -.01em; }
+.marque span { color: var(--bleu); }
+header nav a { color: var(--encre-2); text-decoration: none; margin-left: 16px; font-size: .88rem; }
+
+.etat { display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: var(--carte-fond); border: 1px solid var(--bord); border-radius: 8px;
+  padding: 12px 16px; margin-bottom: 14px; }
+.etat .pastille { width: 8px; height: 8px; border-radius: 50%; background: var(--bleu); }
+.etat .titre { font-weight: 600; }
+.etat .sep { color: var(--bord); }
+.etat .avance { color: var(--encre-2); font-size: .9rem; }
+.etat .barre { flex: 1 1 140px; min-width: 100px; height: 5px; background: var(--neutre); border-radius: 3px; }
+.etat .barre i { display: block; height: 100%; background: var(--bleu); border-radius: 3px; }
+
+table { width: 100%; border-collapse: collapse; background: var(--carte-fond);
+  border: 1px solid var(--bord); border-radius: 8px; overflow: hidden; }
+thead th { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--encre-2); font-weight: 600; text-align: left; padding: 10px 14px;
+  border-bottom: 1px solid var(--bord); background: #fafaf8; white-space: nowrap; }
+tbody td { padding: 14px; border-bottom: 1px solid var(--bord); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+.objet { font-weight: 600; max-width: 26ch; }
+.objet small { display: block; font-weight: 400; color: var(--encre-2); font-size: .78rem; margin-top: 2px; }
+.chiffre { font-size: 1.5rem; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; }
+.oui { color: var(--bleu); } .non { color: var(--rouge); }
+.badge { display: inline-block; font-size: .72rem; font-weight: 600; padding: 2px 8px;
+  border-radius: 999px; white-space: nowrap; }
+.badge.oui { background: #e8f1fc; } .badge.non { background: #fbeae8; }
+.col-num { text-align: right; white-space: nowrap; }
+
+/* Le dot plot : dépouillé (trait) → projeté (pastille), sur l'échelle 0–100. */
+.piste { position: relative; height: 34px; min-width: 190px; }
+.piste .rail { position: absolute; left: 0; right: 0; top: 16px; height: 3px;
+  background: var(--neutre); border-radius: 2px; }
+.piste .seuil { position: absolute; top: 6px; bottom: 6px; left: 50%; width: 1px; background: #b9bcc2; }
+.piste .seuil::after { content: "50"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  font-size: .64rem; color: var(--encre-2); }
+.piste .trajet { position: absolute; top: 16px; height: 3px; border-radius: 2px; }
+.piste .connu { position: absolute; top: 9px; width: 2px; height: 17px; background: var(--encre-2); }
+.piste .projete { position: absolute; top: 11px; width: 13px; height: 13px; border-radius: 50%;
+  border: 2px solid var(--carte-fond); transform: translateX(-6px); }
+.mini { width: 132px; height: 84px; }
+
+.pied { display: flex; gap: 20px; flex-wrap: wrap; justify-content: space-between;
+  color: var(--encre-2); font-size: .8rem; margin-top: 14px; }
+.legende { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.legende b { font-weight: 600; color: var(--encre); }
+@media (max-width: 820px) {
+  thead { display: none; }
+  table, tbody, tr, td { display: block; width: 100%; }
+  tbody tr { border-bottom: 1px solid var(--bord); padding: 6px 0; }
+  tbody td { border: 0; padding: 6px 14px; }
+  /* En colonne, les en-têtes ont disparu : chaque cellule reprend le sien. */
+  tbody td[data-libelle]::before { content: attr(data-libelle) " · "; color: var(--encre-2);
+    font-size: .8rem; }
+  .col-num { text-align: left; }
+  .mini { width: 100%; height: 150px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="marque">Politiques<span>.ch</span></div>
+  <nav><a href="#">Accueil</a><a href="#">Cartes</a><a href="#">Méthodes</a><a href="#">Contact</a></nav>
+</header>
+
+<div class="etat">
+  <i class="pastille"></i>
+  <span class="titre">Votation fédérale du <span id="date"></span></span>
+  <span class="sep">|</span>
+  <span class="avance">dépouillement : <b id="avance" class="tnum"></b></span>
+  <div class="barre"><i id="jauge"></i></div>
+  <span class="avance" id="maj"></span>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Objet</th>
+      <th class="col-num">Projeté</th>
+      <th class="col-num">Dépouillé</th>
+      <th class="col-num">Écart</th>
+      <th style="width:34%">Dépouillé → projeté</th>
+      <th>Communes</th>
+    </tr>
+  </thead>
+  <tbody id="lignes"></tbody>
+</table>
+
+<div class="pied">
+  <div class="legende">
+    <span><b>|</b> dépouillé</span>
+    <span><b>●</b> projeté</span>
+    <span>seuil de majorité à 50 %</span>
+  </div>
+  <div>Maquette — données fictives. <a href="#">La méthode</a></div>
+</div>
+
+<script src="plotly.min.js"></script>
+<script src="topojson-stub.js"></script>
+<script src="charte.js"></script>
+<script src="figures.js"></script>
+<script>
+const THEME = {
+  surface: "#ffffff", bleu: "#1c5cab", rouge: "#b3372c", neutre: "#e8e7e2",
+  carte: { hauteur: 84, barreCouleur: false, demiEtendue: 18, contour: 0, opacite: 1 },
+};
+const pct = (v, d = 1) => (100 * v).toLocaleString("fr-CH", { minimumFractionDigits: d, maximumFractionDigits: d }) + " %";
+const pts = (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toLocaleString("fr-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const code = (nom) => nom.includes("(") ? nom.split("(")[1].split(")")[0] : nom;
+
+document.getElementById("date").textContent =
+  new Date(VUE.date).toLocaleDateString("fr-CH", { day: "numeric", month: "long", year: "numeric" });
+document.getElementById("avance").textContent = pct(VUE.avance);
+document.getElementById("jauge").style.width = (100 * VUE.avance) + "%";
+const acceptes = VUE.sujets.filter((s) => s.oui_extrapole >= 0.5).length;
+document.getElementById("maj").textContent =
+  `${acceptes} accepté${acceptes > 1 ? "s" : ""} sur ${VUE.sujets.length}`;
+
+document.getElementById("lignes").innerHTML = VUE.sujets.map((s, i) => {
+  const g = s.oui_extrapole >= 0.5;
+  const a = 100 * Math.min(s.oui_connu, s.oui_extrapole);
+  const b = 100 * Math.max(s.oui_connu, s.oui_extrapole);
+  return `<tr>
+    <td class="objet">${s.nom}<small>${code(s.nom)}</small></td>
+    <td class="col-num"><span class="chiffre tnum ${g ? "oui" : "non"}">${pct(s.oui_extrapole)}</span><br>
+        <span class="badge ${g ? "oui" : "non"}">${g ? "accepté" : "refusé"}</span></td>
+    <td class="col-num tnum" data-libelle="dépouillé" style="color:var(--encre-2)">${pct(s.oui_connu)}</td>
+    <td class="col-num tnum" data-libelle="écart" style="color:var(--encre-2)">${pts(100 * (s.oui_extrapole - s.oui_connu))}</td>
+    <td>
+      <div class="piste">
+        <i class="rail"></i><i class="seuil"></i>
+        <i class="trajet" style="left:${a}%;width:${b - a}%;background:${g ? "var(--bleu-clair)" : "#e6b3ad"}"></i>
+        <i class="connu" style="left:${100 * s.oui_connu}%"></i>
+        <i class="projete" style="left:${100 * s.oui_extrapole}%;background:${g ? "var(--bleu)" : "var(--rouge)"}"></i>
+      </div>
+    </td>
+    <td><div class="mini" id="mini-${i}"></div></td>
+  </tr>`;
+}).join("");
+
+VUE.sujets.forEach((s, i) => tracer("mini-" + i, FIGURES.cartes_svg[s.id], "carte_svg", THEME));
+</script>
+</body>
+</html>

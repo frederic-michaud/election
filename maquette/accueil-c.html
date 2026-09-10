@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C — Cartes d'abord · maquette Politiques.ch</title>
+<style>
+/* ═══ Variante C — « Cartes d'abord » ══════════════════════════════════════
+   Parti pris : la carte est le sujet, pas l'illustration. Elle occupe la
+   moitié haute de l'écran, on change d'objet par onglets, et le chiffre se
+   lit en surimpression. C'est la seule variante qui utilise la carte Mapbox
+   (zoom et déplacement à la souris) : elle sert justement à comparer avec la
+   projection SVG des autres. Les trois objets restent atteignables en bas,
+   sous forme de jauges qui font aussi office de navigation.
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --fond: #fcfcfb; --encre: #191c21; --encre-2: #6a6e75; --bord: #e4e4de;
+  --bleu: #1c5cab; --bleu-vif: #2a78d6; --rouge: #b3372c; --neutre: #eeece7;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--fond); color: var(--encre); font: 15px/1.5 var(--sans); }
+body { margin: 0 auto; max-width: 1240px; padding: 0 18px 40px; }
+
+header { display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; padding: 14px 0; }
+.marque { font-weight: 700; font-size: 1.05rem; } .marque span { color: var(--bleu); }
+header nav a { color: var(--encre-2); text-decoration: none; margin-left: 16px; font-size: .88rem; }
+
+.onglets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.onglets button { font: inherit; font-size: .88rem; cursor: pointer; padding: 7px 14px;
+  border: 1px solid var(--bord); background: #fff; color: var(--encre-2);
+  border-radius: 999px; transition: .12s; }
+.onglets button:hover { border-color: #c9c9c1; }
+.onglets button[aria-selected="true"] { background: var(--encre); border-color: var(--encre); color: #fff; }
+
+.scene { position: relative; border: 1px solid var(--bord); border-radius: 12px;
+  overflow: hidden; background: #fff; }
+.toile { height: min(62vh, 560px); }
+.panneau { position: absolute; top: 18px; left: 18px; z-index: 5; max-width: min(340px, 62%);
+  background: rgba(255,255,255,.93); backdrop-filter: blur(6px);
+  border: 1px solid var(--bord); border-radius: 10px; padding: 16px 18px; }
+.panneau .nom { font-size: .9rem; color: var(--encre-2); margin-bottom: 10px; }
+.panneau .chiffre { font-size: clamp(2.6rem, 6vw, 3.6rem); font-weight: 700;
+  line-height: .95; letter-spacing: -.03em; }
+.oui { color: var(--bleu); } .non { color: var(--rouge); }
+.panneau .verdict { font-weight: 600; margin-top: 6px; }
+.panneau .verdict small { font-weight: 400; color: var(--encre-2); }
+.panneau .avance { font-size: .82rem; color: var(--encre-2); margin-top: 10px;
+  padding-top: 10px; border-top: 1px solid var(--bord); }
+.echelle { position: absolute; right: 18px; bottom: 18px; z-index: 5; font-size: .74rem;
+  color: var(--encre-2); background: rgba(255,255,255,.9); border: 1px solid var(--bord);
+  border-radius: 8px; padding: 8px 10px; }
+.echelle .bande { height: 8px; width: 150px; border-radius: 4px; margin: 5px 0 4px;
+  background: linear-gradient(90deg, var(--rouge), var(--neutre) 50%, var(--bleu-vif)); }
+.echelle .bornes { display: flex; justify-content: space-between; }
+
+.jauges { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px; margin-top: 14px; }
+.jauge { text-align: left; font: inherit; cursor: pointer; background: #fff;
+  border: 1px solid var(--bord); border-radius: 10px; padding: 13px 15px; transition: .12s; }
+.jauge:hover { border-color: #c9c9c1; }
+.jauge[aria-selected="true"] { border-color: var(--encre); box-shadow: 0 0 0 1px var(--encre); }
+.jauge .t { font-size: .82rem; color: var(--encre-2); min-height: 2.4em; }
+.jauge .v { font-size: 1.5rem; font-weight: 700; margin: 4px 0 8px; letter-spacing: -.01em; }
+.jauge .piste { position: relative; height: 7px; background: var(--neutre); border-radius: 4px; }
+.jauge .piste i { position: absolute; inset: 0 auto 0 0; border-radius: 4px; }
+.jauge .piste b { position: absolute; top: -3px; bottom: -3px; left: 50%; width: 1px; background: var(--encre); }
+footer { color: var(--encre-2); font-size: .82rem; margin-top: 20px; }
+@media (max-width: 640px) { .panneau { position: static; max-width: none; border: 0; border-bottom: 1px solid var(--bord); border-radius: 0; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="marque">Politiques<span>.ch</span></div>
+  <nav><a href="#">Accueil</a><a href="#">Cartes</a><a href="#">Méthodes</a><a href="#">Contact</a></nav>
+</header>
+
+<div class="onglets" id="onglets" role="tablist"></div>
+
+<div class="scene">
+  <div class="panneau" id="panneau"></div>
+  <div class="echelle">
+    Part de oui par commune
+    <div class="bande"></div>
+    <div class="bornes"><span>32 %</span><span>50 %</span><span>68 %</span></div>
+  </div>
+  <div class="toile" id="toile"></div>
+</div>
+
+<div class="jauges" id="jauges"></div>
+
+<footer>
+  Les communes non dépouillées sont affichées avec leur valeur estimée.
+  Maquette — données fictives. <a href="#">La méthode</a>
+</footer>
+
+<script src="plotly.min.js"></script>
+<script src="topojson-stub.js"></script>
+<script src="charte.js"></script>
+<script src="figures.js"></script>
+<script>
+const THEME = {
+  surface: "#ffffff", bleu: "#2a78d6", rouge: "#b3372c", neutre: "#eeece7",
+  carte: { hauteur: null, barreCouleur: false, demiEtendue: 18, contour: 0.15 },
+};
+const pct = (v, d = 1) => (100 * v).toLocaleString("fr-CH", { minimumFractionDigits: d, maximumFractionDigits: d }) + " %";
+const code = (nom) => nom.includes("(") ? nom.split("(")[1].split(")")[0] : nom;
+const dateLongue = new Date(VUE.date).toLocaleDateString("fr-CH", { day: "numeric", month: "long", year: "numeric" });
+
+let actif = 0;
+
+document.getElementById("onglets").innerHTML = VUE.sujets.map((s, i) =>
+  `<button role="tab" data-i="${i}" aria-selected="${i === 0}">${code(s.nom)}</button>`).join("");
+
+document.getElementById("jauges").innerHTML = VUE.sujets.map((s, i) => {
+  const g = s.oui_extrapole >= 0.5;
+  return `<button class="jauge" data-i="${i}" aria-selected="${i === 0}">
+    <div class="t">${s.nom}</div>
+    <div class="v ${g ? "oui" : "non"}">${pct(s.oui_extrapole)}</div>
+    <div class="piste">
+      <i style="width:${100 * s.oui_extrapole}%;background:${g ? "var(--bleu)" : "var(--rouge)"}"></i><b></b>
+    </div>
+  </button>`;
+}).join("");
+
+function afficher(i) {
+  actif = i;
+  const s = VUE.sujets[i];
+  const g = s.oui_extrapole >= 0.5;
+  document.getElementById("panneau").innerHTML = `
+    <div class="nom">${s.nom}</div>
+    <div class="chiffre ${g ? "oui" : "non"}">${pct(s.oui_extrapole)}</div>
+    <div class="verdict">${g ? "Accepté" : "Refusé"} <small>— projection</small></div>
+    <div class="avance">Votation du ${dateLongue}<br>
+      ${pct(VUE.avance)} du dépouillement · ${pct(s.oui_connu)} de oui dépouillés</div>`;
+  document.querySelectorAll("[data-i]").forEach((el) =>
+    el.setAttribute("aria-selected", String(Number(el.dataset.i) === i)));
+  const toile = document.getElementById("toile");
+  // Contrairement à la projection SVG, Mapbox ne sait pas cadrer sur les
+  // données : il faut lui calculer un zoom à chaque changement de taille.
+  // Étalonné à l'œil : au zoom 6, le pays occupe environ 420 px de large.
+  const cible = Math.min(toile.clientWidth * 0.78, toile.clientHeight * 1.85);
+  const zoom = 6 + Math.log2(cible / 420);
+  tracer("toile", FIGURES.cartes[s.id], "carte", Object.assign({}, THEME, {
+    carte: Object.assign({}, THEME.carte, { hauteur: toile.clientHeight, zoom, centre: { lat: 46.82, lon: 8.9 } }),
+  }));
+}
+
+document.addEventListener("click", (e) => {
+  const cible = e.target.closest("[data-i]");
+  if (cible) afficher(Number(cible.dataset.i));
+});
+afficher(0);
+</script>
+</body>
+</html>

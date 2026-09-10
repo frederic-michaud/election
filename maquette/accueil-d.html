@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D — Soirée électorale · maquette Politiques.ch</title>
+<style>
+/* ═══ Variante D — « Soirée électorale » ═══════════════════════════════════
+   Parti pris : la page est faite pour être regardée de loin, projetée dans
+   une salle ou posée sur un second écran pendant le dépouillement. Fond
+   sombre, très peu de texte, des chiffres énormes, une horloge et une barre
+   d'avancement qui rappellent que ça bouge encore. Trois panneaux de poids
+   égal — c'est un mur de résultats, pas un article.
+   Contrainte à vérifier : le contraste des couleurs change complètement sur
+   fond sombre, et la palette validée l'a été sur fond clair.
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --nuit: #0f1319; --panneau: #171c25; --bord: #262d3a;
+  --clair: #eef1f6; --gris: #8d97a8;
+  --oui: #58a0f7; --non: #f0705f; --neutre: #2b3340;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--nuit); color: var(--clair); font: 16px/1.5 var(--sans); }
+body { margin: 0 auto; max-width: 1280px; padding: 0 22px 44px; }
+
+header { display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  flex-wrap: wrap; padding: 20px 0 14px; }
+.marque { font-weight: 700; font-size: 1.1rem; letter-spacing: .01em; }
+.marque span { color: var(--oui); }
+.direct { display: flex; align-items: center; gap: 9px; font-size: .78rem;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--gris); }
+.point { width: 9px; height: 9px; border-radius: 50%; background: var(--non);
+  box-shadow: 0 0 0 0 rgba(240,112,95,.6); animation: pulse 2.2s infinite; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 10px rgba(240,112,95,0); } 100% { box-shadow: 0 0 0 0 rgba(240,112,95,0); } }
+
+.avancement { background: var(--panneau); border: 1px solid var(--bord); border-radius: 12px;
+  padding: 16px 20px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.avancement .l { font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--gris); }
+.avancement .v { font-size: 2rem; font-weight: 700; letter-spacing: -.02em; }
+.avancement .rail { flex: 1 1 220px; min-width: 160px; height: 10px;
+  background: var(--neutre); border-radius: 5px; overflow: hidden; }
+.avancement .rail i { display: block; height: 100%; background: linear-gradient(90deg, #2f6fc4, var(--oui)); }
+.avancement .note { font-size: .84rem; color: var(--gris); }
+
+.mur { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 18px; margin-top: 18px; }
+.panneau { background: var(--panneau); border: 1px solid var(--bord); border-radius: 14px;
+  padding: 22px 22px 8px; display: flex; flex-direction: column; }
+.panneau .nom { font-size: .95rem; color: var(--gris); min-height: 3em; }
+.panneau .chiffre { font-size: clamp(3.2rem, 7vw, 4.6rem); font-weight: 800;
+  line-height: .95; letter-spacing: -.035em; margin: 10px 0 2px; }
+.oui { color: var(--oui); } .non { color: var(--non); }
+.etiquette { display: inline-block; font-size: .78rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; padding: 5px 12px; border-radius: 999px; margin-bottom: 16px; }
+.etiquette.oui { background: rgba(88,160,247,.16); }
+.etiquette.non { background: rgba(240,112,95,.16); }
+.piste { position: relative; height: 12px; background: var(--neutre); border-radius: 6px; }
+.piste i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; }
+.piste b { position: absolute; top: -5px; bottom: -5px; left: 50%; width: 2px; background: var(--clair); opacity: .8; }
+.sous { display: flex; justify-content: space-between; font-size: .8rem; color: var(--gris); margin-top: 8px; }
+.carte { margin-top: 12px; }
+footer { color: var(--gris); font-size: .82rem; margin-top: 26px; text-align: center; }
+footer a { color: var(--oui); }
+</style>
+</head>
+<body>
+<header>
+  <div class="marque">Politiques<span>.ch</span></div>
+  <div class="direct"><i class="point"></i> Dépouillement en cours · <span id="heure"></span></div>
+</header>
+
+<div class="avancement">
+  <div>
+    <div class="l">Dépouillement</div>
+    <div class="v" id="avance"></div>
+  </div>
+  <div class="rail"><i id="jauge"></i></div>
+  <div class="note">Votation fédérale du <span id="date"></span> · <span id="resume"></span></div>
+</div>
+
+<section class="mur" id="mur"></section>
+
+<footer>Projections extrapolées des communes dépouillées. Maquette — données fictives. <a href="#">La méthode</a></footer>
+
+<script src="plotly.min.js"></script>
+<script src="topojson-stub.js"></script>
+<script src="charte.js"></script>
+<script src="figures.js"></script>
+<script>
+const THEME = {
+  surface: "#171c25", encre1: "#eef1f6", encre2: "#8d97a8",
+  bleu: "#58a0f7", rouge: "#f0705f", neutre: "#39414f",
+  carte: { hauteur: 210, barreCouleur: false, demiEtendue: 18, contour: 0.15, opacite: 1 },
+};
+const pct = (v, d = 1) => (100 * v).toLocaleString("fr-CH", { minimumFractionDigits: d, maximumFractionDigits: d }) + " %";
+
+document.getElementById("date").textContent =
+  new Date(VUE.date).toLocaleDateString("fr-CH", { day: "numeric", month: "long", year: "numeric" });
+document.getElementById("heure").textContent =
+  new Date().toLocaleTimeString("fr-CH", { hour: "2-digit", minute: "2-digit" });
+document.getElementById("avance").textContent = pct(VUE.avance);
+document.getElementById("jauge").style.width = (100 * VUE.avance) + "%";
+const acceptes = VUE.sujets.filter((s) => s.oui_extrapole >= 0.5).length;
+document.getElementById("resume").textContent =
+  `${acceptes} objet${acceptes > 1 ? "s" : ""} accepté${acceptes > 1 ? "s" : ""} sur ${VUE.sujets.length}`;
+
+document.getElementById("mur").innerHTML = VUE.sujets.map((s, i) => {
+  const g = s.oui_extrapole >= 0.5;
+  return `<article class="panneau">
+    <div class="nom">${s.nom}</div>
+    <div class="chiffre ${g ? "oui" : "non"}">${pct(s.oui_extrapole)}</div>
+    <div><span class="etiquette ${g ? "oui" : "non"}">${g ? "accepté" : "refusé"}</span></div>
+    <div class="piste">
+      <i style="width:${100 * s.oui_extrapole}%;background:${g ? "var(--oui)" : "var(--non)"}"></i><b></b>
+    </div>
+    <div class="sous"><span>projeté</span><span>dépouillé : ${pct(s.oui_connu)}</span></div>
+    <div class="carte" id="carte-${i}"></div>
+  </article>`;
+}).join("");
+
+VUE.sujets.forEach((s, i) => tracer("carte-" + i, FIGURES.cartes_svg[s.id], "carte_svg", THEME));
+</script>
+</body>
+</html>

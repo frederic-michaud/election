@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E — Écart à la majorité · maquette Politiques.ch</title>
+<style>
+/* ═══ Variante E — « Écart à la majorité » ═════════════════════════════════
+   Parti pris d'information, pas seulement de mise en page : on n'affiche plus
+   « 46,9 % de oui » mais « à 3,1 points de la majorité ». L'axe est centré sur
+   50 %, vers la droite l'objet passe, vers la gauche il tombe. Deux barres par
+   objet — le dépouillé et le projeté — donnent à voir le travail de
+   l'extrapolation : c'est l'argument scientifique du site, rendu visible.
+   Conséquence : cette variante demande une figure que le site ne produit pas
+   encore (voir README, « ce qu'une variante peut demander »).
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --fond: #fdfdfc; --encre: #1b1e22; --encre-2: #6d7178; --bord: #e6e5e0;
+  --bleu: #1c5cab; --bleu-pale: #a9cbf3; --rouge: #b3372c; --rouge-pale: #eab9b3;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--fond); color: var(--encre); font: 16px/1.55 var(--sans); }
+body { margin: 0 auto; max-width: 1000px; padding: 0 20px 56px; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  flex-wrap: wrap; padding: 18px 0; border-bottom: 1px solid var(--bord); }
+.marque { font-weight: 700; font-size: 1.05rem; } .marque span { color: var(--bleu); }
+header nav a { color: var(--encre-2); text-decoration: none; margin-left: 16px; font-size: .88rem; }
+
+.intro { padding: 30px 0 8px; }
+.intro h1 { font-size: 1.45rem; font-weight: 650; margin: 0 0 8px; letter-spacing: -.01em; }
+.intro p { color: var(--encre-2); margin: 0; max-width: 62ch; }
+
+/* L'axe centré : 50 % au milieu, ±25 points de part et d'autre. */
+.axe { position: relative; height: 26px; margin: 28px 0 6px; }
+.axe .trait { position: absolute; top: 13px; left: 0; right: 0; height: 1px; background: var(--bord); }
+.axe .zero { position: absolute; top: 13px; bottom: 0; left: 50%; width: 1px; background: #c4c3bc; }
+.axe span { position: absolute; top: 0; font-size: .74rem; color: var(--encre-2); transform: translateX(-50%); }
+
+/* Le trait de la majorité court derrière les barres, et s'arrête avec elles. */
+.objets { position: relative; }
+.objets::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%;
+  width: 1px; background: #c4c3bc; }
+.objet { padding: 20px 0; border-bottom: 1px solid var(--bord); }
+.objet:last-child { border-bottom: 0; }
+.entete { display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+  flex-wrap: wrap; margin-bottom: 14px; }
+.entete .nom { font-weight: 600; }
+.entete .verdict { font-size: .84rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.verdict.oui { background: #e7f0fb; color: var(--bleu); }
+.verdict.non { background: #fbe9e7; color: var(--rouge); }
+
+.rangee { position: relative; height: 26px; margin-bottom: 6px; }
+.rangee .barre { position: absolute; top: 4px; height: 18px; border-radius: 3px; }
+.rangee.pale .barre { top: 7px; height: 12px; }
+.rangee .valeur { position: absolute; top: 3px; font-size: .82rem; white-space: nowrap; }
+.rangee .etiq { position: absolute; top: 5px; font-size: .74rem; color: var(--encre-2); }
+.oui { color: var(--bleu); } .non { color: var(--rouge); }
+
+.cartes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px; margin-top: 34px; }
+.vignette { border: 1px solid var(--bord); border-radius: 10px; padding: 12px; background: #fff; }
+.vignette .t { font-size: .8rem; color: var(--encre-2); min-height: 2.4em; margin-bottom: 4px; }
+.pied { color: var(--encre-2); font-size: .84rem; margin-top: 26px; padding-top: 14px;
+  border-top: 1px solid var(--bord); }
+</style>
+</head>
+<body>
+<header>
+  <div class="marque">Politiques<span>.ch</span></div>
+  <nav><a href="#">Accueil</a><a href="#">Cartes</a><a href="#">Méthodes</a><a href="#">Contact</a></nav>
+</header>
+
+<div class="intro">
+  <h1>Votation fédérale du <span id="date"></span></h1>
+  <p>Écart à la majorité, en points de pourcentage. À droite de l'axe, l'objet passe.
+     La barre pleine est la projection, la barre pâle ce que donnent les communes déjà
+     dépouillées — <span id="avance"></span> du total.</p>
+</div>
+
+<div class="axe" id="axe"></div>
+<section class="objets" id="objets"></section>
+
+<section class="cartes" id="cartes"></section>
+
+<div class="pied">
+  Le dépouillement commence par les petites communes, dont le vote n'est pas celui du pays :
+  l'écart entre les deux barres est la correction apportée par l'extrapolation.
+  Maquette — données fictives. <a href="#">La méthode</a>
+</div>
+
+<script src="plotly.min.js"></script>
+<script src="topojson-stub.js"></script>
+<script src="charte.js"></script>
+<script src="figures.js"></script>
+<script>
+const THEME = {
+  surface: "#ffffff", bleu: "#1c5cab", rouge: "#b3372c", neutre: "#eeece7",
+  carte: { hauteur: 150, barreCouleur: false, demiEtendue: 18, contour: 0 },
+};
+const ETENDUE = 25;  // points affichés de part et d'autre de la majorité
+const pos = (points) => 50 + 50 * points / ETENDUE;  // en % de la largeur
+const pts = (v) => (v >= 0 ? "+" : "−") + Math.abs(v).toLocaleString("fr-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const pct = (v) => (100 * v).toLocaleString("fr-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %";
+
+document.getElementById("date").textContent =
+  new Date(VUE.date).toLocaleDateString("fr-CH", { day: "numeric", month: "long", year: "numeric" });
+document.getElementById("avance").textContent = pct(VUE.avance);
+
+document.getElementById("axe").innerHTML = '<i class="trait"></i><i class="zero"></i>' +
+  [-20, -10, 0, 10, 20].map((g) =>
+    `<span style="left:${pos(g)}%">${g === 0 ? "majorité" : (g > 0 ? "+" : "−") + Math.abs(g)}</span>`).join("");
+
+function rangee(points, couleur, epais, etiquette) {
+  const a = Math.min(50, pos(points));
+  const b = Math.max(50, pos(points));
+  const aDroite = points >= 0;
+  return `<div class="rangee ${epais ? "" : "pale"}">
+    <i class="barre" style="left:${a}%;width:${b - a}%;background:${couleur}"></i>
+    <span class="valeur ${aDroite ? "oui" : "non"}" style="${aDroite ? `left:${b}%;margin-left:8px` : `right:${100 - a}%;margin-right:8px`};${epais ? "font-weight:700" : "opacity:.75"}">${pts(points)}</span>
+    ${epais ? "" : `<span class="etiq" style="${aDroite ? `right:${100 - a}%;margin-right:8px` : `left:${b}%;margin-left:8px`}">${etiquette}</span>`}
+  </div>`;
+}
+
+document.getElementById("objets").innerHTML = VUE.sujets.map((s) => {
+  const g = s.oui_extrapole >= 0.5;
+  const ecartProjete = 100 * s.oui_extrapole - 50;
+  const ecartConnu = 100 * s.oui_connu - 50;
+  return `<article class="objet">
+    <div class="entete">
+      <span class="nom">${s.nom}</span>
+      <span class="verdict ${g ? "oui" : "non"}">${g ? "accepté" : "refusé"} — projection</span>
+    </div>
+    ${rangee(ecartProjete, g ? "var(--bleu)" : "var(--rouge)", true)}
+    ${rangee(ecartConnu, ecartConnu >= 0 ? "var(--bleu-pale)" : "var(--rouge-pale)", false, "dépouillé")}
+  </article>`;
+}).join("");
+
+document.getElementById("cartes").innerHTML = VUE.sujets.map((s, i) =>
+  `<div class="vignette"><div class="t">${s.nom}</div><div id="carte-${i}"></div></div>`).join("");
+VUE.sujets.forEach((s, i) => tracer("carte-" + i, FIGURES.cartes_svg[s.id], "carte_svg", THEME));
+</script>
+</body>
+</html>
