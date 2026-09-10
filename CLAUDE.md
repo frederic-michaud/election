@@ -34,6 +34,12 @@ le sont déjà.
 Garde-fou : sous **7 communes dépouillées**, `get_extrapolation` renvoie `0.5, 0.5, 0`
 plutôt qu'un ajustement sur trop peu de points.
 
+Une commune sans profil ACP ne fait jamais tomber la projection : déjà
+dépouillée, ses bulletins comptent mais elle ne sert pas à ajuster le modèle ;
+pas encore rentrée, elle est projetée avec le profil moyen de son district. Le
+cas est courant — une commune qui se met à publier ses résultats séparément n'a
+pas d'historique, donc pas de profil.
+
 À noter : `manage.py run_extrapolation` **écrit les valeurs extrapolées dans les
 lignes `ResultatCommunalEnCours`** des communes non dépouillées (tout en laissant
 `comptabilise=False`). C'est ce qui permet aux cartes d'afficher toute la Suisse —

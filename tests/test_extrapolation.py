@@ -22,6 +22,7 @@ from scrutin.extrapolation import (
     get_linear_parameter,
     get_percentage,
     nb_component,
+    profils_de_repli,
 )
 from scrutin.models import Canton, Commune, District, ResultatCommunalEnCours, SujetVote
 
@@ -200,15 +201,65 @@ def test_moins_de_sept_communes_depouillees_renvoie_le_repli():
 
 
 @pytest.mark.django_db
-def test_commune_sans_profil_acp_est_signalee():
-    """Une commune sans ``PCAResult`` doit lever une erreur explicite.
+def test_une_commune_sans_profil_ne_fait_pas_tomber_la_projection(caplog):
+    """Le scénario qui gelait la soirée.
 
-    C'est la cause racine des exclusions nominatives (Rüti bei Lyssach, Jaberg)
-    qui traînent dans les scripts du jour J : le message doit nommer la commune
-    fautive pour qu'un soir de scrutin reste diagnosticable.
+    Une commune sans ``PCAResult`` levait une exception, donc plus aucune
+    projection jusqu'à ce que quelqu'un s'en aperçoive. C'est arrivé pour de
+    vrai : une commune qui se met à publier ses résultats séparément n'a pas
+    d'historique, donc pas de profil. Elle est désormais projetée avec le
+    profil moyen de son district, et l'avertissement la nomme.
+    """
+    sujet, oui_reel, non_reel = peupler_base_lineaire(nb_communes=40, nb_comptees=13)
+    # Une commune pas encore dépouillée : c'est elle qu'il faut projeter.
+    PCAResult.objects.filter(commune__nom="Commune 20").delete()
+
+    _, extrapolation, _, sans_resultat, _, _ = get_extrapolation(sujet)
+
+    assert "Commune 20" in caplog.text
+    # Elle est projetée comme les autres, pas laissée de côté.
+    assert "Commune 20" in [voix.commune.nom for voix in sans_resultat]
+    assert extrapolation == pytest.approx(oui_reel / (oui_reel + non_reel), abs=0.01)
+
+
+@pytest.mark.django_db
+def test_les_bulletins_d_une_commune_comptee_sans_profil_sont_comptes(caplog):
+    """Ses voix sont réelles : elles entrent dans le dépouillement connu.
+
+    Elle ne peut pas servir de point d'appui au modèle — un profil inventé
+    fausserait l'ajustement — mais l'ignorer perdrait de vrais bulletins, ce
+    que faisaient les exclusions nominatives des scripts du jour J.
     """
     sujet, _, _ = peupler_base_lineaire(nb_communes=40, nb_comptees=13)
-    PCAResult.objects.filter(commune__nom="Commune 7").delete()
+    comptee = ResultatCommunalEnCours.objects.filter(
+        sujet_vote=sujet, comptabilise=True).order_by("commune").first()
+    PCAResult.objects.filter(commune=comptee.commune).delete()
 
-    with pytest.raises(Exception, match="Commune 7"):
-        get_extrapolation(sujet)
+    connu, _, _, _, _, _ = get_extrapolation(sujet)
+
+    assert comptee.commune.nom in caplog.text
+    lignes = ResultatCommunalEnCours.objects.filter(sujet_vote=sujet, comptabilise=True)
+    oui = sum(ligne.nombre_oui for ligne in lignes)
+    non = sum(ligne.nombre_non for ligne in lignes)
+    assert connu == pytest.approx(oui / (oui + non))
+
+
+@pytest.mark.django_db
+def test_le_profil_de_repli_est_la_moyenne_du_district():
+    """Deux districts aux profils opposés : le repli doit prendre le bon."""
+    peupler_base_lineaire(nb_communes=4, nb_comptees=4)
+    district = District.objects.get()
+    autre = District.objects.create(nom="Ailleurs", code_historique=2,
+                                    canton=district.canton)
+    lointaine = Commune.objects.create(nom="Lointaine", numero_ofs=9999,
+                                       canton=district.canton, district=autre)
+    PCAResult.objects.create(commune=lointaine, coordinate_1=10.0, coordinate_2=0.0,
+                             coordinate_3=0.0, coordinate_4=0.0, coordinate_5=0.0,
+                             coordinate_6=0.0)
+
+    par_district, national = profils_de_repli()
+
+    assert par_district[autre.id][0] == pytest.approx(10.0)
+    # Les quatre communes du premier district sont réparties de -1,5 à 1,5.
+    assert par_district[district.id][0] == pytest.approx(0.0)
+    assert national[0] == pytest.approx(10.0 / 5)

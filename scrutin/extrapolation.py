@@ -1,10 +1,44 @@
+import logging
+
 import numpy as np
 import scipy.optimize
 
 from pca.models import PCAResult
 from scrutin.models import ResultatCommunalEnCours
 
+logger = logging.getLogger(__name__)
+
 nb_component = 6
+
+COORDONNEES = ('coordinate_1', 'coordinate_2', 'coordinate_3',
+               'coordinate_4', 'coordinate_5', 'coordinate_6')
+
+
+def profils_de_repli():
+    """Profil moyen par district, et profil moyen national.
+
+    Doublure pour les communes absentes de l'ACP. Il y en a toujours : une
+    commune à l'historique incomplet en est écartée, et c'est le cas de celles
+    qui viennent d'être publiées séparément après avoir voté à l'urne d'une
+    voisine. Leur prêter le profil moyen de leurs voisines vaut mieux que de
+    les ignorer, et bien mieux que de faire tomber la projection.
+
+    Les composantes étant centrées, la moyenne nationale vaut à peu près zéro :
+    une commune sans district connu est donc traitée comme une commune
+    moyenne, le pari le moins aventureux.
+    """
+    par_district = {}
+    tous = []
+    for district_id, *coordonnees in PCAResult.objects.values_list(
+            'commune__district_id', *COORDONNEES):
+        profil = list(coordonnees[:nb_component])
+        par_district.setdefault(district_id, []).append(profil)
+        tous.append(profil)
+    if not tous:
+        return {}, [0.0] * nb_component
+    moyennes = {district_id: list(np.mean(profils, axis=0))
+                for district_id, profils in par_district.items()}
+    return moyennes, list(np.mean(tous, axis=0))
 
 def get_percentage(component, params):
     return np.sum(component * params[:-1]) + params[-1]
@@ -39,22 +73,33 @@ def get_extrapolation(sujet):
     data_for_interpolating_participation = []
     nbre_votant_approximated = []
     commune_without_result = []
-    PCAResult_dict = {
-        pca_result.commune_id: pca_result
+    profils = {
+        pca_result.commune_id: pca_result.get_component(nb_component)
         for pca_result in PCAResult.objects.all()
     }
-    for voix in ResultatCommunalEnCours.objects.filter(sujet_vote = sujet).order_by("commune"):
-        try:
-            pca = PCAResult_dict[voix.commune_id]
-        except KeyError as absent:
-            raise Exception(f'Commune pca not found: {voix.commune}') from absent
+    par_district, national = profils_de_repli()
+    for voix in (ResultatCommunalEnCours.objects.filter(sujet_vote=sujet)
+                 .select_related('commune').order_by("commune")):
+        profil = profils.get(voix.commune_id)
         if voix.comptabilise:
-            data_for_interpolating_pourcentage_oui.append((voix.get_pourcentage_oui(), pca.get_component(nb_component), voix.bulletins_rentres))
-            data_for_interpolating_participation.append((voix.get_real_participation(), pca.get_component(nb_component), voix.bulletins_rentres))
+            # Ses bulletins sont réels : ils comptent, profil ou pas.
             know_result_oui += voix.nombre_oui
             know_result_non += voix.nombre_non
+            if profil is None:
+                # Sans profil, elle ne peut pas servir de point d'appui au
+                # modèle : un profil de repli fausserait l'ajustement.
+                logger.warning("%s n'a pas de profil ACP : ses bulletins sont "
+                               "comptés, mais elle ne sert pas à ajuster le modèle",
+                               voix.commune)
+                continue
+            data_for_interpolating_pourcentage_oui.append((voix.get_pourcentage_oui(), profil, voix.bulletins_rentres))
+            data_for_interpolating_participation.append((voix.get_real_participation(), profil, voix.bulletins_rentres))
         else:
-            data_to_interpolate.append(pca.get_component(nb_component))
+            if profil is None:
+                profil = par_district.get(voix.commune.district_id, national)
+                logger.warning("%s n'a pas de profil ACP : projetée avec le "
+                               "profil moyen de son district", voix.commune)
+            data_to_interpolate.append(profil)
             nbre_votant_approximated.append(voix.electeur_election_precedente)
             commune_without_result.append(voix)
     if len(data_for_interpolating_participation) < 7:

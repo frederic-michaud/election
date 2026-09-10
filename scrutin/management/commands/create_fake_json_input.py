@@ -43,8 +43,6 @@ def fabriquer(path_votation, path_sortie):
                     logger.warning('Commune not found: %s: %s',
                                    data_commune["geoLevelnummer"], data_commune["geoLevelname"])
                     continue
-                if (commune.nom in ['Rüti bei Lyssach', 'Jaberg']):
-                    continue
                 resultat_previous = get_result(commune, sujet)
                 if resultat_previous is None:
                     continue

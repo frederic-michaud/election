@@ -430,8 +430,18 @@ Reste de B5, une fois B4 fait :
       l'API AGVCH (`api/communes/levels`, CSV, sans clé) au lieu des fichiers
       non versionnés de `../data`. *Fait en A6* — et `populate_commune` lit le
       même fichier, la hiérarchie y étant déjà jointe.
-- [ ] Jour J blindé : commune sans profil ACP → repli sur le profil moyen du
-      district + log, jamais une exception qui tue l'extrapolation.
+- [x] Jour J blindé : commune sans profil ACP → repli sur le profil moyen du
+      district + log, jamais une exception qui tue l'extrapolation. Distinction
+      selon l'état : une commune **déjà dépouillée** voit ses bulletins comptés
+      mais ne sert pas de point d'appui au modèle, un profil inventé faussant
+      l'ajustement ; une commune **pas encore rentrée** est projetée avec le
+      profil moyen de son district, à défaut le profil moyen national.
+      Les trois exclusions nominatives (`Rüti bei Lyssach`, `Jaberg`) des
+      scripts du jour J disparaissent : elles disaient par des noms ce que le
+      code exprime maintenant par la condition. Rejeu du 14 juin avec les deux
+      communes réintégrées, à moitié dépouillé : 45,28 % et 53,24 % pour
+      45,2 % et 52,5 % réels, contre 45,4 % et 53,4 % quand elles étaient
+      jetées.
 - [ ] **[I]** GeoJSON communal à jour — voir Partie 6.
 
 ---
