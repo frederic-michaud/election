@@ -44,7 +44,7 @@ forme du contrat (ci-dessous), méthode statistique, priorités. Seule la
 | `election/settings.py`, `Dockerfile`, `compose.yaml`, CI | **M** |
 | `carte/donnees.py` | **M** |
 | `templates/`, `*/static/` (CSS, JS, logo) | **I** |
-| `scrutin/charte.py`, `scrutin/graphiques.py`, `carte/figure.py` | **I** |
+| `scrutin/charte.py`, `scrutin/graphiques.py`, `carte/figure.py`, `maquette/` | **I** |
 | `*/views.py` | **commun** — doit rester minuscule (voir couture) |
 | `tests/test_contrat.py` | **commun** — fige la forme du contrat |
 | `CLAUDE.md`, `PLAN_MODERNISATION.md` | **commun** |
@@ -176,6 +176,15 @@ ses frontières — un agent refuse d'éditer la zone de l'autre.
 Découpage identique pour deux personnes ou deux agents — c'est le même contrat
 qui protège dans les deux cas.
 
+### Un troisième agent : le passeur
+
+`moteur` et `interface` travaillent chacun dans `master`. Le design, lui, se
+fait sur la branche `maquette` (Partie 7.0), et il faut bien que quelqu'un
+fasse traverser le résultat. C'est le rôle de l'agent **`passeur`**
+(`.claude/agents/passeur.md`) : il lit la branche `maquette`, écrit dans
+`master`, et **réécrit** — il ne fusionne jamais. C'est le seul agent qui voit
+les deux côtés, d'où des frontières écrites noir sur blanc.
+
 ### Rythme et intégration
 
 - Chacun son clone, chacun sa branche, **petites PR relues par l'autre** (c'est
@@ -192,8 +201,8 @@ qui protège dans les deux cas.
 2. **Voie M seule** : A1–A3 + `peupler_demo` — au bout, `manage.py peupler_demo`
    puis `runserver` donnent un site complet depuis un clone frais. C'est le
    jalon qui débloque la voie I.
-3. **En parallèle** : voie M sur A4–A5 (bugs, tests), voie I sur la charte CSS
-   puis `charte.py`, histogramme, carte.
+3. **En parallèle** : voie M sur A4–A5 (bugs, tests), voie I sur la maquette
+   statique (Partie 7.1–7.2), dont la charte sera extraite ensuite.
 
 ---
 
@@ -580,8 +589,8 @@ Généraliser du binaire oui/non au multi-candidats :
 |---|---|---|
 | **0. Contrat** *(à deux, en premier)* | forme du dict + couture `donnees`/`graphiques` | idem |
 | **1. Le repo démarre** | A1–A3 + `peupler_demo` — **débloque la voie I** | (attend le jalon 1) |
-| **2. Base saine** | A4–A5 : bugs, tests, CI | P7 : charte CSS, `charte.py`, histogramme, carte |
-| **3. Prêt pour un scrutin** | B1–B4 : Django 5.2, dé-harcodage, pipeline | P7 : chiffre héro, a11y, hygiène |
+| **2. Base saine** | A4–A5 : bugs, tests, CI | P7.0–7.2 : branche `maquette`, cinq variantes, itérations |
+| **3. Prêt pour un scrutin** | B1–B4 : Django 5.2, dé-harcodage, pipeline | P7.3–7.4 : charte extraite, passage en production |
 | **4. Communes à jour** | B4 : `importer_historique` depuis STAT-TAB | GeoJSON 2026, contrôle qualité |
 | **5. En production** | C1–C2 : Compose, cache, timer systemd | C3 : contrôle visuel du dry run |
 | **6. Produit** | D1 : IC bootstrap, données de convergence | D1 : réel/estimé, courbe, page Méthodes |
@@ -618,11 +627,12 @@ extrapolation qui tourne, site consultable. La conteneurisation peut suivre.
 5. Corrections des bugs latents (petites PR séparées).
 6. Tests de `extrapolation.py` + CI.
 
-*Puis voie I* :
-1. Charte en variables CSS + fonte unique + contrastes corrigés.
-2. `charte.py` (template Plotly partagé), puis histogramme (ligne des 50 %),
-   puis carte (divergente ancrée à 50 %).
-3. Chiffre héro, tableaux de valeurs, hygiène (SVG, favicon, Plotly vendoré).
+*Puis voie I* (Partie 7, dans cet ordre) :
+1. ~~Figures exportables, `figures.js`, plotly.js vendoré~~ (7.1, fait sur la
+   branche `maquette`).
+2. Choisir parmi les cinq variantes, itérer à deux, trancher Mapbox ou SVG (7.2).
+3. Charte CSS et `charte.py` extraites de la variante retenue (7.3), puis
+   passage en production par l'agent `passeur` (7.4).
 
 ---
 
@@ -687,7 +697,116 @@ au backend. Alimente D1.
 - Bon point à préserver : `white-bg` sans tuiles externes → compatible avec le
   mirroir statique, aucune dépendance à un serveur de cartes.
 
-### Refonte proposée **[I]**
+### Démarche retenue : la maquette d'abord **[2]** — *décidé le 2026-09-10*
+
+La « Cible visuelle » ci-dessous a été écrite sans jamais voir une page. Or ce
+qui se décide ici est une question de mise en page — où va le chiffre héro, ce
+qu'on voit sur un téléphone à 18 h le dimanche — et ça ne se tranche qu'en
+regardant. On inverse donc l'ordre : **on itère sur des pages HTML statiques,
+puis on en extrait la charte.**
+
+Les figures Plotly y sont embarquées **en JSON, pas en image** : la carte reste
+interactive et tout son rendu est éditable en clair, là où un PNG figerait
+justement ce qu'on veut faire varier.
+
+#### 7.0 La maquette vit sur une branche, pas dans `master` **[2]**
+
+Chantier utile une fois : dans la branche principale, il l'encombrerait pour
+des années.
+
+- **La branche `maquette` n'est jamais fusionnée.** Ce qui remonte est
+  **réécrit** dans les gabarits Django (7.4), pas transporté.
+- **Synchronisation à sens unique**, `master` → `maquette`, pour qu'elle
+  continue de se construire.
+- Coût assumé : elle touche `graphiques.py` et `carte/API.py` (elle a besoin de
+  la figure, pas du `<div>`) — seul recouvrement entre les deux branches, à
+  garder minimal.
+
+#### 7.1 Extraire les figures **[I]** — *fait*
+
+`maquette/construire.py` amorce Django et appelle **les mêmes fonctions de
+figures que les vues**, puis écrit `figures.js`. Partir du HTML rendu aurait
+marché aussi, mais chaque figure y est un bloc d'un mégaoctet aux réglages
+figés : séparer les données (générées) de la page (écrite à la main) est tout
+l'intérêt.
+
+- [x] `graphiques.py` et `carte/API.py` exposent la figure ; `en_div` l'enrobe
+      pour les gabarits. Les vues n'ont pas changé.
+- [x] **Poids divisé par six** (6,0 → 1,8 Mo) : le GeoJSON n'est plus recopié
+      dans chaque figure, et ses coordonnées ne traînent plus seize décimales.
+      **Le site gagnerait la même chose.**
+- [x] `plotly.min.js` copié du paquet Python. *Au passage* : `base.html` charge
+      la version **2.11 (2022)** depuis le CDN alors que le Python produit du
+      plotly.js 3. Le vendorage remonte en 7.4.
+- [x] `figure_carte_svg`, candidate au remplacement de `choropleth_mapbox`,
+      déprécié. Les deux sont exportées, les maquettes les comparent :
+
+| | Mapbox | Projection SVG |
+|---|---|---|
+| WebGL | exigé | non |
+| Cadrage | zoom figé, à recalculer | `fitbounds`, automatique |
+| Réseau | aucun | un fond de carte mondial, sauf à lui en fournir un vide |
+| Zoom à la souris | oui | non |
+| Impression, capture | aléatoire | fidèle |
+
+#### 7.2 Les variantes **[2]** — *en cours*
+
+Cinq propositions sur les mêmes données et les mêmes figures : ce qui les
+sépare est un choix, pas un hasard. `maquette/index.html` les liste, `charte.js`
+porte leurs réglages.
+
+| | Variante | Parti pris |
+|---|---|---|
+| **A** | La une | Un objet domine, comme un quotidien. Serif de titrage, pas d'histogramme. |
+| **B** | Tableau de bord | Aucun objet privilégié, tout en un écran. Dot plot dépouillé → projeté. |
+| **C** | Cartes d'abord | Carte plein cadre, onglets, chiffre en surimpression. La seule en Mapbox. |
+| **D** | Soirée électorale | Fond sombre, chiffres énormes, pour être projetée ou vue de loin. |
+| **E** | Écart à la majorité | « À 3,1 points » plutôt que « 46,9 % ». La correction de l'extrapolation rendue visible. |
+
+- [ ] Itérer à deux, **largeur téléphone comprise**.
+- [ ] Trancher **Mapbox ou SVG** (tableau ci-dessus).
+- [ ] Revalider la palette **sur fond sombre** si D est retenue.
+- [ ] **Critère d'arrêt** : une variante validée par les deux, sur grand écran
+      et sur téléphone, palette passée à `validate_palette.js`. Rien de 7.3 ne
+      commence avant.
+
+Une variante a le droit de **demander** ce que le site ne fait pas — E propose
+une figure qui n'existe nulle part. Elle sera alors ajoutée à `graphiques.py`,
+jamais bricolée dans `figures.js` ; une donnée hors contrat passe par la voie M.
+
+#### 7.3 Extraire la charte **[I]**
+
+- [ ] `style.css` : les variables CSS de la variante retenue, une seule fonte.
+- [ ] `scrutin/charte.py` : transcription de `charte.js`, template Plotly
+      partagé appliqué à *tous* les graphes.
+- [ ] Réécrire la « Cible visuelle » avec ce qui a réellement été retenu.
+
+#### 7.4 Le passage en production **[2]**
+
+**On ne fusionne pas, on transpose.** `git worktree add ../election-maquette
+maquette` met les deux arbres côte à côte, et l'agent **`passeur`**
+(`.claude/agents/passeur.md`) fait le travail : seul à lire les deux branches,
+d'où des frontières écrites noir sur blanc.
+
+- [ ] `base.html` / `home.html` reproduisent la structure de la variante, les
+      valeurs du contrat à la place des constantes.
+- [ ] Ce qu'elle réclamait de neuf est **demandé, pas contourné**.
+- [ ] Les gains techniques de 7.1 remontent ici, `plotly.min.js` vendoré compris.
+- [ ] **Contrôle** : le site et la variante côte à côte, à 1200 et 400 px. Les
+      figures sortent du même code, seule la mise en page peut diverger.
+
+#### 7.5 Après coup
+
+La branche reste comme laboratoire, régénérée depuis la base fictive. Son seul
+risque est la dérive, tenu par deux garde-fous : ses figures ne sont jamais
+écrites à la main, et elle n'a aucune autorité sur `master`. Le jour où le
+design se stabilise, on peut l'abandonner sans rien perdre.
+
+### Cible visuelle (à confirmer par la maquette) **[I]**
+
+Ce qui suit est l'hypothèse de départ de 7.2, **pas un cahier des charges** :
+la maquette peut l'infirmer, et 7.3 la réécrit avec ce qui a été retenu.
+
 1. **Mini-charte en variables CSS** (`--surface`, `--encre-1/2`, `--bleu-450`…,
    valeurs de la palette validée ci-dessous) ; **une seule fonte** : la sans
    système (`system-ui, …`) partout — Garamond peut survivre dans le seul
@@ -710,7 +829,8 @@ au backend. Alimente D1.
    sans-couleur + copiable), `lang="fr"`, alt/aria sur la nav.
 7. **Hygiène** : icône ☰ en SVG inline (supprimer Font Awesome), favicon,
    liens réparés, **vendorer `plotly.min.js`** (le CDN casse le mirroir wget
-   hors-ligne et fige la version), année du footer dynamique.
+   hors-ligne et fige la version — et voir 7.1 pour le décalage de version),
+   année du footer dynamique.
 
 Palettes validées (`validate_palette.js`, surface `#fcfcfb`) :
 - `#2a78d6` + `#eb6834` : tous contrôles PASS (ΔE daltonien 24,7 ; normal 33,6).
