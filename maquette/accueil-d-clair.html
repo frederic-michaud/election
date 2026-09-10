@@ -33,14 +33,6 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .logo { height: 48px; width: auto; display: block; }
 .logo .pays { fill: var(--gris); opacity: .72; }
 .logo .barres rect, .logo .points circle { fill: var(--oui); }
-/* Sur téléphone (600 px, le seuil du site) : l'emblème suffit, le nom disparaît ;
-   la date reste à côté du logo, sur deux lignes, plutôt que de passer dessous. */
-@media (max-width: 600px) {
-  .marque .mot { display: none; }
-  header { flex-wrap: nowrap; }
-  .contexte { text-align: right; line-height: 1.5; }
-  .contexte .quand { display: block; }
-}
 .contexte { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gris); }
 .point { width: 9px; height: 9px; border-radius: 50%; background: var(--non);
   box-shadow: 0 0 0 0 rgba(201,53,43,.5); animation: pulse 2.2s infinite; }
@@ -74,6 +66,24 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .carte { margin-top: 12px; }
 footer { color: var(--gris); font-size: .82rem; margin-top: 26px; text-align: center; }
 footer a { color: var(--oui); }
+
+/* Sur téléphone (600 px, le seuil du site) : l'emblème suffit, le nom disparaît ;
+   la date reste à côté du logo, sur deux lignes, plutôt que de passer dessous. */
+@media (max-width: 600px) {
+  .marque .mot { display: none; }
+  header { flex-wrap: nowrap; }
+  .contexte { text-align: right; line-height: 1.5; }
+  .contexte .quand { display: block; }
+  /* Le bloc de dépouillement se fait petit : l'essentiel, ce sont les objets.
+     Deux lignes — le direct, puis la jauge avec son pourcentage à droite — sans
+     l'étiquette, que « Dépouillement en cours » rend redondante. */
+  .avancement { padding: 12px 14px; gap: 8px 12px; }
+  .avancement > div:first-child { display: contents; }
+  .avancement .l { display: none; }
+  .avancement .note { order: 1; flex-basis: 100%; font-size: .78rem; white-space: nowrap; }
+  .avancement .rail { order: 2; flex: 1 1 0; min-width: 0; height: 8px; }
+  .avancement .v { order: 3; font-size: 1.1rem; }
+}
 </style>
 </head>
 <body>

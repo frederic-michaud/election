@@ -57,6 +57,14 @@ La date, elle, reste à côté du logo au lieu de passer dessous : l'en-tête ne
 replie plus, et « Votation fédérale » / « du 10 septembre 2026 » se coupent en
 deux lignes alignées à droite.
 
+**Le bloc de dépouillement se fait petit sur téléphone.** L'essentiel, ce sont
+les objets ; le taux de dépouillement est utile d'emblée, pas central. Sous
+600 px le bloc passe de 148 à 79 px : le direct sur une ligne, puis la jauge
+avec son pourcentage à droite, en 1,1 rem. L'étiquette « Dépouillement »
+disparaît, « Dépouillement en cours » la rend redondante. Grand écran
+inchangé — la proportion y est bonne. Au passage : le bloc `@media` doit rester
+en fin de feuille, sinon les règles de base, écrites après, l'écrasent.
+
 **Ce qu'on a vu.** À 48 px de haut, l'emblème se lit : la carte, les barres,
 les trois points. Le trou du lac de Neuchâtel est un détail qu'on devine plus
 qu'on ne le voit — c'est bien.
