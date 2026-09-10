@@ -47,7 +47,7 @@ mais les cartes **ne distinguent donc pas visuellement réel et estimé**.
 |---|---|
 | `scrutin` | Cœur métier : tous les modèles, la logique d'extrapolation, la vue d'accueil, le CSS et le logo. |
 | `pca` | Modèle `PCAResult` (6 coordonnées par commune) + vue nuage de points ACP colorée par langue. |
-| `carte` | `carte/API.py` : cartes choroplèthes Plotly sur le GeoJSON communal. |
+| `carte` | `carte/API.py` : cartes choroplèthes Plotly sur le GeoJSON communal. Les contours ne sont pas incrustés dans la figure : elle référence `/static/carte/communes.geojson` (fabriqué par `manage.py alleger_geojson` depuis `data/K4voge_*.geojson`, coordonnées arrondies à 5 décimales), que le navigateur télécharge une fois pour toutes les cartes de la page. |
 | `page_statique` | Pages éditables en base (Méthodes, Contact), servies par la route attrape-tout `path("<slug:url>", …)` (404 si absente). **Ce sont aussi les onglets du menu** : le context processor `page_statique.context_processors.menu` les expose à tous les gabarits, et `base.html` boucle dessus. Ajouter une page en base ajoute donc un onglet, sans toucher au HTML. |
 
 ### Modèles (`scrutin/models.py`)

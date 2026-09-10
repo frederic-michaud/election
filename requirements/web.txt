@@ -6,7 +6,6 @@ Django==5.2.*
 gunicorn==23.*
 whitenoise==6.*
 plotly==6.*
-geojson==3.*
 python-dotenv==1.*
 
 # Exigés par plotly.express, pas par notre code : px convertit ses entrées en
