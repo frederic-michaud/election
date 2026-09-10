@@ -33,8 +33,14 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .logo { height: 48px; width: auto; display: block; }
 .logo .pays { fill: var(--gris); opacity: .72; }
 .logo .barres rect, .logo .points circle { fill: var(--oui); }
-/* Sur téléphone, l'emblème suffit : le nom disparaît, comme sur le site (600 px). */
-@media (max-width: 600px) { .marque .mot { display: none; } }
+/* Sur téléphone (600 px, le seuil du site) : l'emblème suffit, le nom disparaît ;
+   la date reste à côté du logo, sur deux lignes, plutôt que de passer dessous. */
+@media (max-width: 600px) {
+  .marque .mot { display: none; }
+  header { flex-wrap: nowrap; }
+  .contexte { text-align: right; line-height: 1.5; }
+  .contexte .quand { display: block; }
+}
 .contexte { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gris); }
 .point { width: 9px; height: 9px; border-radius: 50%; background: var(--non);
   box-shadow: 0 0 0 0 rgba(201,53,43,.5); animation: pulse 2.2s infinite; }
@@ -86,7 +92,7 @@ footer a { color: var(--oui); }
     </svg>
     <span class="mot">Politiques<span>.ch</span></span>
   </div>
-  <div class="contexte">Votation fédérale du <span id="date"></span></div>
+  <div class="contexte"><span>Votation fédérale</span> <span class="quand">du <span id="date"></span></span></div>
 </header>
 
 <div class="avancement">

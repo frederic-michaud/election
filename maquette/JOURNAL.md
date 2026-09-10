@@ -53,6 +53,9 @@ suit le direct, puisque c'est lui qu'il signale — à reprendre si on le voulai
 **Et sur téléphone, l'emblème seul.** Sous 600 px — le seuil du site pour
 cacher son titre — le nom « Politiques.ch » disparaît de l'en-tête, le logo
 reste. Le point rouge reste dans la barre d'avancement : validé tel quel.
+La date, elle, reste à côté du logo au lieu de passer dessous : l'en-tête ne
+replie plus, et « Votation fédérale » / « du 10 septembre 2026 » se coupent en
+deux lignes alignées à droite.
 
 **Ce qu'on a vu.** À 48 px de haut, l'emblème se lit : la carte, les barres,
 les trois points. Le trou du lac de Neuchâtel est un détail qu'on devine plus
