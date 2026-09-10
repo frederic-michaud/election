@@ -57,6 +57,7 @@ sépare est un choix, pas un hasard.
 
 | Fichier | Rôle | Versionné |
 |---|---|---|
+| `JOURNAL.md` | **le journal de bord** : ce qu'on a essayé, décidé, et pourquoi — une entrée par séance | oui |
 | `construire.py` | génère tout ce qui suit depuis la base fictive, avec les fonctions du site | oui |
 | `simplifier_geojson.py` | allège les contours communaux (Douglas-Peucker + arrondi) | oui |
 | `charte.js` | **les réglages de design**, appliqués par-dessus les figures au chargement | oui |
