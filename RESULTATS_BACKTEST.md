@@ -103,23 +103,79 @@ ajoute 2,5). Le modèle corrige un biais qui n'existait pas.
 
 L'extrapolation divise l'erreur par 2 à 4 même contre un ordre adversarial, et
 n'est jamais pire (0/30 et 1/30 objets). Mais elle reste à 8 points d'erreur à
-10 % d'avance : elle atténue le biais d'ordre, elle ne l'annule pas.
+10 % d'avance : elle atténue le biais d'ordre, elle ne l'annule pas. Voir plus
+bas : ces deux ordres ne sont pas atteignables en pratique.
 
-## Le point central : quand les adversariaux se rejoignent
+## Les ordres adversariaux sont-ils des pires cas atteignables ? Non.
 
-| écart entre les deux adversariaux | avance médiane | min | max |
+Frédéric a objecté qu'un biais aussi systématique sur la courbe *extrapolée*
+n'avait pas de raison d'être. Vérification faite, **le code est juste, mais
+l'objection touchait juste** : le protocole était trop pessimiste.
+
+**Le code d'abord.** Sur des données engendrées exactement par le modèle
+(résidu nul), le biais adversarial vaut **2·10⁻¹² point** — fit, agrégation,
+ordre et balayage sont donc corrects. Et sur un objet réel, une projection
+« oracle » (mêmes données, mêmes ordres, mais paramètres ajustés sur *toutes*
+les communes) est exacte à **0,2–0,3 point** à toutes les avances, pendant que
+la projection ajustée sur le sous-ensemble se trompe de 10,9 points. Tout le
+biais vient donc des paramètres ajustés, pas de la mécanique.
+
+**D'où vient le biais.** Trier par %oui ne sélectionne pas seulement des
+*profils* non représentatifs — ça, le modèle le corrige parfaitement. Ça
+sélectionne sur le **résidu**, la part du %oui que les 6 composantes
+n'expliquent pas (R² pondéré médian 0,81, σ résiduel **3,3 points**). La
+régression ne peut pas distinguer « ces communes ont un résidu négatif » de
+« le niveau général est plus bas » : elle absorbe l'écart dans la constante et
+l'applique à tout le monde. Reconstruction à partir de rien, sur données
+synthétiques avec le seul résidu ajouté :
+
+| σ résidu | tri par %oui | tri par composante ACP 1 |
+|---|---|---|
+| 0 pt | 0,00 | 0,00 |
+| 2,0 pt | 5,92 | 0,58 |
+| **3,3 pt (le réel)** | **7,91** | **0,25** |
+| 5,0 pt | 11,78 | 0,18 |
+
+Le σ réel reproduit à lui seul les 8,45 points observés. À résidu identique, un
+tri sur le *profil* ne coûte que 0,25 point.
+
+**Conséquence.** Le résidu est par construction imprévisible depuis
+l'historique : un ordre d'arrivée qui lui serait corrélé exigerait de connaître
+le résultat à l'avance. Les deux courbes `adversarial_*` sont donc des **bornes
+d'oracle**, pas des ordres qu'un processus réel puisse produire. Ma conclusion
+précédente — « la borne pessimiste est 84 % d'avance » — était trop sévère.
+
+Le vrai pire cas atteignable est un ordre corrélé à quelque chose d'observable
+d'avance : le profil politique, la langue, le canton. D'où les deux scénarios
+`profil_bas` / `profil_haut`, qui trient sur la 1ʳᵉ composante ACP.
+
+### Les quatre bornes, médianes sur 30 objets
+
+| scénario | err@10 % | err@25 % | err@50 % | nu @10 % |
+|---|---|---|---|---|
+| adversarial bas (oracle) | 8,45 | 5,21 | 2,67 | 16,45 |
+| adversarial haut (oracle) | 8,49 | 4,33 | 2,16 | 17,94 |
+| **profil bas (atteignable)** | **1,68** | **1,34** | **0,72** | 11,82 |
+| **profil haut (atteignable)** | **4,61** | **1,99** | **0,89** | 12,41 |
+| réaliste | 0,54 | 0,42 | 0,29 | 3,74 |
+
+Avance à laquelle les deux bornes se rejoignent (écart < 1 point) :
+
+| paire de bornes | médiane | min | max |
 |---|---|---|---|
-| < 5 pt | 46,5 % | 20,3 % | 80,4 % |
-| < 2 pt | 73,2 % | 50,3 % | 93,9 % |
-| **< 1 pt** | **84,2 %** | **60,7 %** | **100 %** |
-| < 0,5 pt | 92,5 % | 70,9 % | 100 % |
+| oracle (tri sur le %oui) | 84,2 % | 60,7 % | 100 % |
+| **prévisible (tri sur le profil)** | **50,3 %** | **24,5 %** | **77,9 %** |
 
-**La borne pessimiste de la méthode est ~84 % d'avance.** En-deçà, il existe un
-ordre d'arrivée qui laisse plus d'un point d'incertitude. Ce qui rend le site
-utile à 10 % d'avance repose donc entièrement sur l'hypothèse que l'ordre réel
-n'est pas adversarial — hypothèse que la régression sur les
-`kommunale_resultate_*` soutient (la taille domine, le %oui n'est pas
-significatif, t = −1,5).
+**La borne pessimiste réellement atteignable est donc ~50 % d'avance, pas
+84 %.** Et sous un ordre hostile mais prévisible, l'extrapolation tient déjà
+sous 2 points dès 10 % d'avance — contre 12 points pour le dépouillement nu.
+
+**Une réserve sérieuse malgré tout** : `profil_haut` explose à très faible
+avance — erreur médiane **21,6 points** en dessous de 2 % d'avance, jusqu'à
+3 064 points. Compter d'abord un bloc politiquement homogène force la
+régression à extrapoler vers l'autre extrémité du spectre, avec un levier
+énorme. C'est un mode de défaillance physiquement atteignable (un canton qui
+dépouille vite et vote d'un bloc), et c'est exactement ce que le levier détecte.
 
 ## Le levier remplace-t-il le « ≥ 7 communes » ?
 

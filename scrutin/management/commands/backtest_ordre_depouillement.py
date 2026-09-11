@@ -22,8 +22,15 @@ from django.core.management.base import BaseCommand, CommandError
 
 NB_COMPOSANTES = 6
 SEUIL_COMMUNES = 7  # garde-fou de get_extrapolation
+# Les deux « adversarial_* » trient sur le %oui de l'objet : ils sélectionnent
+# sur le résidu, que l'historique ne peut pas prévoir. Ce sont des bornes
+# d'oracle, pas des ordres qu'un processus réel puisse produire. Les deux
+# « profil_* » trient sur la 1re composante ACP — un ordre tout aussi hostile,
+# mais entièrement déterminé par l'historique, donc physiquement atteignable.
 COULEURS = {"adversarial_bas": "tab:red",
             "adversarial_haut": "tab:orange",
+            "profil_bas": "tab:purple",
+            "profil_haut": "tab:green",
             "realiste": "tab:blue"}
 # Loi d'arrivée calibrée sur les kommunale_resultate_* du BFS (ZH/AG/GR/SZ/ZG),
 # 181 communes x 18 dates : retard = 80*log10(electeurs) + N(0, 46 min).
@@ -216,11 +223,15 @@ def balayer(composantes, pourcentage_oui, participation, bulletins, exprimes,
             "poids_total": np.cumsum(poids)[pos]}
 
 
-def ordres(scenario, pourcentage_oui, electeurs, rng):
+def ordres(scenario, pourcentage_oui, composantes, electeurs, rng):
     if scenario == "adversarial_bas":
         return np.argsort(pourcentage_oui, kind="stable")
     if scenario == "adversarial_haut":
         return np.argsort(-pourcentage_oui, kind="stable")
+    if scenario == "profil_bas":
+        return np.argsort(composantes[:, 0], kind="stable")
+    if scenario == "profil_haut":
+        return np.argsort(-composantes[:, 0], kind="stable")
     retard = RETARD_PENTE * np.log10(np.maximum(electeurs, 1.0))
     retard = retard + rng.normal(0.0, RETARD_SIGMA, size=len(electeurs))
     return np.argsort(retard, kind="stable")
@@ -331,7 +342,8 @@ class Command(BaseCommand):
                                           "avance_affichee", "cond", "levier_max",
                                           "nb_depouillees")}
             for _ in range(nb_tirages):
-                ordre = ordres(scenario, ctx["pourcentage_oui"], ctx["electeurs"], rng)
+                ordre = ordres(scenario, ctx["pourcentage_oui"], ctx["composantes"],
+                               ctx["electeurs"], rng)
                 brut = balayer(ctx["composantes"], ctx["pourcentage_oui"],
                                ctx["participation"], ctx["bulletins"], ctx["exprimes"],
                                ctx["oui_absolus"], ctx["electeurs_precedents"],
@@ -516,7 +528,7 @@ class Command(BaseCommand):
             self.tracer(axe, ctx, toutes[ctx["sujet_id"]], grille_avance, marge)
             axe.set_xlabel("avance (part des bulletins dépouillés)")
             axe.set_ylabel("% oui projeté")
-            axe.legend(fontsize=7)
+            axe.legend(fontsize=6)
             figure.tight_layout()
             for suffixe in ("png", "pdf"):
                 figure.savefig(sortie / f"objet_{ctx['sujet_id']:03d}.{suffixe}", dpi=110)
@@ -538,7 +550,7 @@ class Command(BaseCommand):
 
     def tracer(self, axe, ctx, courbes, grille_avance, marge, compact=False):
         vrai = 100 * ctx["vrai_oui"]
-        for scenario, couleur in COULEURS.items():
+        for scenario, couleur in COULEURS.items():  # noqa: B007
             donnees = courbes[scenario]["oui_projete"] * 100
             moyenne = np.nanmean(donnees, axis=0)
             axe.plot(grille_avance, moyenne, color=couleur, lw=1.2,
