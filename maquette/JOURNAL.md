@@ -9,6 +9,45 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-11, nuit, suite — D′ allégé : les chiffres au-dessus, la barre sans texte
+
+**Point de départ.** Avec la barre finale, les panneaux de D′ font très
+chargés. Trois demandes :
+
+- enlever tous les textes de la barre, qui répètent de toute façon ce qui est
+  juste au-dessus ;
+- mettre la valeur dépouillée au-dessus, en plus petit et en gris ;
+- remplacer « accepté » / « refusé » sous le grand chiffre par « extrapolé », et
+  mettre « dépouillé » sous le chiffre gris.
+
+**Ce qu'on a fait.**
+
+- *La barre n'a plus aucun texte* : ni mots, ni chiffres. Il reste le rail
+  teinté, la moustache et, hors de l'intervalle, le trait gris et sa flèche.
+  Elle passe de 62 à 25 px de haut, et tout le code de placement des étiquettes
+  disparaît de D′. Un `aria-label` sur la barre garde ses valeurs pour les
+  lecteurs d'écran.
+- *Deux valeurs côte à côte sous le nom de l'objet*, alignées par le bas :
+  l'extrapolé en grand dans la couleur du verdict, libellé « extrapolé » dessous
+  dans la même couleur ; le dépouillé en plus petit et en gris, libellé
+  « dépouillé » dessous. Les libellés reprennent la typographie de l'ancienne
+  pastille (capitales espacées, gras), sans le fond coloré.
+- *La pastille accepté / refusé disparaît.* Le verdict se lit dans la couleur
+  du chiffre, dans le chiffre lui-même, et dans la barre.
+- *Le dépouillé est toujours affiché au-dessus*, qu'il soit dans l'intervalle ou
+  non : la règle « seulement dehors » ne vaut que pour la barre.
+
+**Un accroc réglé en route.** Sur trois colonnes, un panneau est plus étroit
+qu'un téléphone par rapport au grand chiffre, qui était dimensionné sur la
+largeur de l'écran : le dépouillé passait sous l'extrapolé dans un panneau sur
+trois à 1240 px, et dans tous à 1000 px. Les deux chiffres sont maintenant
+dimensionnés sur la largeur du *panneau* (requêtes de conteneur, unités `cqi`),
+avec l'ancienne taille en repli pour les navigateurs qui ne les connaissent
+pas. Vérifié à 375, 700, 1000 et 1240 px : côte à côte dans tous les panneaux.
+Le grand chiffre passe de 74 à 65 px sur grand écran pour laisser la place.
+
+**Ouvert.** Rien de bloquant. La marge réelle reste une demande à la voie Moteur.
+
 ## 2026-09-11, nuit — La barre est finale, et elle entre dans D′
 
 **Décision.** La barre de `barres-proposition.html`, dans son état du commit
