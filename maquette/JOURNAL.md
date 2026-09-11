@@ -9,6 +9,52 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-11, soir — Alléger la barre retenue
+
+**Point de départ.** Quatre retouches sur la barre retenue, et une ou deux
+variations si des idées peuvent l'améliorer :
+
+- enlever les « ± » du texte sous la barre, qui alourdissent ;
+- mettre les deux pourcentages en bas tant qu'ils ne se chevauchent pas, et
+  seulement l'extrapolation s'ils se chevauchent ;
+- mettre au-dessus, dans une police discrète, « extrapolation » et
+  « dépouillé » ;
+- rendre la flèche plus subtile, en gris.
+
+**Ce qu'on a fait.**
+
+- *Sous la barre, rien que des pourcentages.* Les « ± » sont partis, et avec
+  eux les mentions « dépouillé dans la marge », qui relevaient du même
+  alourdissement. Chaque chiffre est centré sous sa marque : l'extrapolation
+  en gras dans la couleur du verdict, le dépouillé en gris.
+- *Au-dessus, deux mots* en petit gris, « extrapolation » et « dépouillé »,
+  chacun au-dessus de sa marque.
+- *Les chevauchements sont mesurés dans la page*, à chaque largeur d'écran,
+  avec 8 px de marge. Si les chiffres se chevauchent, le dépouillé perd son
+  chiffre *et* son mot. Si seuls les mots se chevauchent — ils sont plus longs
+  que les chiffres — mots et chiffres s'alignent chacun du côté opposé à
+  l'autre.
+- *La flèche est grise* (`#9d9c96`), plus fine, pointe plus petite.
+- *Deux variations* : V1, les étiquettes s'écartent avant de disparaître ; V2,
+  la flèche en pointillé, sans pointe.
+
+**Ce qu'on a vu.** La règle telle quelle marche sur grand écran : la barre fait
+726 px, les trois objets du jour gardent leurs deux chiffres. Sur téléphone,
+elle ne marche pas : la barre fait 281 px, deux chiffres centrés y ont besoin
+d'une vingtaine de points d'écart, et la proposition perd le chiffre du
+dépouillé sur les trois objets. V1, qui écarte les chiffres avant de renoncer,
+les garde tous les trois ; dans les cas vraiment serrés (fin, mi-parcours) les
+deux donnent la même chose. V2 allège encore, mais le pointillé gris sur le
+rail pâle se devine plus qu'il ne se voit.
+
+Au passage : la pointe de flèche restait noire, le raccourci CSS `border-left`
+reprenant la couleur du texte ; on lui donne désormais la couleur de la flèche.
+
+**Décision proposée.** Adopter V1 comme règle : elle est la proposition sur
+grand écran, et la seule qui tienne sur téléphone.
+
+**Ouvert.** Adopter V1 ou non ; V2 ou la flèche grise ; puis le report dans D′.
+
 ## 2026-09-11, fin — La barre retenue
 
 **Point de départ.** Une seule proposition, à partir de C4 (moustaches), avec
