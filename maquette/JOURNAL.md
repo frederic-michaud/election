@@ -9,6 +9,55 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-11, toujours — Plus de pastille : la question, c'est 50 %
+
+**Point de départ.** Refaire toutes les variations sans la pastille centrale.
+Le chiffre suffit à dire où est le projeté ; ce qui intéresse le lecteur, c'est
+de voir si l'intervalle de confiance passe par-dessus 50 %. La position exacte
+de l'extrapolation n'est pas si importante, et déjà lisible dans le chiffre.
+
+**Ce qu'on a fait.** La planche est réécrite sans aucune pastille. Le trait du
+dépouillé, le trajet, la zone et les deux chiffres restent. Sans pastille, la
+zone devient l'unique objet coloré de l'haltère : l'œil va droit à la question
+« chevauche-t-elle le trait de majorité ? ». Le trait de majorité est renforcé
+(opacité 0,7) puisqu'il est désormais la référence. Quand le dépouillé est
+dans la marge, plus de fil gris non plus : il pointait vers un centre qu'on ne
+dessine plus.
+
+Deux variations changent de sens, « sans pastille » et « anneau » n'ayant plus
+d'objet :
+
+- *C8 — Acquis, refusé, en jeu.* Trois états, trois couleurs : l'intervalle
+  entier est bleu s'il est tout au-dessus de 50, rouge s'il est tout en
+  dessous, gris et marqué « en jeu » s'il passe par-dessus — et le chiffre
+  prend la même couleur. Le verdict n'est affiché que quand l'intervalle le
+  garantit.
+- *C9 — Axe resserré, 25–75.* Le C2 sur un axe qui ne va plus de 0 à 100 :
+  tout est deux fois plus large, l'intervalle de fin de soirée redevient
+  visible. Un résultat de votation fédérale vit entre 25 et 75.
+
+**Décisions.**
+
+- *Pas de pastille, nulle part.* Le chiffre est le projeté. La zone marque
+  l'intervalle, et son centre suffit à l'œil.
+- *Le trait de majorité est la référence de lecture.* Il apparaît dans chaque
+  légende.
+- *C7 et C8 disent la même chose avec deux tempéraments.* C7 nuance (la part de
+  chaque couleur dit combien c'est serré) ; C8 tranche (verdict ou « en jeu »,
+  rien entre). C8 est le plus prudent : il refuse de colorer 51 % en bleu tant
+  que la marge touche 50, et son gris devient bleu quand la marge se resserre
+  — le déroulé d'une soirée.
+
+**Ce qu'on a vu.** Sans pastille, C3 (bande pleine) et C6 (deux niveaux)
+gagnent en netteté ; C4 (moustaches) devient un crochet fin, toujours
+fragile ; C5 (fondu) rend la question « passe-t-il 50 ? » floue par nature.
+Les plus convaincants : C2 pour la simplicité, C7 et C8 pour la question de
+la majorité, C9 pour la fin de soirée.
+
+**Ouvert.** Si une forme à intervalle est retenue, la marge devient une
+demande ferme à la voie Moteur, et C8 a besoin qu'elle soit honnête : c'est
+elle qui décide du mot affiché.
+
 ## 2026-09-11, encore — La fin du dépouillement, l'état oublié
 
 **Point de départ.** Remarque juste : les variations à intervalle étaient

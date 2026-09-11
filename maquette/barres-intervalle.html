@@ -7,8 +7,10 @@
 <style>
 /* ═══ Planche « haltère + intervalle » ════════════════════════════════════
    Variations sur le concept C de barres.html — un trait pour le dépouillé,
-   une pastille pour le projeté, un trajet entre les deux — auquel on ajoute
-   un intervalle de confiance autour du projeté. Neuf façons de le dessiner.
+   un trajet vers le projeté — auquel on ajoute un intervalle de confiance
+   autour du projeté. Sans pastille : le chiffre suffit à dire où est le
+   projeté, et ce qui compte pour le lecteur n'est pas sa position exacte
+   mais si l'intervalle passe par-dessus 50 %. Neuf façons de le dessiner.
    Le site ne calcule pas encore de marge : celle-ci est illustrative, et un
    curseur la fait varier pour juger chaque forme avec un intervalle étroit
    ou large. Quatre scénarios : les trois objets du jour, et un quatrième,
@@ -46,8 +48,8 @@ h1 { font-size: 1.4rem; margin: 0 0 4px; letter-spacing: -.01em; }
   padding: 8px 10px; background: var(--fond); border-radius: 8px; }
 .legende i { display: inline-block; vertical-align: middle; margin-right: 6px; }
 .legende i.trait { width: 2px; height: 14px; background: var(--encre); }
+.legende i.seuil { width: 2px; height: 14px; background: var(--encre); opacity: .7; }
 .legende i.barre { width: 18px; height: 7px; background: var(--encre); border-radius: 0 3px 3px 0; }
-.legende i.rond { width: 11px; height: 11px; border-radius: 50%; }
 .legende i.zone { width: 22px; height: 12px; border-radius: 3px; }
 .legende i.hachure { background: repeating-linear-gradient(45deg, var(--bleu) 0 2px, transparent 2px 5px); }
 .legende i.fl { width: 18px; height: 2px; background: var(--encre); position: relative; }
@@ -62,33 +64,34 @@ h1 { font-size: 1.4rem; margin: 0 0 4px; letter-spacing: -.01em; }
 .objet.fin { border-top: 1px dashed var(--bord); padding-top: 10px; }
 .objet.fin .nom { color: var(--bleu); }
 
-/* L'haltère : un rail 0–100, la majorité, et par-dessus ce que chaque variation ajoute. */
+/* L'haltère : un rail, la majorité bien marquée, et par-dessus ce que chaque variation ajoute. */
 .haltere { position: relative; height: 56px; }
 .haltere .rail { position: absolute; left: 0; right: 0; top: 27px; height: 3px; background: var(--neutre); border-radius: 2px; }
-.haltere .seuil { position: absolute; top: 15px; bottom: 15px; left: 50%; width: 2px; margin-left: -1px; background: var(--encre); opacity: .45; }
+.haltere .seuil { position: absolute; top: 14px; bottom: 14px; left: 50%; width: 2px; margin-left: -1px; background: var(--encre); opacity: .7; }
 .haltere .zone { position: absolute; top: 20px; height: 17px; border-radius: 4px; }
 .haltere .zone.hachure { background: repeating-linear-gradient(45deg, var(--c) 0 2.5px, transparent 2.5px 6px); }
 .haltere .zone.pleine { background: var(--c); }
-.haltere .zone.fondu { background: linear-gradient(90deg, transparent, var(--c) 35%, var(--c) 65%, transparent); opacity: .55; }
+.haltere .zone.fondu { background: linear-gradient(90deg, transparent, var(--c) 35%, var(--c) 65%, transparent); opacity: .6; }
 .haltere .zone.coeur { top: 23px; height: 11px; }
 .haltere .moustache { position: absolute; top: 27.5px; height: 2px; background: var(--c); }
-.haltere .moustache::before, .haltere .moustache::after { content: ""; position: absolute; top: -5px; width: 2px; height: 12px; background: var(--c); }
+.haltere .moustache::before, .haltere .moustache::after { content: ""; position: absolute; top: -6px; width: 2px; height: 14px; background: var(--c); }
 .haltere .moustache::before { left: 0; } .haltere .moustache::after { right: 0; }
 .haltere .connu { position: absolute; top: 16px; height: 25px; width: 2px; margin-left: -1px; background: var(--encre); box-shadow: 0 0 0 1.5px #fff; }
 .haltere .barre-noire { position: absolute; left: 0; top: 24px; height: 9px; background: var(--encre); border-radius: 0 4px 4px 0; }
 .haltere .barre-noire::after { content: ""; position: absolute; right: -1px; top: -8px; height: 25px; width: 2px; background: var(--encre); box-shadow: 0 0 0 1.5px #fff; }
 .haltere .trajet { position: absolute; top: 27.5px; height: 2px; }
-.haltere .trajet.faible { background: var(--gris); opacity: .7; }
 .haltere .fleche { position: absolute; top: 23.5px; width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
 .haltere .fleche.droite { margin-left: -8px; border-left: 8px solid; }
 .haltere .fleche.gauche { border-right: 8px solid; }
-.haltere .projete { position: absolute; top: 21.5px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.1); }
-.haltere .projete.anneau { width: 16px; height: 16px; margin-left: -8px; top: 20.5px; background: rgba(255,255,255,.55); border: 3px solid; box-shadow: none; }
+.haltere .grad { position: absolute; top: 40px; transform: translateX(-50%); font-size: .66rem; color: var(--gris); font-style: normal; white-space: nowrap; }
 .haltere .v-connu { position: absolute; top: -1px; transform: translateX(-50%); font-size: .72rem; color: var(--gris); white-space: nowrap; font-style: normal;
   background: rgba(255,255,255,.9); padding: 0 3px; border-radius: 3px; }
 .haltere .v-proj { position: absolute; top: 39px; transform: translateX(-50%); font-size: .8rem; font-weight: 700; white-space: nowrap; font-style: normal; }
 .haltere .v-proj .marge { font-weight: 400; color: var(--gris); font-size: .7rem; }
+.haltere .v-proj .etat { font-weight: 700; font-size: .7rem; letter-spacing: .04em; text-transform: uppercase; margin-left: 4px; }
 .haltere .bord-g { transform: none; } .haltere .bord-d { transform: translateX(-100%); }
+.haltere.zoom { height: 74px; }
+.haltere.zoom .grad { top: 58px; }
 
 footer { color: var(--gris); font-size: .82rem; margin-top: 30px; text-align: center; }
 footer a { color: var(--bleu); }
@@ -98,12 +101,14 @@ footer a { color: var(--bleu); }
 <body>
 <h1>L'haltère avec un intervalle de confiance</h1>
 <p class="intro">Neuf variations sur le concept C de la <a href="barres.html">planche des barres</a> :
-un trait pour le dépouillé, une pastille pour le projeté, un trajet de l'un à l'autre — et autour du
-projeté, un intervalle de confiance. Le site ne calcule pas encore de marge : celle-ci est
-<b>illustrative</b>, différente pour chaque objet (× 0,7, × 1, × 1,4) pour voir un intervalle étroit
-et un large, et le curseur la fait varier. Un <b>quatrième scénario, fictif</b>, est ajouté aux trois objets
-du jour : la fin du dépouillement, quand le dépouillé tombe dans l'intervalle et que la correction est
-plus petite que la marge — l'état le plus fréquent de la soirée. Toutes les variations y sont jugées.</p>
+un trait pour le dépouillé, un trajet vers le projeté — et autour du projeté, un intervalle de
+confiance. <b>Sans pastille</b> : le chiffre suffit à dire où est le projeté, et ce qui compte pour le
+lecteur n'est pas sa position exacte mais si l'intervalle <b>passe par-dessus 50 %</b>. Le site ne
+calcule pas encore de marge : celle-ci est <b>illustrative</b>, différente pour chaque objet (× 0,7,
+× 1, × 1,4) pour voir un intervalle étroit et un large, et le curseur la fait varier. Un <b>quatrième
+scénario, fictif</b>, est ajouté aux trois objets du jour : la fin du dépouillement, quand le dépouillé
+tombe dans l'intervalle et que la correction est plus petite que la marge — l'état le plus fréquent
+de la soirée. Toutes les variations y sont jugées.</p>
 
 <div class="reglage">
   <label for="marge">Marge illustrative</label>
@@ -136,118 +141,126 @@ const SUJETS = [...VUE.sujets, FIN];
 const FACTEURS = [0.7, 1, 1.4, 0.5];
 const bord = (x) => x < 12 ? " bord-g" : x > 88 ? " bord-d" : "";
 
-// Ce que toutes les variations partagent : les deux valeurs, l'intervalle, et
-// le bord de l'intervalle vers lequel pointe le trajet. Quand le dépouillé est
-// déjà dedans, plus de flèche : un fil gris relie encore les deux — on voit
-// qu'il reste un écart, et qu'il est plus petit que la marge — et l'étiquette
-// le dit en toutes lettres. Le trait du dépouillé passe toujours au-dessus de
-// la pastille, avec un halo blanc : il reste visible même quand ils coïncident.
+// Ce que toutes les variations partagent : les deux valeurs, l'intervalle, le
+// bord de l'intervalle vers lequel pointe le trajet, et si la majorité est en
+// jeu (l'intervalle passe par-dessus 50). Quand le dépouillé est déjà dans
+// l'intervalle, plus de trajet du tout : le trait est dans la zone, et
+// l'étiquette le dit en toutes lettres.
 function base(s, m) {
   const k = 100 * s.oui_connu, p = 100 * s.oui_extrapole, g = p >= 50;
   const lo = Math.max(0, p - m), hi = Math.min(100, p + m);
-  const dedans = k >= lo && k <= hi;
-  return { k, p, g, m, lo, hi, dedans, cible: p >= k ? lo : hi, c: C(g), cl: CL(g) };
+  return { k, p, g, m, lo, hi, dedans: k >= lo && k <= hi, enJeu: lo < 50 && hi > 50,
+           cible: p >= k ? lo : hi, c: C(g), cl: CL(g) };
 }
 const nom = (s) => `<div class="nom">${s.nom}</div>`;
-const rail = `<i class="rail"></i><i class="seuil"></i>`;
-const connu = (b) => `<i class="connu" style="left:${b.k}%"></i>`;
-const trajet = (b, couleur, vers = b.cible) => b.dedans
-  ? `<i class="trajet faible" style="left:${Math.min(b.k, b.p)}%;width:${Math.abs(b.p - b.k)}%"></i>`
-  : `<i class="trajet" style="left:${Math.min(b.k, vers)}%;width:${Math.abs(vers - b.k)}%;background:${couleur}"></i>
-     <i class="fleche ${b.p >= b.k ? "droite" : "gauche"}" style="left:${vers}%;border-color:transparent ${couleur}"></i>`;
-const pastille = (b) => `<i class="projete" style="left:${b.p}%;background:${b.c}"></i>`;
-const zone = (b, genre, style = "") => `<i class="zone ${genre}" style="left:${b.lo}%;width:${b.hi - b.lo}%;--c:${b.c};${style}"></i>`;
-const vConnu = (b) => `<em class="v-connu tnum${bord(b.k)}" style="left:${b.k}%">${P(b.k)}</em>`;
-const vProj = (b) => `<em class="v-proj tnum${bord(b.p)}" style="left:${b.p}%;color:${b.c}">${P(b.p)} <span class="marge">± ${N(b.m)}${b.dedans ? " · dépouillé dans la marge" : ""}</span></em>`;
-const haltere = (...morceaux) => `<div class="haltere">${rail}${morceaux.join("")}</div>`;
+
+// Les pièces de l'haltère, sur une échelle X (identité, ou 25–75 pour C9).
+const pieces = (X) => ({
+  rail: `<i class="rail"></i><i class="seuil"></i>`,
+  connu: (b) => `<i class="connu" style="left:${X(b.k)}%"></i>`,
+  trajet: (b, couleur, vers = b.cible) => b.dedans ? "" :
+    `<i class="trajet" style="left:${Math.min(X(b.k), X(vers))}%;width:${Math.abs(X(vers) - X(b.k))}%;background:${couleur}"></i>
+     <i class="fleche ${b.p >= b.k ? "droite" : "gauche"}" style="left:${X(vers)}%;border-color:transparent ${couleur}"></i>`,
+  zone: (b, genre, style = "", lo = b.lo, hi = b.hi) =>
+    `<i class="zone ${genre}" style="left:${X(lo)}%;width:${X(hi) - X(lo)}%;--c:${b.c};${style}"></i>`,
+  moustache: (b) => `<i class="moustache" style="left:${X(b.lo)}%;width:${X(b.hi) - X(b.lo)}%;--c:${b.c}"></i>`,
+  vConnu: (b) => `<em class="v-connu tnum${bord(X(b.k))}" style="left:${X(b.k)}%">${P(b.k)}</em>`,
+  vProj: (b, couleur = b.c, suffixe = "") => `<em class="v-proj tnum${bord(X(b.p))}" style="left:${X(b.p)}%;color:${couleur}">${P(b.p)}
+    <span class="marge">± ${N(b.m)}${b.dedans ? " · dépouillé dans la marge" : ""}</span>${suffixe}</em>`,
+});
+const std = pieces((v) => v);
+const zoom = pieces((v) => (v - 25) / 50 * 100);
+const haltere = (...m) => `<div class="haltere">${std.rail}${m.join("")}</div>`;
 
 const VARIATIONS = [
   {
     lettre: "C1", titre: "Barre noire vers la zone hachurée",
-    parti: "La proposition de départ : le dépouillé est une barre noire pleine, qui pointe vers une zone hachurée — l'intervalle — où se pose le projeté.",
+    parti: "La proposition de départ : le dépouillé est une barre noire pleine, qui pointe vers une zone hachurée — l'intervalle. Le projeté n'est qu'un chiffre, sous la zone.",
     legende: `<span><i class="barre"></i>dépouillé</span><span><i class="fl"></i>vers l'intervalle</span>
-              <span><i class="zone hachure"></i>intervalle, hachuré</span><span><i class="rond" style="background:var(--bleu)"></i>projeté</span>`,
-    note: "La barre pleine donne du poids au fait. Quand la projection descend (LTr), la flèche revient sur la barre noire : elle prend la couleur du verdict pour rester visible. À la fin : la barre entre dans la zone hachurée et s'y arrête, son extrémité reste marquée d'un trait — « le compté a rejoint l'estimé ». Ça se lit, mais l'image « une barre qui pointe vers une zone » n'a plus lieu d'être : c'est une forme pour le début de soirée.",
+              <span><i class="zone hachure"></i>intervalle du projeté</span><span><i class="seuil"></i>majorité</span>`,
+    note: "La barre pleine donne du poids au fait. Quand la projection descend (LTr), la flèche revient sur la barre noire et prend la couleur du verdict pour rester visible. À la fin : la barre entre dans la zone et s'y arrête, son extrémité marquée d'un trait — « le compté a rejoint l'estimé ». Mais l'image « une barre qui pointe vers une zone » n'a plus lieu d'être : une forme de début de soirée.",
     rendu: (s, m) => { const b = base(s, m); return nom(s) + haltere(
-      zone(b, "hachure"), trajet(b, b.c), pastille(b), `<i class="barre-noire" style="width:${b.k}%"></i>`, vConnu(b), vProj(b)); },
+      std.zone(b, "hachure"), std.trajet(b, b.c), `<i class="barre-noire" style="width:${b.k}%"></i>`, std.vConnu(b), std.vProj(b)); },
   },
   {
     lettre: "C2", titre: "Trait vers la zone hachurée",
-    parti: "La même, avec le trait du C d'origine à la place de la barre : plus léger, la flèche est noire, l'intervalle hachuré.",
+    parti: "La même, avec le trait du C d'origine à la place de la barre : plus léger, la flèche est noire, l'intervalle hachuré, le projeté en chiffre.",
     legende: `<span><i class="trait"></i>dépouillé</span><span><i class="fl"></i>vers l'intervalle</span>
-              <span><i class="zone hachure"></i>intervalle, hachuré</span><span><i class="rond" style="background:var(--bleu)"></i>projeté</span>`,
-    note: "Le trait et la flèche sont noirs : ce sont les faits (d'où l'on part, de combien on corrige). Seuls l'intervalle et la pastille portent le verdict. À la fin : le trait se plante dans la zone, à un cheveu de la pastille, sans flèche — l'image tient toute seule, « le compté est dans l'estimé ». La plus robuste des huit sur les deux états.",
+              <span><i class="zone hachure"></i>intervalle du projeté</span><span><i class="seuil"></i>majorité</span>`,
+    note: "Le trait et la flèche sont noirs : ce sont les faits (d'où l'on part, de combien on corrige). Seul l'intervalle porte le verdict. Sans pastille, la zone est l'unique objet coloré : l'œil va droit à la question « chevauche-t-elle le trait de majorité ? ». À la fin, le trait se plante dans la zone, sans flèche — l'image tient toute seule.",
     rendu: (s, m) => { const b = base(s, m); return nom(s) + haltere(
-      zone(b, "hachure"), trajet(b, "var(--encre)"), pastille(b), connu(b), vConnu(b), vProj(b)); },
+      std.zone(b, "hachure"), std.trajet(b, "var(--encre)"), std.connu(b), std.vConnu(b), std.vProj(b)); },
   },
   {
     lettre: "C3", titre: "Bande pleine, en clair",
     parti: "L'intervalle est une bande pleine dans la couleur claire du verdict, comme les cartes disent « estimé » : même teinte, plus clair.",
     legende: `<span><i class="trait"></i>dépouillé</span><span><i class="fl"></i>vers l'intervalle</span>
-              <span><i class="zone" style="background:var(--bleu-clair)"></i>intervalle</span><span><i class="rond" style="background:var(--bleu)"></i>projeté</span>`,
-    note: "Plus calme que le hachuré, et cohérent avec la charte (bleu clair = extrapolé). Mais une bande pleine ressemble à une barre : on peut la lire comme « de 44 à 50 % de oui ». À la fin : la bande étroite disparaît presque sous la pastille et le trait ; il ne reste qu'un point avec un trait dedans, et l'idée d'intervalle s'est évaporée. Le hachuré résiste mieux, parce qu'on le voit dépasser.",
+              <span><i class="zone" style="background:var(--bleu-clair)"></i>intervalle du projeté</span><span><i class="seuil"></i>majorité</span>`,
+    note: "Plus calme que le hachuré, et cohérent avec la charte (bleu clair = extrapolé). Mais une bande pleine ressemble à une barre : on peut la lire comme « de 44 à 50 % de oui ». Sans pastille elle gagne en netteté ; à la fin, étroite, elle reste un petit rectangle clair autour du trait — lisible, mais discret, presque effacé.",
     rendu: (s, m) => { const b = base(s, m); return nom(s) + haltere(
-      zone(b, "pleine", `--c:${b.cl}`), trajet(b, "var(--encre)"), pastille(b), connu(b), vConnu(b), vProj(b)); },
+      std.zone(b, "pleine", `--c:${b.cl}`), std.trajet(b, "var(--encre)"), std.connu(b), std.vConnu(b), std.vProj(b)); },
   },
   {
     lettre: "C4", titre: "Moustaches",
-    parti: "Le vocabulaire des scientifiques : la pastille, et de part et d'autre une moustache terminée par un taquet.",
+    parti: "Le vocabulaire des scientifiques : une moustache terminée par deux taquets, et rien au centre.",
     legende: `<span><i class="trait"></i>dépouillé</span><span><i class="fl"></i>vers l'intervalle</span>
-              <span><i class="mous"></i>intervalle</span><span><i class="rond" style="background:var(--bleu)"></i>projeté</span>`,
-    note: "Tout le monde a vu une barre d'erreur ; personne n'a besoin de légende. Mais c'est fin, et le trait du dépouillé, les taquets et la majorité sont trois traits verticaux — ça se confond quand ils sont proches (LSU). À la fin, c'est pire : quatre traits verticaux serrés dans quelques pixels. À écarter si la fin de soirée compte.",
+              <span><i class="mous"></i>intervalle du projeté</span><span><i class="seuil"></i>majorité</span>`,
+    note: "Tout le monde a vu une barre d'erreur. Sans pastille, elle devient un simple crochet [——] : léger, mais fin, et le trait du dépouillé, les taquets et la majorité sont quatre traits verticaux — ça se confond quand ils sont proches (LSU), et à la fin ils tiennent dans quelques pixels. À écarter si la fin de soirée compte.",
     rendu: (s, m) => { const b = base(s, m); return nom(s) + haltere(
-      `<i class="moustache" style="left:${b.lo}%;width:${b.hi - b.lo}%;--c:${b.c}"></i>`,
-      trajet(b, "var(--encre)"), pastille(b), connu(b), vConnu(b), vProj(b)); },
+      std.moustache(b), std.trajet(b, "var(--encre)"), std.connu(b), std.vConnu(b), std.vProj(b)); },
   },
   {
     lettre: "C5", titre: "Fondu",
     parti: "L'intervalle n'a pas de bord : la couleur est dense au centre et s'évanouit vers les extrémités, comme une probabilité.",
     legende: `<span><i class="trait"></i>dépouillé</span><span><i class="fl"></i>vers l'intervalle</span>
-              <span><i class="zone" style="background:linear-gradient(90deg,transparent,var(--bleu),transparent)"></i>intervalle, fondu</span><span><i class="rond" style="background:var(--bleu)"></i>projeté</span>`,
-    note: "Le plus honnête sur ce qu'est une marge : pas une frontière nette, une vraisemblance qui décroît. Le plus dur à lire précisément — où s'arrête-t-il ? — et la flèche vise un bord qu'on ne voit pas. À la fin : le fondu se resserre en un halo autour de la pastille, et le trait dedans — c'est joli et ça dit bien « ça converge », mais rien ne distingue « dans la marge » de « tout près ».",
+              <span><i class="zone" style="background:linear-gradient(90deg,transparent,var(--bleu),transparent)"></i>intervalle du projeté, fondu</span><span><i class="seuil"></i>majorité</span>`,
+    note: "Le plus honnête sur ce qu'est une marge : pas une frontière nette, une vraisemblance qui décroît. Sans pastille, le centre dense joue son rôle : il marque le projeté sans prétendre à un point. Mais la flèche vise un bord qu'on ne voit pas, et « l'intervalle passe-t-il 50 ? » devient une question de nuance de gris — précisément ce qu'on veut trancher d'un coup d'œil.",
     rendu: (s, m) => { const b = base(s, m); return nom(s) + haltere(
-      zone(b, "fondu"), trajet(b, "var(--encre)"), pastille(b), connu(b), vConnu(b), vProj(b)); },
+      std.zone(b, "fondu"), std.trajet(b, "var(--encre)"), std.connu(b), std.vConnu(b), std.vProj(b)); },
   },
   {
     lettre: "C6", titre: "Deux niveaux",
     parti: "Deux intervalles emboîtés : un cœur dense pour le probable, une bande claire pour le possible.",
     legende: `<span><i class="trait"></i>dépouillé</span><span><i class="zone" style="background:var(--bleu-clair)"></i>possible</span>
-              <span><i class="zone" style="background:var(--bleu);opacity:.6;width:12px"></i>probable</span><span><i class="rond" style="background:var(--bleu)"></i>projeté</span>`,
-    note: "Dit deux choses d'un coup : le probable et le possible. Demande deux marges à la voie Moteur au lieu d'une — et une légende. À la fin : les deux niveaux se confondent sous la pastille ; le trait tombe dans le cœur, ce qui serait l'information la plus forte (« dans le probable ») si on la voyait encore. Trop d'encre pour un si petit espace.",
+              <span><i class="zone" style="background:var(--bleu);opacity:.6;width:12px"></i>probable</span><span><i class="seuil"></i>majorité</span>`,
+    note: "Dit deux choses d'un coup : le probable et le possible — et, sans pastille, le cœur dense tient lieu de centre. Sur la majorité, c'est riche : « 50 est dans le possible mais pas dans le probable » se lit. Demande deux marges à la voie Moteur au lieu d'une, et une légende. À la fin, le trait tombe dans le cœur : c'est l'information la plus forte, et elle se voit encore.",
     rendu: (s, m) => { const b = base(s, m); const bi = base(s, m / 2); return nom(s) + haltere(
-      zone(b, "pleine", `--c:${b.cl}`), zone(bi, "pleine coeur", `--c:${b.c};opacity:.55`),
-      trajet(b, "var(--encre)"), pastille(b), connu(b), vConnu(b), vProj(b)); },
+      std.zone(b, "pleine", `--c:${b.cl}`), std.zone(bi, "pleine coeur", `--c:${b.c};opacity:.55`),
+      std.trajet(b, "var(--encre)"), std.connu(b), std.vConnu(b), std.vProj(b)); },
   },
   {
-    lettre: "C7", titre: "La majorité en jeu",
-    parti: "L'intervalle hachuré change de couleur à 50 : rouge à gauche, bleu à droite. On voit d'un coup si la majorité est acquise ou encore en jeu.",
+    lettre: "C7", titre: "La majorité en jeu, bicolore",
+    parti: "L'intervalle hachuré change de couleur à 50 : rouge à gauche, bleu à droite. La proportion des deux dit combien c'est serré.",
     legende: `<span><i class="trait"></i>dépouillé</span><span><i class="zone hachure" style="background:repeating-linear-gradient(45deg,var(--rouge) 0 2px,transparent 2px 5px)"></i>part sous 50</span>
-              <span><i class="zone hachure"></i>part au-dessus</span><span><i class="rond" style="background:var(--bleu)"></i>projeté</span>`,
-    note: "La seule variation où la couleur ne vient pas du verdict mais du côté de la majorité : quand l'intervalle chevauche 50, il est bicolore, et la proportion des deux dit combien c'est serré. À la fin, c'est elle qui parle le plus : le scénario fictif est à 51 %, dans la marge, et l'intervalle reste bicolore — « le oui est probable, pas acquis ». Serrez la marge au curseur, il devient tout bleu : le moment où c'est plié se voit.",
+              <span><i class="zone hachure"></i>part au-dessus</span><span><i class="seuil"></i>majorité</span>`,
+    note: "La couleur ne vient pas du verdict mais du côté de la majorité. Quand l'intervalle chevauche 50, il est bicolore, et la part de chaque couleur est la réponse à la question qui compte. Le chiffre, lui, garde la couleur du verdict projeté — les deux peuvent se contredire, et c'est voulu : « 51 % projeté, mais un tiers de l'intervalle est rouge ». À la fin, à ± 1,5, le scénario fictif reste bicolore ; serrez la marge, il devient tout bleu : le moment où c'est plié se voit.",
     rendu: (s, m) => { const b = base(s, m); const parts = [];
-      if (b.lo < 50) parts.push(`<i class="zone hachure" style="left:${b.lo}%;width:${Math.min(b.hi, 50) - b.lo}%;--c:var(--rouge)"></i>`);
-      if (b.hi > 50) parts.push(`<i class="zone hachure" style="left:${Math.max(b.lo, 50)}%;width:${b.hi - Math.max(b.lo, 50)}%;--c:var(--bleu)"></i>`);
-      return nom(s) + haltere(parts.join(""), trajet(b, "var(--encre)"), pastille(b), connu(b), vConnu(b), vProj(b)); },
+      if (b.lo < 50) parts.push(std.zone(b, "hachure", "--c:var(--rouge)", b.lo, Math.min(b.hi, 50)));
+      if (b.hi > 50) parts.push(std.zone(b, "hachure", "--c:var(--bleu)", Math.max(b.lo, 50), b.hi));
+      return nom(s) + haltere(parts.join(""), std.trajet(b, "var(--encre)"), std.connu(b), std.vConnu(b), std.vProj(b)); },
   },
   {
-    lettre: "C8", titre: "Sans pastille",
-    parti: "Le projeté n'est pas un point, alors on ne le dessine pas : la flèche mène à une zone, et le chiffre se lit au centre.",
-    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="fl"></i>vers l'intervalle</span>
-              <span><i class="zone hachure"></i>intervalle — le projeté est dedans</span>`,
-    note: "Le plus radical : refuser de faire croire à une précision qu'on n'a pas. En retour, l'œil n'a plus de cible ; le trait fin au centre la lui rend sans redevenir une pastille. À la fin : deux traits dans une zone étroite, le noir (compté) contre le coloré (estimé) — sans pastille, rien ne se cache, et c'est la seule forme où l'état final se lit aussi bien que le début.",
-    rendu: (s, m) => { const b = base(s, m); return nom(s) + haltere(
-      zone(b, "hachure"), `<i class="zone pleine" style="left:${b.p}%;width:2px;margin-left:-1px;--c:${b.c};top:18px;height:21px;opacity:.9"></i>`,
-      trajet(b, "var(--encre)"), connu(b), vConnu(b), vProj(b)); },
+    lettre: "C8", titre: "Acquis, refusé, en jeu",
+    parti: "Trois états, trois couleurs : l'intervalle entier est bleu s'il est tout au-dessus de 50, rouge s'il est tout en dessous, gris s'il passe par-dessus — et le chiffre prend la même couleur, avec le mot.",
+    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="zone hachure"></i>acquis</span>
+              <span><i class="zone hachure" style="background:repeating-linear-gradient(45deg,var(--rouge) 0 2px,transparent 2px 5px)"></i>refusé</span>
+              <span><i class="zone hachure" style="background:repeating-linear-gradient(45deg,var(--gris) 0 2px,transparent 2px 5px)"></i>en jeu</span>`,
+    note: "Le plus direct sur la seule question qui compte : le verdict n'est affiché que quand l'intervalle le garantit ; sinon, gris et « en jeu », quel que soit le chiffre. C'est aussi le plus prudent — il refuse de colorer 51 % en bleu tant que la marge touche 50. À la fin : le scénario fictif est gris à ± 1,5 et devient bleu quand la marge se resserre, ce qui est exactement le déroulé d'une soirée. En échange, on perd la nuance « à quel point c'est serré » que C7 donnait.",
+    rendu: (s, m) => { const b = base(s, m);
+      const couleur = b.enJeu ? "var(--gris)" : b.c;
+      const mot = b.enJeu ? "en jeu" : (b.g ? "acquis" : "refusé");
+      return nom(s) + haltere(std.zone(b, "hachure", `--c:${couleur}`), std.trajet(b, "var(--encre)"), std.connu(b), std.vConnu(b),
+        std.vProj(b, couleur, `<span class="etat">${mot}</span>`)); },
   },
   {
-    lettre: "C9", titre: "L'anneau",
-    parti: "Pensée pour la fin de soirée : la pastille est un anneau, pas un disque. Le trait et la zone restent visibles à travers, et quand le compté rejoint l'estimé, l'anneau l'entoure.",
+    lettre: "C9", titre: "Axe resserré, 25–75",
+    parti: "Le C2, mais l'axe ne va plus de 0 à 100 : de 25 à 75. Tout est deux fois plus large, et l'intervalle de fin de soirée redevient visible.",
     legende: `<span><i class="trait"></i>dépouillé</span><span><i class="fl"></i>vers l'intervalle</span>
-              <span><i class="zone hachure"></i>intervalle, hachuré</span><span><i class="rond" style="background:none;border:2.5px solid var(--bleu)"></i>projeté</span>`,
-    note: "L'anneau ne cache rien : au début on voit la zone hachurée à l'intérieur, à la fin on voit le trait noir dedans — « le compté est dans le cercle ». C'est l'image la plus simple des deux états, et elle n'a besoin ni de flèche ni de mot pour dire que ça converge. À tester sur les cartes de D′, où la pastille pleine de C avait été choisie pour se voir de loin.",
-    rendu: (s, m) => { const b = base(s, m); return nom(s) + haltere(
-      zone(b, "hachure"), trajet(b, "var(--encre)"),
-      `<i class="projete anneau" style="left:${b.p}%;border-color:${b.c}"></i>`, connu(b), vConnu(b), vProj(b)); },
+              <span><i class="zone hachure"></i>intervalle du projeté</span><span><i class="seuil"></i>majorité</span>`,
+    note: "Puisque la position exacte du projeté n'est pas l'essentiel, l'échelle 0–100 ne l'est pas non plus : un résultat de votation fédérale vit entre 25 et 75. Sur cet axe, ± 1,5 fait dix-huit pixels au lieu de neuf, et la question « l'intervalle passe-t-il 50 ? » se tranche d'un coup d'œil, même à la fin. Le prix : un axe qui ne commence pas à zéro, qu'il faut graduer — et un objet à 20 % sortirait du cadre.",
+    rendu: (s, m) => { const b = base(s, m); return nom(s) + `<div class="haltere zoom">${zoom.rail}
+      <i class="grad" style="left:0">25</i><i class="grad" style="left:50%">50</i><i class="grad" style="left:100%">75</i>
+      ${zoom.zone(b, "hachure")}${zoom.trajet(b, "var(--encre)")}${zoom.connu(b)}${zoom.vConnu(b)}${zoom.vProj(b)}</div>`; },
   },
 ];
 
