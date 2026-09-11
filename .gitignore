@@ -31,3 +31,6 @@ politiques/          # sortie de wget --recursive
 .idea/
 .vscode/
 .DS_Store
+
+# Artefacts de backtest (figures, CSV, snapshot de base)
+/var/
