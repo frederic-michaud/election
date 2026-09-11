@@ -9,6 +9,42 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-11, nuit, épilogue bis — La fourchette chiffrée sous l'extrapolé
+
+**Point de départ.** Mettre en petit, à gauche sous le chiffre en couleur et
+dans la même couleur, l'intervalle de confiance quantifié. Six formulations
+proposées d'abord, sur l'exemple de la naturalisation (46,9 %, marge inventée
+de ± 2,1) :
+
+| | Texte | Pour | Contre |
+|---|---|---|---|
+| 1 | IC 95 % : 44,8 – 49,0 | précis, court | « IC » est du jargon |
+| 2 | [44,8 ; 49,0] à 95 % | sans ambiguïté | peu parlant |
+| 3 | entre 44,8 et 49,0 % | le plus lisible | perd le niveau de confiance |
+| 4 | fourchette 44,8 – 49,0 % | court, compris de tous | — |
+| 5 | marge d'erreur ± 2,1 pts | formule des médias | ne donne pas les bornes |
+| 6 | 95 % de chances entre 44,8 et 49,0 % | explicite | trop long ; faux pour un intervalle de confiance classique |
+
+Deux contraintes ont guidé la recommandation : environ 25 caractères de place
+sous le grand chiffre sur téléphone, et un niveau de confiance qui n'existe pas
+encore — les marges sont inventées, la voie Moteur décidera.
+
+**Décision.** La quatrième, « fourchette 44,8 – 49,0 % », coupée après
+« fourchette » et jamais entre les deux bornes.
+
+**Ce qu'on a fait.** Sous le grand chiffre, entre lui et la pastille
+« extrapolé » : le mot « fourchette » en petit, les bornes en gras sur la ligne
+suivante, dans la couleur du verdict. Les bornes sont calculées avec la même
+marge que la barre (`MARGES`), séparées par des espaces insécables.
+
+**Vérifié.** À 375, 1000 et 1240 px : toujours deux lignes, bornes jamais
+coupées, les deux valeurs côte à côte, pastilles alignées, dépouillé toujours
+calé sur la fin de la barre, et au moins 34 px entre la fourchette et le
+dépouillé.
+
+**Ouvert.** Le jour où la marge sera réelle, décider si le niveau de confiance
+s'affiche (« fourchette à 95 % ») ou reste dans « La méthode ».
+
 ## 2026-09-11, nuit, épilogue — Le dépouillé calé sur la fin de la barre
 
 **Point de départ.** Essayer de centrer le dépouillé gris, chiffre et

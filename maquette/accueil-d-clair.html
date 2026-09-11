@@ -14,8 +14,8 @@
    noir ? Le sombre donne la solennité de la soirée ; le clair donne la
    lisibilité de jour, l'impression papier, et une palette déjà validée.
    Chaque panneau donne deux valeurs : l'extrapolé en grand, dans la couleur
-   du verdict, et le dépouillé en plus petit, en gris, chacune avec son
-   libellé. Dessous, la barre finale des planches (barres-proposition.html),
+   du verdict, avec sa fourchette en petit dessous, et le dépouillé en plus
+   petit, en gris, calé à droite ; chacune avec sa pastille. Dessous, la barre finale des planches (barres-proposition.html),
    sans aucun texte puisque les chiffres sont juste au-dessus : la moustache
    pour l'intervalle de confiance de l'extrapolation, le rail teinté pour la
    majorité, le dépouillé en gris avec sa flèche seulement quand il est hors
@@ -75,6 +75,10 @@ header { display: flex; align-items: center; justify-content: space-between; gap
   font-weight: 800; line-height: .95; letter-spacing: -.035em; }
 .panneau .chiffre-connu { font-size: clamp(1.2rem, 2.4vw, 1.75rem); font-size: clamp(1rem, 6.7cqi, 1.75rem);
   font-weight: 700; line-height: 1; letter-spacing: -.02em; color: var(--gris); }
+/* La fourchette de l'extrapolation, sous le grand chiffre et dans sa couleur : le
+   mot sur une ligne, les bornes sur la suivante, jamais coupées entre elles. */
+.panneau .fourchette { font-size: .74rem; line-height: 1.35; margin-top: 7px; }
+.panneau .fourchette .bornes { display: block; white-space: nowrap; font-weight: 700; font-variant-numeric: tabular-nums; }
 /* Les libellés en pastille, comme l'était « accepté / refusé » : teinte du verdict
    pour l'extrapolé, gris pour le dépouillé. */
 .panneau .libelle { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .1em;
@@ -172,6 +176,12 @@ const pct = (v, d = 1) => (100 * v).toLocaleString("fr-CH", { minimumFractionDig
 // (demi-largeur, en points) sont inventées — celles de la planche par défaut,
 // ± 3 × 0,7, × 1, × 1,4 — en attendant que la voie Moteur en calcule une.
 const MARGES = [2.1, 3, 4.2];
+const dixieme = (v) => v.toLocaleString("fr-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+// « 44,8 – 49,0 % », avec des espaces insécables : les bornes restent sur une ligne.
+const bornes = (s, m) => {
+  const p = 100 * s.oui_extrapole;
+  return `${dixieme(Math.max(0, p - m))}\u00a0–\u00a0${dixieme(Math.min(100, p + m))}\u00a0%`;
+};
 
 function barre(s, m) {
   const k = 100 * s.oui_connu, p = 100 * s.oui_extrapole, c = p >= 50 ? "var(--oui)" : "var(--non)";
@@ -196,14 +206,18 @@ document.getElementById("avance").textContent = pct(VUE.avance);
 document.getElementById("jauge").style.width = (100 * VUE.avance) + "%";
 
 document.getElementById("mur").innerHTML = VUE.sujets.map((s, i) => {
-  const g = s.oui_extrapole >= 0.5;
+  const g = s.oui_extrapole >= 0.5, m = MARGES[i] ?? 3;
   return `<article class="panneau">
     <div class="nom">${s.nom}</div>
     <div class="valeurs">
-      <div><div class="chiffre ${g ? "oui" : "non"}">${pct(s.oui_extrapole)}</div><div class="libelle ${g ? "oui" : "non"}">extrapolé</div></div>
+      <div>
+        <div class="chiffre ${g ? "oui" : "non"}">${pct(s.oui_extrapole)}</div>
+        <div class="fourchette ${g ? "oui" : "non"}">fourchette<span class="bornes">${bornes(s, m)}</span></div>
+        <div class="libelle ${g ? "oui" : "non"}">extrapolé</div>
+      </div>
       <div><div class="chiffre-connu">${pct(s.oui_connu)}</div><div class="libelle">dépouillé</div></div>
     </div>
-    ${barre(s, MARGES[i] ?? 3)}
+    ${barre(s, m)}
     <div class="carte" id="carte-${i}"></div>
   </article>`;
 }).join("");
