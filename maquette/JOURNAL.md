@@ -9,6 +9,70 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-11 — Planche : dix barres pour un dépouillé et un projeté
+
+**Point de départ.** Les barres de la variante B plaisent : montrer sur une
+même barre le résultat dépouillé et le résultat projeté. Deux réserves : il
+faut savoir en un coup d'œil lequel est quoi (une légende n'est pas exclue),
+et la couleur pose problème quand les deux ne tombent pas du même côté de la
+majorité. Demande : dix maquettes de barres sur une seule page, à part des
+variantes, deux ou trois standard et le reste plus audacieux, pour brainstormer.
+
+**Ce qu'on a fait.** `barres.html`, une *planche* — pas une variante : des
+composants isolés, listés dans une nouvelle section « Planches » du sommaire.
+Dix cartes, chacune avec son parti pris, sa légende, les trois objets du jour
+et une note sur la question des couleurs. Sans Plotly : du CSS, avec les
+données de `figures.js` pour rester sur les vrais chiffres. Les données du
+jour fournissent justement le cas qui fâche : LTr, 54,4 % dépouillé → 46,9 %
+projeté, le dépouillé dit oui et la projection dit non.
+
+**Les dix, en une ligne chacune.**
+
+- *A — Deux barres, une légende.* Un rang dépouillé (encre), un rang projeté
+  (couleur du verdict). Standard.
+- *B — Une barre, un repère.* Le « bullet chart » : la barre est le projeté, le
+  dépouillé un trait noir posé dessus. Standard.
+- *C — Haltère avec sens.* Le dot plot de B, plus une pointe sur le trajet.
+  Standard.
+- *D — Plein contre pointillé.* Plein = compté, pointillé = estimé, sur le
+  même rang : ce qui déborde du cadre est ce que l'extrapolation retire.
+- *E — Depuis la majorité.* La barre part de 50, vers la gauche (rouge) ou la
+  droite (bleu) : l'écart à la majorité, pas le pourcentage. L'idée de E.
+- *F — La flèche de correction.* Barre du projeté, et au-dessus une flèche
+  noire qui part du dépouillé : on voit d'où l'on vient.
+- *G — Sur l'échelle de la carte.* La barre est la légende des cartes
+  (rouge → neutre → bleu), les deux valeurs sont des marques noires dessus.
+- *H — Ce qui manque, ce qui dépasse.* Gris jusqu'à la valeur ou jusqu'à 50 ;
+  la couleur ne peint que la distance à la majorité.
+- *I — Thermomètres.* Vertical, par paires, la majorité en travers ; il faut
+  des sigles.
+- *J — La fourchette.* Le projeté est une plage, pas un point ; marge
+  inventée (± 3) pour poser la question de l'incertitude.
+
+**Trois réponses au problème des couleurs**, qui traversent les dix :
+
+1. *Un seul des deux porte une couleur* (A, B, C, D, F, J) : le dépouillé est
+   un fait, en encre ; le projeté seul porte le verdict. Pas de conflit
+   possible, puisqu'il n'y a qu'un verdict affiché.
+2. *La couleur vient du côté, pas du verdict* (E, H) : à gauche de 50 rouge,
+   à droite bleu, toujours. Le cas qui fâche devient le plus lisible.
+3. *La couleur est sous les marques, pas sur elles* (G) : la barre est
+   l'échelle de la carte, les valeurs sont noires et se lisent contre elle.
+
+**Décisions.**
+
+- *Une planche, pas une variante.* Le sommaire gagne une section « Planches »
+  pour les composants isolés ; on ne touche pas aux variantes.
+- *Les chiffres au bout des barres sont posés sur une pastille blanche*, sinon
+  ils se lisent mal sur le trait de majorité — le cas de toute valeur entre 40
+  et 50, fréquent.
+- *Les étiquettes centrées s'ancrent au bord* quand la valeur est sous 12 ou
+  au-dessus de 88, pour ne pas sortir de la barre.
+
+**Ouvert.** Choisir, ou mélanger — par exemple B ou F pour le rang, avec la
+couleur de E. Et, si J plaît, demander une marge à la voie Moteur. La page se
+regarde aussi en colonne unique sur téléphone : chaque carte y tient.
+
 ## 2026-09-10, plus tard — D′ retenue ; fonds inversés, logo, moins de texte
 
 **Point de départ.** D′ est la variante qui plaît le plus : c'est désormais la

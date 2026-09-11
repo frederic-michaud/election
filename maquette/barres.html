@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Barres — dépouillé et projeté · maquette Politiques.ch</title>
+<style>
+/* ═══ Planche « barres » ══════════════════════════════════════════════════
+   Dix façons de montrer, sur une barre, le résultat dépouillé et le résultat
+   projeté d'un objet. Mêmes données que les variantes, même échelle 0–100,
+   même majorité à 50. Trois assez standard (A–C), sept plus audacieuses.
+   Deux questions posées à chacune : lequel est quoi, en un coup d'œil ? et
+   que fait la couleur quand le dépouillé et le projeté ne tombent pas du même
+   côté de la majorité ? Ce n'est pas une page du site : c'est une planche
+   pour comparer et choisir. Palette de D′.
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --fond: #fcfcfb; --panneau: #ffffff; --bord: #e1e0d9;
+  --encre: #1f1f1c; --gris: #5f5e58; --neutre: #ecebe6;
+  --bleu: #2a78d6; --bleu-clair: #86b6ef; --rouge: #c9352b; --rouge-clair: #e6a9a3;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--fond); color: var(--encre); font: 15px/1.5 var(--sans); }
+body { margin: 0 auto; max-width: 1320px; padding: 28px 22px 60px; }
+h1 { font-size: 1.4rem; margin: 0 0 4px; letter-spacing: -.01em; }
+.intro { color: var(--gris); max-width: 78ch; margin: 0 0 10px; }
+.cas { color: var(--gris); font-size: .88rem; margin: 0 0 26px; padding-left: 20px; max-width: 90ch; }
+.cas b { color: var(--encre); }
+.cas em { color: var(--rouge); font-style: normal; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+.grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(390px, 1fr)); gap: 18px; }
+.carte { background: var(--panneau); border: 1px solid var(--bord); border-radius: 14px; padding: 18px 20px 14px; }
+.carte h2 { font-size: 1rem; margin: 0; display: flex; align-items: center; gap: 10px; }
+.lettre { display: inline-block; width: 26px; height: 26px; line-height: 26px; text-align: center; border-radius: 6px;
+  background: var(--neutre); color: var(--gris); font-weight: 700; font-size: .82rem; }
+.audace .lettre { background: var(--bleu); color: #fff; }
+.carte .parti { color: var(--gris); font-size: .86rem; margin: 6px 0 12px; }
+.legende { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .76rem; color: var(--gris); margin: 0 0 16px;
+  padding: 8px 10px; background: var(--fond); border-radius: 8px; }
+.legende i { display: inline-block; vertical-align: middle; margin-right: 6px; }
+.legende i.bloc { width: 18px; height: 8px; border-radius: 3px; }
+.legende i.trait { width: 2px; height: 14px; background: var(--encre); }
+.legende i.rond { width: 11px; height: 11px; border-radius: 50%; }
+.legende i.anneau { width: 11px; height: 11px; border-radius: 50%; border: 2.5px solid var(--encre); background: #fff; }
+.legende i.tiret { width: 18px; height: 8px; border: 2px dashed var(--bleu); border-radius: 4px; }
+.legende i.tri { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid var(--encre); }
+.legende i.fl { width: 18px; height: 2px; background: var(--encre); position: relative; }
+.legende i.fl::after { content: ""; position: absolute; right: -2px; top: -4px; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 6px solid var(--encre); }
+.note { font-size: .8rem; color: var(--gris); border-top: 1px dashed var(--bord); padding-top: 10px; margin-top: 6px; }
+
+.objet { margin: 0 0 18px; }
+.objet .nom { font-size: .82rem; color: var(--gris); margin-bottom: 6px; }
+.piste { position: relative; height: 12px; background: var(--neutre); border-radius: 6px; }
+.piste b { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; }
+.piste .seuil { position: absolute; top: -4px; bottom: -4px; left: 50%; width: 2px; background: var(--encre); opacity: .5; }
+.val { position: absolute; top: 50%; transform: translateY(-50%); margin-left: 8px; font-size: .78rem; font-style: normal; white-space: nowrap;
+  background: rgba(255,255,255,.9); padding: 0 4px; border-radius: 3px; }
+.val.gauche { margin-left: 0; margin-right: 8px; }
+.val.haut { top: auto; bottom: calc(100% + 5px); transform: translateX(-50%); margin: 0; font-size: .72rem; color: var(--gris); background: none; padding: 0; }
+.val.bas { top: calc(100% + 5px); transform: translateX(-50%); margin: 0; background: none; padding: 0; }
+/* Près des bords, l'étiquette centrée sortirait de la barre : on l'ancre au bord. */
+.val.haut.bord-g, .val.bas.bord-g, .rep-lib.bord-g { transform: none; }
+.val.haut.bord-d, .val.bas.bord-d, .rep-lib.bord-d { transform: translateX(-100%); }
+.val .marge { font-weight: 400; color: var(--gris); font-size: .7rem; }
+
+/* A, H — deux rangs par objet */
+.rang { display: flex; align-items: center; gap: 10px; margin: 4px 0; }
+.rang .lib { width: 62px; flex: none; font-size: .72rem; color: var(--gris); text-align: right; }
+.rang .piste { flex: 1; height: 9px; }
+.rang .chiffre { width: 118px; flex: none; font-size: .8rem; text-align: right; }
+.rang .chiffre small { color: var(--gris); font-size: .72rem; margin-left: 4px; }
+
+/* B, F, J — repère du dépouillé sur une seule barre */
+.piste.haute { height: 14px; margin: 22px 0 6px; }
+.piste.haute.avec-fleche { margin-top: 40px; }
+.piste.haute.avec-bas { margin-bottom: 28px; }
+.repere { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--encre); margin-left: -1px; }
+.rep-lib { position: absolute; bottom: calc(100% + 8px); transform: translateX(-50%); font-size: .72rem; color: var(--gris); white-space: nowrap; font-style: normal; }
+
+/* C — haltère */
+.haltere { position: relative; height: 46px; margin: 4px 0 0; }
+.haltere .rail { position: absolute; left: 0; right: 0; top: 22px; height: 3px; background: var(--neutre); border-radius: 2px; }
+.haltere .seuil { position: absolute; top: 12px; bottom: 12px; left: 50%; width: 2px; background: var(--encre); opacity: .5; }
+.haltere .trajet { position: absolute; top: 22px; height: 3px; }
+.haltere .connu { position: absolute; top: 14px; height: 19px; width: 2px; background: var(--encre); margin-left: -1px; }
+.haltere .projete { position: absolute; top: 16px; width: 15px; height: 15px; border-radius: 50%; margin-left: -7.5px; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
+.haltere .fleche { position: absolute; top: 18.5px; width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+.haltere .fleche.droite { margin-left: -15px; border-left: 8px solid; }
+.haltere .fleche.gauche { margin-left: 7px; border-right: 8px solid; }
+.haltere .v-connu { position: absolute; top: -4px; transform: translateX(-50%); font-size: .72rem; color: var(--gris); white-space: nowrap; font-style: normal; }
+.haltere .v-proj { position: absolute; top: 33px; transform: translateX(-50%); font-size: .8rem; font-weight: 700; white-space: nowrap; font-style: normal; }
+
+/* D — plein contre pointillé */
+.piste.cadre { height: 16px; margin: 20px 0 22px; background: transparent; }
+.piste.cadre .fond { position: absolute; inset: 3px 0; background: var(--neutre); border-radius: 5px; }
+.piste.cadre .plein { position: absolute; left: 0; top: 3px; bottom: 3px; background: var(--gris); border-radius: 5px; }
+.piste.cadre .pointille { position: absolute; left: 0; top: 0; bottom: 0; border: 2px dashed; border-radius: 8px; }
+
+/* E, G — axe 25–75 */
+.axe { position: relative; height: 16px; margin: 24px 0 22px; background: var(--neutre); border-radius: 8px; }
+.axe .maj { position: absolute; left: 50%; top: -7px; bottom: -7px; width: 2px; background: var(--encre); margin-left: -1px; }
+.axe .depuis { position: absolute; top: 0; bottom: 0; }
+.axe .anneau { position: absolute; top: 50%; width: 13px; height: 13px; border: 2.5px solid var(--encre); background: #fff; border-radius: 50%; transform: translate(-50%, -50%); }
+.axe .grad { position: absolute; top: calc(100% + 4px); transform: translateX(-50%); font-size: .68rem; color: var(--gris); font-style: normal; white-space: nowrap; }
+.axe .ecart { position: absolute; top: 50%; transform: translateY(-50%); font-weight: 700; font-size: .82rem; font-style: normal; white-space: nowrap; }
+.axe.echelle { background: linear-gradient(90deg, var(--rouge), #f0efec 50%, var(--bleu)); }
+.axe .tri { position: absolute; top: calc(100% + 1px); transform: translateX(-50%); width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 9px solid var(--encre); }
+.axe .rond { position: absolute; top: 50%; width: 15px; height: 15px; border-radius: 50%; border: 2.5px solid var(--encre); background: rgba(255,255,255,.35); transform: translate(-50%, -50%); }
+
+/* F — flèche de correction, au-dessus de la barre */
+.piste .trait { position: absolute; top: -10px; height: 2px; background: var(--encre); }
+.piste .pointe { position: absolute; top: -14px; width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+.piste .pointe.droite { border-left: 7px solid var(--encre); margin-left: -7px; }
+.piste .pointe.gauche { border-right: 7px solid var(--encre); }
+.piste .depart { position: absolute; top: -14px; height: 10px; width: 2px; background: var(--encre); margin-left: -1px; }
+
+/* I — thermomètres */
+.thermos { position: relative; display: flex; justify-content: space-around; align-items: flex-end; padding: 18px 76px 0 0; }
+.thermos .ligne50 { position: absolute; left: 0; right: 0; bottom: calc(28px + 75px); border-top: 2px dashed var(--encre); opacity: .5; }
+.thermos .ligne50 span { position: absolute; right: 0; bottom: 2px; font-size: .68rem; color: var(--encre); font-style: normal; }
+.paire .colonnes { height: 150px; display: flex; align-items: flex-end; gap: 8px; }
+.paire .col { width: 40px; height: 100%; display: flex; align-items: flex-end; }
+.paire .col b { display: block; width: 100%; border-radius: 4px 4px 0 0; position: relative; }
+.paire .col b em { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 3px; font-size: .68rem; white-space: nowrap; font-style: normal;
+  background: rgba(255,255,255,.9); padding: 0 3px; border-radius: 3px; }
+.paire .etiq { height: 28px; padding-top: 6px; text-align: center; font-size: .8rem; }
+
+/* J — fourchette */
+.piste .bande { position: absolute; top: 0; bottom: 0; border-radius: 6px; }
+.piste .centre { position: absolute; top: -3px; bottom: -3px; width: 3px; margin-left: -1.5px; border-radius: 2px; }
+
+footer { color: var(--gris); font-size: .82rem; margin-top: 30px; text-align: center; }
+footer a { color: var(--bleu); }
+.absent { margin: 16px 0; padding: 14px 18px; border: 1px solid #e0b400; border-left: 5px solid #e0b400; border-radius: 8px; background: #fffbe8; }
+</style>
+</head>
+<body>
+<h1>Dix barres pour un dépouillé et un projeté</h1>
+<p class="intro">Même objet, deux nombres : ce que disent les communes déjà dépouillées, et ce que
+l'extrapolation projette pour la fin. Sur une même échelle 0–100, la majorité à 50. Trois
+propositions assez standard (A–C), sept plus audacieuses, pour choisir ou mélanger. La question
+posée à chacune : lequel est quoi, en un coup d'œil ? Et que fait la couleur quand le dépouillé et
+le projeté ne tombent pas du même côté de la majorité ?</p>
+<ul class="cas" id="cas"></ul>
+
+<div class="grille" id="grille"></div>
+
+<footer>Planche de travail — données fictives, les mêmes que les variantes. <a href="index.html">Retour au sommaire</a></footer>
+
+<script src="figures.js"></script>
+<script>
+if (typeof VUE === "undefined") {
+  document.body.insertAdjacentHTML("afterbegin", `<div class="absent"><b>Il manque <code>figures.js</code>.</b>
+    Depuis la racine du dépôt : <code>python maquette/construire.py</code>, puis recharger.</div>`);
+  throw new Error("figures.js absent");
+}
+
+const P = (v) => (100 * v).toLocaleString("fr-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %";
+const pts = (d) => (d >= 0 ? "+" : "−") + Math.abs(d).toLocaleString("fr-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " pts";
+const code = (nom) => nom.includes("(") ? nom.split("(")[1].split(")")[0] : nom;
+const V = (s) => ({ k: 100 * s.oui_connu, p: 100 * s.oui_extrapole, g: s.oui_extrapole >= 0.5, gk: s.oui_connu >= 0.5 });
+const C = (g) => g ? "var(--bleu)" : "var(--rouge)";
+const CL = (g) => g ? "var(--bleu-clair)" : "var(--rouge-clair)";
+const nom = (s) => `<div class="nom">${s.nom}</div>`;
+// Étiquette au bout d'une barre ; passe à gauche du bout quand il n'y a plus de place.
+const lab = (x, html, style = "", cls = "") => x > 78
+  ? `<em class="val gauche ${cls}" style="right:${100 - x}%;${style}">${html}</em>`
+  : `<em class="val ${cls}" style="left:${x}%;${style}">${html}</em>`;
+const xA = (v) => (v - 25) / 50 * 100;   // axe 25–75 → 0–100 %
+const bord = (x) => x < 12 ? " bord-g" : x > 88 ? " bord-d" : "";
+
+// Les trois cas que fournissent les données du jour.
+document.getElementById("cas").innerHTML = VUE.sujets.map((s) => {
+  const { k, p, g, gk } = V(s);
+  const verdict = g === gk ? (g ? "oui des deux côtés" : "non des deux côtés")
+    : `le dépouillé dit ${gk ? "oui" : "non"}, la projection dit ${g ? "oui" : "non"}`;
+  return `<li><b>${code(s.nom)}</b> — ${verdict}, la projection ${p > k ? "monte" : "descend"}
+    (${P(s.oui_connu)} → ${P(s.oui_extrapole)})${g !== gk ? " : <em>le cas qui fâche les couleurs</em>" : ""}.</li>`;
+}).join("");
+
+const CONCEPTS = [
+  {
+    lettre: "A", titre: "Deux barres, une légende", audace: false,
+    parti: "La plus simple : un rang pour le dépouillé, un rang pour le projeté, chacun avec son chiffre.",
+    legende: `<span><i class="bloc" style="background:var(--encre)"></i>dépouillé</span>
+              <span><i class="bloc" style="background:var(--bleu)"></i><i class="bloc" style="background:var(--rouge)"></i>projeté, coloré par son verdict</span>
+              <span><i class="trait" style="opacity:.5"></i>majorité</span>`,
+    note: "Le dépouillé est un fait : en encre, sans couleur. Seul le projeté porte le verdict — quand ils se contredisent, un seul des deux a une couleur, donc pas de conflit.",
+    rendu: (s) => { const { k, p, g } = V(s); return `${nom(s)}
+      <div class="rang"><span class="lib">dépouillé</span><div class="piste"><i class="seuil"></i><b style="width:${k}%;background:var(--encre)"></b>${lab(k, P(s.oui_connu), "color:var(--gris)")}</div></div>
+      <div class="rang"><span class="lib">projeté</span><div class="piste"><i class="seuil"></i><b style="width:${p}%;background:${C(g)}"></b>${lab(p, P(s.oui_extrapole), `color:${C(g)};font-weight:700`)}</div></div>`; },
+  },
+  {
+    lettre: "B", titre: "Une barre, un repère", audace: false,
+    parti: "Le « bullet chart » : la barre est le projeté, le dépouillé n'est qu'un trait posé dessus.",
+    legende: `<span><i class="bloc" style="background:var(--bleu)"></i><i class="bloc" style="background:var(--rouge)"></i>projeté</span>
+              <span><i class="trait"></i>dépouillé</span>
+              <span><i class="trait" style="opacity:.5"></i>majorité</span>`,
+    note: "Une seule barre à lire. Le repère est neutre par construction. Mais deux traits noirs (repère et majorité) peuvent se confondre : la majorité devra changer de style.",
+    rendu: (s) => { const { k, p, g } = V(s); return `${nom(s)}
+      <div class="piste haute"><i class="seuil"></i><b style="width:${p}%;background:${C(g)}"></b>
+        <i class="repere" style="left:${k}%"></i><em class="rep-lib tnum${bord(k)}" style="left:${k}%">dépouillé ${P(s.oui_connu)}</em>
+        ${lab(p, P(s.oui_extrapole), `color:${C(g)};font-weight:700`)}</div>`; },
+  },
+  {
+    lettre: "C", titre: "Haltère avec sens", audace: false,
+    parti: "Le dot plot de la variante B, plus une pointe : on lit le chemin du dépouillé vers le projeté.",
+    legende: `<span><i class="trait"></i>dépouillé</span>
+              <span><i class="rond" style="background:var(--bleu)"></i><i class="rond" style="background:var(--rouge)"></i>projeté</span>
+              <span><i class="bloc" style="background:var(--bleu-clair);height:3px"></i>trajet, avec sa pointe</span>`,
+    note: "La couleur ne vit que sur la pastille et sur le trajet, en clair — comme sur les cartes, le clair veut dire « estimé ». Le trait du dépouillé reste noir.",
+    rendu: (s) => { const { k, p, g } = V(s); const a = Math.min(k, p), b = Math.max(k, p); return `${nom(s)}
+      <div class="haltere"><i class="rail"></i><i class="seuil"></i>
+        <i class="trajet" style="left:${a}%;width:${b - a}%;background:${CL(g)}"></i>
+        <i class="fleche ${p >= k ? "droite" : "gauche"}" style="left:${p}%;border-color:transparent ${CL(g)}"></i>
+        <i class="connu" style="left:${k}%"></i><i class="projete" style="left:${p}%;background:${C(g)}"></i>
+        <em class="v-connu tnum" style="left:${k}%">${P(s.oui_connu)}</em>
+        <em class="v-proj tnum" style="left:${p}%;color:${C(g)}">${P(s.oui_extrapole)}</em></div>`; },
+  },
+  {
+    lettre: "D", titre: "Plein contre pointillé", audace: true,
+    parti: "Plein = compté, pointillé = estimé. Les deux sur le même rang : ce qui déborde ou ce qui reste vide, c'est la correction.",
+    legende: `<span><i class="bloc" style="background:var(--gris)"></i>dépouillé, plein</span>
+              <span><i class="tiret"></i>projeté, en pointillé</span>
+              <span><i class="trait" style="opacity:.5"></i>majorité</span>`,
+    note: "Le vocabulaire est celui des schémas : un cadre pointillé, c'est une hypothèse. Ce qui dépasse du cadre est ce que l'extrapolation retire ; le vide dans le cadre, ce qu'elle ajoute. La couleur, sur le pointillé seul.",
+    rendu: (s) => { const { k, p, g } = V(s); return `${nom(s)}
+      <div class="piste cadre"><i class="fond"></i><i class="seuil"></i>
+        <b class="plein" style="width:${k}%"></b>
+        <i class="pointille" style="width:${p}%;border-color:${C(g)}"></i>
+        <em class="val haut tnum${bord(k)}" style="left:${k}%">dépouillé ${P(s.oui_connu)}</em>
+        <em class="val bas tnum${bord(p)}" style="left:${p}%;color:${C(g)};font-weight:700">${P(s.oui_extrapole)} projeté</em></div>`; },
+  },
+  {
+    lettre: "E", titre: "Depuis la majorité", audace: true,
+    parti: "La barre part de 50 et va vers la gauche ou la droite : on lit l'écart à la majorité, pas le pourcentage.",
+    legende: `<span><i class="bloc" style="background:var(--rouge)"></i>manque, à gauche</span>
+              <span><i class="bloc" style="background:var(--bleu)"></i>dépasse, à droite</span>
+              <span><i class="anneau"></i>dépouillé</span>`,
+    note: "La couleur ne vient pas d'un verdict mais d'un côté : à gauche rouge, à droite bleu, toujours. Le cas qui fâche devient le plus lisible — c'est le parti pris de la variante E.",
+    rendu: (s) => { const { k, p, g } = V(s); return `${nom(s)}
+      <div class="axe">
+        <i class="grad" style="left:0">25</i><i class="grad" style="left:50%">50 · majorité</i><i class="grad" style="left:100%">75</i>
+        <b class="depuis" style="${p >= 50 ? `left:50%;width:${xA(p) - 50}%` : `right:50%;width:${50 - xA(p)}%`};background:${C(g)}"></b>
+        <i class="maj"></i>
+        <i class="anneau" style="left:${xA(k)}%"></i>
+        <em class="ecart tnum" style="${p >= 50 ? `left:${xA(p)}%;margin-left:8px` : `right:${100 - xA(p)}%;margin-right:8px`};color:${C(g)}">${pts(p - 50)}</em>
+        <em class="val haut tnum${bord(xA(k))}" style="left:${xA(k)}%">dépouillé ${P(s.oui_connu)}</em></div>`; },
+  },
+  {
+    lettre: "F", titre: "La flèche de correction", audace: true,
+    parti: "Une barre pour le projeté, et au-dessus, une flèche qui part du dépouillé : on voit d'où l'on vient.",
+    legende: `<span><i class="bloc" style="background:var(--bleu)"></i><i class="bloc" style="background:var(--rouge)"></i>projeté</span>
+              <span><i class="fl"></i>correction, depuis le dépouillé</span>
+              <span><i class="trait" style="opacity:.5"></i>majorité</span>`,
+    note: "Le mouvement est l'information : sa longueur dit combien l'extrapolation corrige, son sens dans quelle direction. La flèche est neutre ; la barre seule a une couleur.",
+    rendu: (s) => { const { k, p, g } = V(s); return `${nom(s)}
+      <div class="piste haute avec-fleche"><i class="seuil"></i><b style="width:${p}%;background:${C(g)}"></b>
+        <i class="depart" style="left:${k}%"></i>
+        <i class="trait" style="left:${Math.min(k, p)}%;width:${Math.abs(p - k)}%"></i>
+        <i class="pointe ${p >= k ? "droite" : "gauche"}" style="left:${p}%"></i>
+        <em class="rep-lib tnum${bord(k)}" style="left:${k}%;bottom:calc(100% + 14px)">dépouillé ${P(s.oui_connu)}</em>
+        ${lab(p, P(s.oui_extrapole), `color:${C(g)};font-weight:700`)}</div>`; },
+  },
+  {
+    lettre: "G", titre: "Sur l'échelle de la carte", audace: true,
+    parti: "La barre est la légende des cartes : rouge, neutre à 50, bleu. Les deux valeurs se lisent contre elle.",
+    legende: `<span><i class="tri"></i>dépouillé</span>
+              <span><i class="anneau"></i>projeté</span>
+              <span><i class="bloc" style="background:linear-gradient(90deg,var(--rouge),#f0efec,var(--bleu))"></i>la couleur des cartes</span>`,
+    note: "La barre ne prend pas parti : les marques sont noires, la couleur est sous elles, la même que sur la carte au-dessous. Cartes et barres racontent alors la même histoire. Mais l'axe 25–75 n'est plus 0–100.",
+    rendu: (s) => { const { k, p, g } = V(s); return `${nom(s)}
+      <div class="axe echelle">
+        <i class="grad" style="left:0">25</i><i class="grad" style="left:50%">50</i><i class="grad" style="left:100%">75</i>
+        <i class="tri" style="left:${xA(k)}%"></i>
+        <i class="rond" style="left:${xA(p)}%"></i>
+        <em class="val haut tnum${bord(xA(p))}" style="left:${xA(p)}%;color:var(--encre);font-weight:700;font-size:.8rem">${P(s.oui_extrapole)}</em>
+        <em class="val bas tnum${bord(xA(k))}" style="left:${xA(k)}%;color:var(--gris);font-size:.72rem;top:calc(100% + 12px)">dépouillé ${P(s.oui_connu)}</em></div>`; },
+  },
+  {
+    lettre: "H", titre: "Ce qui manque, ce qui dépasse", audace: true,
+    parti: "Chaque barre est grise jusqu'à sa valeur ou jusqu'à 50 ; la couleur ne peint que la distance à la majorité.",
+    legende: `<span><i class="bloc" style="background:var(--rouge)"></i>ce qu'il manque pour 50</span>
+              <span><i class="bloc" style="background:var(--bleu)"></i>ce qui dépasse 50</span>
+              <span><i class="bloc" style="background:#c9c8c2"></i>le reste, gris</span>`,
+    note: "Pas de verdict peint, une mesure : le rouge dit combien il manque, le bleu combien on dépasse. Deux rangs pour comparer, et le cas qui fâche montre un sliver bleu au-dessus d'un sliver rouge — exactement ce qui s'est passé.",
+    rendu: (s) => { const { k, p } = V(s);
+      const rang = (lib, x, gras) => `<div class="rang"><span class="lib">${lib}</span><div class="piste"><i class="seuil"></i>
+        <b style="width:${Math.min(x, 50)}%;background:#c9c8c2"></b>
+        ${x < 50 ? `<b style="left:${x}%;width:${50 - x}%;background:var(--rouge);border-radius:0 6px 6px 0"></b>`
+                 : `<b style="left:50%;width:${x - 50}%;background:var(--bleu);border-radius:0 6px 6px 0"></b>`}</div>
+        <span class="chiffre tnum" style="${gras ? "font-weight:700" : "color:var(--gris)"}">${P(x / 100)}<small>${pts(x - 50)}</small></span></div>`;
+      return `${nom(s)}${rang("dépouillé", k, false)}${rang("projeté", p, true)}`; },
+  },
+  {
+    lettre: "I", titre: "Thermomètres", audace: true, groupe: true,
+    parti: "L'histogramme du site, lu par paires : dépouillé et projeté côte à côte, la majorité en travers.",
+    legende: `<span><i class="bloc" style="background:var(--gris)"></i>dépouillé</span>
+              <span><i class="bloc" style="background:var(--bleu)"></i><i class="bloc" style="background:var(--rouge)"></i>projeté</span>`,
+    note: "Le seul concept vertical : les trois objets se comparent d'un coup d'œil sur la même ligne de majorité. En échange, le nom des objets n'a plus de place — il faut des sigles.",
+    rendu: (sujets) => `<div class="thermos"><i class="ligne50"><span>50 · majorité</span></i>${sujets.map((s) => {
+      const { k, p, g } = V(s); return `<div class="paire"><div class="colonnes">
+        <div class="col"><b style="height:${k}%;background:var(--gris)"><em class="tnum" style="color:var(--gris)">${P(s.oui_connu)}</em></b></div>
+        <div class="col"><b style="height:${p}%;background:${C(g)}"><em class="tnum" style="color:${C(g)};font-weight:700">${P(s.oui_extrapole)}</em></b></div>
+        </div><div class="etiq"><b>${code(s.nom)}</b></div></div>`; }).join("")}</div>`,
+  },
+  {
+    lettre: "J", titre: "La fourchette", audace: true,
+    parti: "Le projeté n'est pas un point mais une plage : on montre l'incertitude. Le dépouillé, lui, est sûr — une barre pleine.",
+    legende: `<span><i class="bloc" style="background:var(--gris);height:5px"></i>dépouillé, certain</span>
+              <span><i class="bloc" style="background:var(--bleu-clair)"></i><i class="bloc" style="background:var(--rouge-clair)"></i>fourchette du projeté</span>
+              <span><i class="trait" style="background:var(--bleu)"></i>projeté</span>`,
+    note: "Le site ne calcule pas encore de marge : la fourchette est ici inventée (± 3 points) pour poser la question — montrer l'incertitude, ou pas ? Si oui, la voie Moteur devra la produire.",
+    rendu: (s) => { const { k, p, g } = V(s); const m = 3; return `${nom(s)}
+      <div class="piste haute avec-bas"><i class="seuil"></i>
+        <b style="width:${k}%;background:var(--gris);top:4px;bottom:4px"></b>
+        <b class="bande" style="left:${p - m}%;width:${2 * m}%;background:${CL(g)}"></b>
+        <i class="centre" style="left:${p}%;background:${C(g)}"></i>
+        <em class="rep-lib tnum${bord(k)}" style="left:${k}%">dépouillé ${P(s.oui_connu)}</em>
+        <em class="val bas tnum${bord(p)}" style="left:${p}%;color:${C(g)};font-weight:700">${P(s.oui_extrapole)} <span class="marge">± ${m} <i>illustratif</i></span></em></div>`; },
+  },
+];
+
+document.getElementById("grille").innerHTML = CONCEPTS.map((c) => `
+  <section class="carte ${c.audace ? "audace" : ""}">
+    <h2><span class="lettre">${c.lettre}</span>${c.titre}</h2>
+    <p class="parti">${c.parti}</p>
+    <div class="legende">${c.legende}</div>
+    ${c.groupe ? c.rendu(VUE.sujets) : VUE.sujets.map((s) => `<div class="objet">${c.rendu(s)}</div>`).join("")}
+    <p class="note">${c.note}</p>
+  </section>`).join("");
+</script>
+</body>
+</html>

@@ -65,6 +65,7 @@ sépare est un choix, pas un hasard.
 | `topojson-stub.js` | évite que Plotly aille chercher un fond de carte mondial sur le réseau | oui |
 | `verifier.js` | affiche un bandeau lisible quand les fichiers générés manquent | oui |
 | `accueil-*.html`, `index.html` | les variantes et leur sommaire | oui |
+| `barres.html` | planche : dix barres « dépouillé / projeté » à comparer, sans Plotly | oui |
 | `capture.mjs` | capture PNG d'une variante (Playwright), pour discuter par message | oui |
 | `figures.js` | contrat de vue + figures en JSON (`window.VUE`, `FIGURES`, `GEOJSON`) | oui (généré, 1,8 Mo) |
 | `plotly.min.js` | plotly.js, copié du paquet Python — la version qui a produit les figures | oui (généré, 4,6 Mo) |
