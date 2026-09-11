@@ -9,6 +9,54 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-11, encore — La fin du dépouillement, l'état oublié
+
+**Point de départ.** Remarque juste : les variations à intervalle étaient
+trompeuses, parce qu'elles n'étaient jugées que sur le début de soirée, quand
+le dépouillé est loin du projeté. À la fin — et c'est l'état où la page passe
+le plus clair de son temps — le dépouillé tombe *dans* l'intervalle, la
+correction est plus petite que la marge, et plusieurs formes s'effondrent :
+la pastille écrase le trait, la flèche n'a plus de sens, rien ne dit que c'est
+un bon signe. Demande : ajouter ce scénario et reprendre les propositions.
+
+**Ce qu'on a fait.**
+
+- *Un quatrième scénario, fictif et annoncé comme tel* : « fin du
+  dépouillement, 96 % des communes », 50,7 % dépouillé, 51,0 % projeté, marge
+  × 0,5 — le dépouillé est dans l'intervalle quelle que soit la position du
+  curseur, et l'intervalle chevauche 50 à la marge par défaut. Il n'est pas
+  dans `figures.js` : il est écrit dans la page, séparé des trois vrais par un
+  filet et un nom en bleu.
+- *Une règle commune aux neuf formes pour cet état* : le trait du dépouillé
+  passe toujours au-dessus de la pastille, avec un halo blanc, et la dépasse en
+  hauteur — il reste visible même quand ils coïncident. Plus de flèche quand
+  le dépouillé est dans la marge : un fil gris relie encore les deux (on voit
+  qu'il reste un écart, et qu'il est plus petit que la marge), et l'étiquette
+  le dit en toutes lettres, « dépouillé dans la marge ». Dans C1, la barre
+  noire garde un trait à son extrémité pour ne pas disparaître sous la pastille.
+- *Une neuvième variation, C9, l'anneau*, pensée pour cet état : la pastille
+  est un anneau, le trait et la zone restent visibles à travers, et à la fin
+  l'anneau entoure le trait — « le compté est dans le cercle », sans flèche ni
+  mot.
+- *Chaque note dit maintenant comment la forme se comporte à la fin.*
+
+**Ce qu'on a vu, forme par forme, à la fin du dépouillement.**
+
+- Tiennent : *C2* (trait dans la zone hachurée, l'image tient seule), *C7*
+  (l'intervalle bicolore dit « probable, pas acquis », et devient tout bleu
+  quand c'est plié), *C8* (sans pastille, rien ne se cache), *C9* (l'anneau
+  entoure le trait).
+- Se dégradent : *C1* (l'image « une barre qui pointe vers une zone » n'a plus
+  lieu d'être — forme de début de soirée), *C3* (la bande claire disparaît
+  sous la pastille, l'idée d'intervalle avec elle), *C5* (joli halo, mais
+  « dans la marge » ne se distingue pas de « tout près »), *C6* (les deux
+  niveaux se confondent).
+- À écarter : *C4* (quatre traits verticaux dans quelques pixels).
+
+**Décision.** Toute proposition de barre se juge désormais sur les deux états,
+début et fin de soirée. Le scénario fictif reste sur la planche tant que le
+contrat de vue ne fournit pas de marge réelle.
+
 ## 2026-09-11, plus tard — L'haltère C avec un intervalle de confiance
 
 **Point de départ.** Sur la planche des barres, c'est C (l'haltère avec sens)
