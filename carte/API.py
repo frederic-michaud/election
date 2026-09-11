@@ -1,20 +1,29 @@
+import functools
+import json
 import statistics
+from pathlib import Path
 
-import geojson
 import plotly
 import plotly.express as px
+from django.templatetags.static import static
+
+GEOJSON = "carte/communes.geojson"
+
+
+@functools.cache
+def nom_par_ofs():
+    with open(Path(__file__).parent / "static" / GEOJSON) as f:
+        return {e["properties"]["vogeId"]: e["properties"]["vogeName"] for e in json.load(f)["features"]}
 
 
 def generate_carte_plot(communes):
     """``communes`` : le dict ``sujet["communes"]`` du contrat de vue."""
-    with open("data/K4voge_20220501_gf.geojson") as f:
-        gj = geojson.load(f)
     all_cities = []
     all_results = []
-    for entry in gj["features"]:
-        resultat = communes.get(entry['properties']['vogeId'])
+    for ofs, nom in nom_par_ofs().items():
+        resultat = communes.get(ofs)
         if resultat is not None and resultat["oui"] is not None:
-            all_cities.append(entry["properties"]['vogeName'])
+            all_cities.append(nom)
             all_results.append(resultat["oui"] * 100)
     all_results_formated = list(map(lambda x: f'{x:.2f} %', all_results))
     dict_properties = {'name': all_cities,
@@ -31,7 +40,7 @@ def generate_carte_plot(communes):
         deciles = statistics.quantiles(valeurs_pour_couleur, n=10)
         lower_bound_color, upper_bound_color = deciles[0], deciles[-1]
     div_containing_plot = plotly.offline.plot(px.choropleth_mapbox(dict_properties,
-                                                                   geojson=gj,
+                                                                   geojson=static(GEOJSON),
                                                                    locations='name',
                                                                    color='results',
                                                                    center={"lat": 46.92, "lon": 8.22},
@@ -50,4 +59,3 @@ def generate_carte_plot(communes):
                                               include_plotlyjs=False,
                                               output_type='div')
     return div_containing_plot
-
