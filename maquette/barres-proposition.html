@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La barre retenue · maquette Politiques.ch</title>
+<style>
+/* ═══ La proposition ══════════════════════════════════════════════════════
+   Une seule barre, assemblée à partir des planches précédentes :
+   — la moustache de C4 (barres-intervalle.html) pour l'intervalle de
+     confiance du projeté, sans pastille — le chiffre suffit ;
+   — le rail teinté de R4 (barres-reperes.html) pour la majorité : rouge pâle
+     à gauche de 50, bleu pâle à droite, aucune ligne ;
+   — le trait noir du dépouillé, avec sa flèche vers l'intervalle, et une
+     règle à deux conditions : il disparaît quand l'intervalle est étroit
+     (moins de 5 points de large) ET que le dépouillé tombe dedans — il ne
+     dirait alors rien de plus que le chiffre.
+   Cinq scénarios : les trois objets du jour, la fin du dépouillement
+   (intervalle étroit, dépouillé dedans : le trait s'efface), et un
+   mi-parcours (intervalle large, dépouillé dedans : le trait reste). Le
+   curseur de marge fait basculer la règle. Palette de D′.
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --fond: #fcfcfb; --panneau: #ffffff; --bord: #e1e0d9;
+  --encre: #1f1f1c; --gris: #5f5e58; --neutre: #ecebe6;
+  --bleu: #2a78d6; --rouge: #c9352b; --rouge-pale: #f1d5d2; --bleu-pale: #d3e2f6;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--fond); color: var(--encre); font: 15px/1.5 var(--sans); }
+body { margin: 0 auto; max-width: 820px; padding: 28px 22px 60px; }
+h1 { font-size: 1.4rem; margin: 0 0 4px; letter-spacing: -.01em; }
+.intro { color: var(--gris); margin: 0 0 14px; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+.reglage { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0 0 20px; padding: 12px 16px;
+  background: var(--panneau); border: 1px solid var(--bord); border-radius: 10px; font-size: .9rem; }
+.reglage input[type=range] { flex: 1 1 200px; max-width: 360px; accent-color: var(--bleu); }
+.reglage .val { font-weight: 700; min-width: 5.5em; }
+.reglage small { color: var(--gris); }
+
+.carte { background: var(--panneau); border: 1px solid var(--bord); border-radius: 14px; padding: 20px 24px 16px; }
+.legende { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: .78rem; color: var(--gris); margin: 0 0 18px;
+  padding: 10px 12px; background: var(--fond); border-radius: 8px; }
+.legende i { display: inline-block; vertical-align: middle; margin-right: 7px; position: relative; }
+.legende i.trait { width: 2px; height: 14px; background: var(--encre); }
+.legende i.fl { width: 18px; height: 2px; background: var(--encre); }
+.legende i.fl::after { content: ""; position: absolute; right: -2px; top: -4px; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 6px solid var(--encre); }
+.legende i.mous { width: 24px; height: 3px; background: var(--bleu); }
+.legende i.mous::before, .legende i.mous::after { content: ""; position: absolute; top: -5px; width: 2px; height: 13px; background: var(--bleu); }
+.legende i.mous::before { left: 0; } .legende i.mous::after { right: 0; }
+.legende i.moitie { width: 26px; height: 9px; border-radius: 5px; background: linear-gradient(90deg, var(--rouge-pale) 50%, var(--bleu-pale) 50%); }
+
+.objet { margin: 0 0 18px; }
+.objet .nom { font-size: .86rem; color: var(--gris); margin-bottom: 2px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.objet .nom .regle { font-size: .74rem; color: var(--gris); font-style: italic; }
+.objet.fictif { border-top: 1px dashed var(--bord); padding-top: 12px; }
+.objet.fictif .nom { color: var(--bleu); }
+
+.haltere { position: relative; height: 62px; }
+.haltere .rail { position: absolute; left: 0; right: 0; top: 27px; height: 9px; border-radius: 5px;
+  background: linear-gradient(90deg, var(--rouge-pale) 50%, var(--bleu-pale) 50%); }
+.haltere .moustache { position: absolute; top: 30px; height: 3px; background: var(--c); }
+.haltere .moustache::before, .haltere .moustache::after { content: ""; position: absolute; top: -6px; width: 2px; height: 15px; background: var(--c); }
+.haltere .moustache::before { left: 0; } .haltere .moustache::after { right: 0; }
+.haltere .connu { position: absolute; top: 18px; height: 27px; width: 2px; margin-left: -1px; background: var(--encre); box-shadow: 0 0 0 1.5px #fff; }
+.haltere .trajet { position: absolute; top: 30.5px; height: 2px; background: var(--encre); }
+.haltere .fleche { position: absolute; top: 26.5px; width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-color: transparent var(--encre); }
+.haltere .fleche.droite { margin-left: -8px; border-left: 8px solid; }
+.haltere .fleche.gauche { border-right: 8px solid; }
+.haltere .v-connu { position: absolute; top: 0; transform: translateX(-50%); font-size: .74rem; color: var(--gris); white-space: nowrap; font-style: normal;
+  background: rgba(255,255,255,.9); padding: 0 3px; border-radius: 3px; }
+.haltere .v-proj { position: absolute; top: 44px; transform: translateX(-50%); font-size: .86rem; font-weight: 700; white-space: nowrap; font-style: normal; }
+.haltere .v-proj .marge { font-weight: 400; color: var(--gris); font-size: .72rem; }
+.haltere .bord-g { transform: none; } .haltere .bord-d { transform: translateX(-100%); }
+
+.regle-texte { font-size: .84rem; color: var(--gris); border-top: 1px dashed var(--bord); padding-top: 12px; margin: 6px 0 0; }
+.regle-texte b { color: var(--encre); }
+footer { color: var(--gris); font-size: .82rem; margin-top: 30px; text-align: center; }
+footer a { color: var(--bleu); }
+.absent { margin: 16px 0; padding: 14px 18px; border: 1px solid #e0b400; border-left: 5px solid #e0b400; border-radius: 8px; background: #fffbe8; }
+</style>
+</head>
+<body>
+<h1>La barre retenue</h1>
+<p class="intro">Une seule proposition, assemblée à partir des planches : la <b>moustache</b> de C4 pour
+l'intervalle du projeté, sans pastille ; le <b>rail teinté</b> de R4 pour la majorité, rouge pâle à
+gauche de 50, bleu pâle à droite, sans ligne ; le <b>trait noir</b> du dépouillé avec sa flèche vers
+l'intervalle. Et une règle à deux conditions : le trait <b>disparaît</b> quand l'intervalle est étroit,
+<b>moins de 5 points de large</b>, <b>et</b> que le dépouillé tombe dedans. Cinq scénarios, dont deux
+fictifs où le dépouillé est dans l'intervalle : l'un étroit, l'autre large. Le curseur fait basculer la
+règle.</p>
+
+<div class="reglage">
+  <label for="marge">Marge illustrative</label>
+  <input type="range" id="marge" min="0.5" max="8" step="0.5" value="3">
+  <span class="val tnum" id="marge-val"></span>
+  <small>demi-largeur autour du projeté, avant le facteur par objet</small>
+</div>
+
+<section class="carte">
+  <div class="legende">
+    <span><i class="trait"></i>dépouillé</span>
+    <span><i class="fl"></i>correction vers l'intervalle</span>
+    <span><i class="mous"></i>intervalle du projeté ; le chiffre est le projeté</span>
+    <span><i class="moitie"></i>majorité : le rail change de teinte à 50</span>
+  </div>
+  <div id="objets"></div>
+  <p class="regle-texte"><b>La règle.</b> Le trait du dépouillé s'efface si l'intervalle fait
+  <b>moins de <span id="seuil-txt"></span> points</b> de large <b>et</b> que le dépouillé est dedans : il ne
+  dirait rien de plus que le chiffre. Il reste dans tous les autres cas — dehors, quelle que soit la
+  marge ; dedans, si la marge est large, parce qu'alors « où en est le compté dans la fourchette »
+  a encore un sens.</p>
+</section>
+
+<footer>Planche de travail — données fictives, marge inventée. <a href="index.html">Retour au sommaire</a></footer>
+
+<script src="figures.js"></script>
+<script>
+if (typeof VUE === "undefined") {
+  document.body.insertAdjacentHTML("afterbegin", `<div class="absent"><b>Il manque <code>figures.js</code>.</b>
+    Depuis la racine du dépôt : <code>python maquette/construire.py</code>, puis recharger.</div>`);
+  throw new Error("figures.js absent");
+}
+
+const SEUIL = 5;   // largeur d'intervalle, en points, sous laquelle le trait du dépouillé s'efface s'il est dedans
+const P = (v) => v.toLocaleString("fr-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %";
+const N = (v) => v.toLocaleString("fr-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const C = (g) => g ? "var(--bleu)" : "var(--rouge)";
+const bord = (x) => x < 12 ? " bord-g" : x > 88 ? " bord-d" : "";
+
+// Deux scénarios fictifs, en plus des trois objets du jour. Les deux ont le
+// dépouillé dans l'intervalle ; ce qui les sépare, c'est la largeur.
+const FIN = { nom: "Scénario fictif : fin du dépouillement, 96 % des communes — intervalle étroit", oui_connu: 0.507, oui_extrapole: 0.510, fictif: true };
+const MI  = { nom: "Scénario fictif : mi-parcours, 60 % des communes — intervalle large", oui_connu: 0.479, oui_extrapole: 0.486, fictif: true };
+const SUJETS = [...VUE.sujets, FIN, MI];
+const FACTEURS = [0.7, 1, 1.4, 0.5, 1.2];
+
+function base(s, m) {
+  const k = 100 * s.oui_connu, p = 100 * s.oui_extrapole, g = p >= 50;
+  const lo = Math.max(0, p - m), hi = Math.min(100, p + m);
+  const dedans = k >= lo && k <= hi, largeur = hi - lo;
+  return { k, p, g, m, lo, hi, dedans, largeur, etroit: largeur < SEUIL,
+           cache: dedans && largeur < SEUIL, cible: p >= k ? lo : hi, c: C(g) };
+}
+
+function haltere(s, m) {
+  const b = base(s, m);
+  const trajet = b.dedans ? "" :
+    `<i class="trajet" style="left:${Math.min(b.k, b.cible)}%;width:${Math.abs(b.cible - b.k)}%"></i>
+     <i class="fleche ${b.p >= b.k ? "droite" : "gauche"}" style="left:${b.cible}%"></i>`;
+  const connu = b.cache ? "" :
+    `<i class="connu" style="left:${b.k}%"></i><em class="v-connu tnum${bord(b.k)}" style="left:${b.k}%">${P(b.k)}</em>`;
+  const mention = b.cache ? ` · dépouillé ${P(b.k)}, dans la marge` : b.dedans ? " · dépouillé dans la marge" : "";
+  const regle = b.dedans
+    ? `dedans, intervalle de ${N(b.largeur)} pts ${b.etroit ? "< " : "≥ "}${SEUIL} → trait ${b.cache ? "effacé" : "gardé"}`
+    : `dehors → trait gardé`;
+  return `<div class="nom"><span>${s.nom}</span><span class="regle tnum">${regle}</span></div>
+    <div class="haltere">
+      <i class="rail"></i>
+      <i class="moustache" style="left:${b.lo}%;width:${b.hi - b.lo}%;--c:${b.c}"></i>
+      ${trajet}${connu}
+      <em class="v-proj tnum${bord(b.p)}" style="left:${b.p}%;color:${b.c}">${P(b.p)} <span class="marge">± ${N(b.m)}${mention}</span></em>
+    </div>`;
+}
+
+const curseur = document.getElementById("marge");
+document.getElementById("seuil-txt").textContent = SEUIL;
+function dessiner() {
+  const m0 = parseFloat(curseur.value);
+  document.getElementById("marge-val").textContent = "± " + N(m0) + " pts";
+  document.getElementById("objets").innerHTML = SUJETS.map((s, i) =>
+    `<div class="objet${s.fictif ? " fictif" : ""}">${haltere(s, m0 * FACTEURS[i])}</div>`).join("");
+}
+curseur.addEventListener("input", dessiner);
+dessiner();
+</script>
+</body>
+</html>

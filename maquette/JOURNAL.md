@@ -9,6 +9,56 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-11, fin — La barre retenue
+
+**Point de départ.** Une seule proposition, à partir de C4 (moustaches), avec
+le rail teinté de R4 pour la majorité. Et une règle à deux conditions pour le
+trait du dépouillé : l'enlever si l'intervalle de confiance est petit, sous
+5 points, *et* que le dépouillé tombe dedans. Ajouter un cinquième scénario
+pour voir la différence au-dessus et en dessous de 5 points.
+
+**Ce qu'on a fait.** `barres-proposition.html`, une page pour une barre :
+
+- *L'intervalle* est la moustache de C4 — un trait horizontal de 3 px dans la
+  couleur du verdict projeté, deux taquets — sans pastille. Le chiffre est le
+  projeté.
+- *La majorité* est le rail teinté de R4 : rouge pâle à gauche de 50, bleu
+  pâle à droite, 9 px de haut, aucune ligne. La question « l'intervalle
+  passe-t-il 50 ? » se lit comme « la moustache chevauche-t-elle la
+  frontière ? ».
+- *Le dépouillé* est le trait noir à halo, avec la flèche vers le bord de
+  l'intervalle quand il est dehors. **Règle** : il s'efface si l'intervalle
+  fait moins de 5 points de large (bornes comprises : `hi − lo < 5`) *et* que
+  le dépouillé est dedans. Sa valeur passe alors dans l'étiquette du projeté,
+  « dépouillé 50,7 %, dans la marge ». Dedans mais intervalle large : le trait
+  reste, sans flèche.
+- *Cinq scénarios* : les trois objets du jour, la fin du dépouillement
+  (étroit, dedans, × 0,5 : le trait s'efface) et un mi-parcours fictif à
+  47,9 → 48,6 %, × 1,2 (large, dedans : le trait reste). À côté de chaque nom,
+  la règle appliquée est écrite : « dedans, intervalle de 7,2 pts ≥ 5 → trait
+  gardé ». Au curseur, le mi-parcours bascule entre ± 2 et ± 2,5, la fin entre
+  ± 4,5 et ± 5.
+
+**Décisions.**
+
+- *Le seuil est une constante de la page*, `SEUIL = 5`, mesuré en largeur
+  totale d'intervalle. Si le site calcule un jour une marge, c'est elle qui le
+  fixera — et il faudra dire si 5 points, c'est ± 2,5 ou ± 5.
+- *La règle est écrite à côté de chaque barre*, pour la maquette seulement :
+  c'est un outil de discussion, pas un élément du site.
+- *La flèche reste noire*, comme le trait : les faits en encre, le verdict en
+  couleur sur la moustache. Le rail ne porte que la teinte du côté.
+
+**Ce qu'on a vu.** Sur le rail teinté, la moustache colorée se lit bien, y
+compris quand elle chevauche la frontière — un trait bleu qui mord dans le
+rose dit « en jeu » sans mot. Quand le trait s'efface, la barre devient très
+calme : une moustache courte, un chiffre. C'est l'état de fin de soirée, et
+c'est ce qu'on voulait.
+
+**Ouvert.** Reporter cette barre dans D′, à la place de la piste actuelle —
+et poser à la voie Moteur la question de la marge, dont dépend désormais la
+règle d'affichage.
+
 ## 2026-09-11, suite — La barre noire change de côté ; deux traits qui se ressemblent
 
 **Point de départ.** Deux suggestions. Sur C1, mettre la barre noire toujours
