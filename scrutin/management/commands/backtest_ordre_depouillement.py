@@ -518,7 +518,8 @@ class Command(BaseCommand):
             axe.set_ylabel("% oui projeté")
             axe.legend(fontsize=7)
             figure.tight_layout()
-            figure.savefig(sortie / f"objet_{ctx['sujet_id']:03d}.png", dpi=110)
+            for suffixe in ("png", "pdf"):
+                figure.savefig(sortie / f"objet_{ctx['sujet_id']:03d}.{suffixe}", dpi=110)
             plt.close(figure)
 
         colonnes = 5
@@ -530,9 +531,10 @@ class Command(BaseCommand):
         for axe in np.ravel(axes)[len(meta):]:
             axe.axis("off")
         figure.tight_layout()
-        figure.savefig(sortie / "recapitulatif.png", dpi=100)
+        for suffixe in ("png", "pdf"):
+            figure.savefig(sortie / f"recapitulatif.{suffixe}", dpi=100)
         plt.close(figure)
-        self.journal(f"Figures : {sortie}/objet_*.png et recapitulatif.png")
+        self.journal(f"Figures : {sortie}/objet_*.{{png,pdf}} et recapitulatif.{{png,pdf}}")
 
     def tracer(self, axe, ctx, courbes, grille_avance, marge, compact=False):
         vrai = 100 * ctx["vrai_oui"]
