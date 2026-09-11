@@ -1,12 +1,6 @@
 """Fabrique ``carte/static/carte/communes.geojson`` à partir du GeoJSON source.
 
-La carte ne charge plus les contours dans Plotly : elle les référence par URL,
-et le navigateur ne les télécharge qu'une fois pour toutes les cartes de la
-page. Le fichier servi est allégé : coordonnées arrondies à 5 décimales
-(1e-5 degré ≈ 1 m, sous le pixel à toute échelle ; le fichier source en
-affiche 15, soit le nanomètre) et seules les propriétés utiles à la carte.
-
-À relancer quand le GeoJSON source change, puis committer le résultat.
+À relancer quand la source est mise à jour, puis committer le résultat.
 """
 
 import json

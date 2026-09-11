@@ -7,11 +7,6 @@ import plotly
 import plotly.express as px
 from django.templatetags.static import static
 
-# Les contours ne passent pas par Plotly : la figure ne contient que l'URL du
-# fichier statique (fabriqué par ``manage.py alleger_geojson``), que le
-# navigateur télécharge une fois pour toutes les cartes de la page. Incruster
-# le GeoJSON coûtait ~1 s de CPU par carte (copie profonde, validation) et
-# 1,1 Mo de HTML par carte.
 GEOJSON = "carte/communes.geojson"
 
 
