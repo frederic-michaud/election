@@ -9,6 +9,30 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-11, nuit, épilogue — Le dépouillé calé sur la fin de la barre
+
+**Point de départ.** Essayer de centrer le dépouillé gris, chiffre et
+pastille, sur la droite du panneau — sans documenter ni commiter tant que le
+résultat n'était pas sûr.
+
+**Deux essais.**
+
+1. *Centré dans la place qui reste à droite de l'extrapolé.* Le bloc gris
+   flottait au milieu de l'espace libre, ni collé à l'extrapolé ni au bord :
+   pas assez à droite.
+2. *Poussé à droite, aligné sur la fin de la barre.* Le chiffre et la pastille
+   restent centrés l'un sur l'autre ; le plus large des deux, la pastille, tombe
+   exactement sur l'extrémité droite de la barre. Retenu.
+
+**Pourquoi ça marche.** Les deux valeurs encadrent désormais la barre :
+l'extrapolé commence avec elle à gauche, le dépouillé finit avec elle à droite.
+Le panneau gagne une grille implicite, et l'écart entre les deux chiffres
+devient la place libre du panneau plutôt qu'un espacement fixe.
+
+**Vérifié.** Au pixel près à 375, 1000 et 1240 px : bord du bloc et bord de la
+barre confondus, chiffre et pastille centrés, les deux valeurs côte à côte dans
+tous les panneaux.
+
 ## 2026-09-11, nuit, fin — Les pastilles reviennent, les chiffres respirent
 
 **Point de départ.** Les pastilles manquent, et la reprise de couleur sous les

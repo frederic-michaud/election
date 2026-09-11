@@ -68,6 +68,9 @@ header { display: flex; align-items: center; justify-content: space-between; gap
    côte à côte dans tous les panneaux à la fois. La première déclaration sert aux
    navigateurs sans requêtes de conteneur. */
 .valeurs { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 8px 28px; gap: 8px 9cqi; margin: 10px 0 14px; }
+/* Le dépouillé, chiffre et pastille centrés l'un sur l'autre, est poussé à
+   droite : son bord tombe sur la fin de la barre, l'extrapolé sur son début. */
+.valeurs > div + div { margin-left: auto; text-align: center; }
 .panneau .chiffre { font-size: clamp(2.8rem, 6vw, 4.2rem); font-size: clamp(2.2rem, 16cqi, 4.2rem);
   font-weight: 800; line-height: .95; letter-spacing: -.035em; }
 .panneau .chiffre-connu { font-size: clamp(1.2rem, 2.4vw, 1.75rem); font-size: clamp(1rem, 6.7cqi, 1.75rem);
