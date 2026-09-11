@@ -67,13 +67,18 @@ header { display: flex; align-items: center; justify-content: space-between; gap
    panneau est plus étroit qu'un téléphone, et les deux valeurs doivent y tenir
    côte à côte dans tous les panneaux à la fois. La première déclaration sert aux
    navigateurs sans requêtes de conteneur. */
-.valeurs { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 8px 18px; margin: 10px 0 14px; }
-.panneau .chiffre { font-size: clamp(3.2rem, 7vw, 4.6rem); font-size: clamp(2.4rem, calc(20.5cqi - 5px), 4.6rem);
+.valeurs { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 8px 28px; gap: 8px 9cqi; margin: 10px 0 14px; }
+.panneau .chiffre { font-size: clamp(2.8rem, 6vw, 4.2rem); font-size: clamp(2.2rem, 16cqi, 4.2rem);
   font-weight: 800; line-height: .95; letter-spacing: -.035em; }
-.panneau .chiffre-connu { font-size: clamp(1.5rem, 2.6vw, 1.9rem); font-size: clamp(1.1rem, calc(8.6cqi - 2px), 1.9rem);
+.panneau .chiffre-connu { font-size: clamp(1.2rem, 2.4vw, 1.75rem); font-size: clamp(1rem, 6.7cqi, 1.75rem);
   font-weight: 700; line-height: 1; letter-spacing: -.02em; color: var(--gris); }
-.panneau .libelle { font-size: .74rem; font-weight: 700; letter-spacing: .1em;
-  text-transform: uppercase; margin-top: 6px; color: var(--gris); }
+/* Les libellés en pastille, comme l'était « accepté / refusé » : teinte du verdict
+   pour l'extrapolé, gris pour le dépouillé. */
+.panneau .libelle { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; padding: 4px 10px; border-radius: 999px; margin-top: 8px;
+  color: var(--gris); background: rgba(95,94,88,.1); }
+.panneau .libelle.oui { color: var(--oui); background: rgba(42,120,214,.12); }
+.panneau .libelle.non { color: var(--non); background: rgba(201,53,43,.12); }
 .oui { color: var(--oui); } .non { color: var(--non); }
 /* La barre finale (barres-proposition.html), sans texte : les chiffres sont
    au-dessus. Le gris dit ce qu'on a compté, la couleur du verdict ce qu'on estime. */

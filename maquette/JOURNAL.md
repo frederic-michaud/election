@@ -9,6 +9,28 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-11, nuit, fin — Les pastilles reviennent, les chiffres respirent
+
+**Point de départ.** Les pastilles manquent, et la reprise de couleur sous les
+pourcentages, surtout pour celui en couleur. Et un peu plus d'espace entre les
+deux chiffres, en les faisant un peu plus petits.
+
+**Ce qu'on a fait.**
+
+- *Les libellés redeviennent des pastilles*, avec la typographie de l'ancienne
+  « accepté / refusé » : « extrapolé » sur fond teinté du verdict, texte dans la
+  même couleur ; « dépouillé » sur fond gris très pâle, texte gris. Un peu plus
+  compactes qu'avant (0,7 rem, 4 × 10 px) pour tenir à côté du grand chiffre.
+- *Plus d'espace, des chiffres plus petits*, toujours proportionnels à la
+  largeur du panneau : l'écart passe à 9 % de la largeur (31 px sur grand écran
+  au lieu de 18), le grand chiffre à 16 % (55 px au lieu de 65 sur grand écran,
+  46 au lieu de 53 sur téléphone), le petit suit.
+
+**Ce qu'on a vu.** Côte à côte dans tous les panneaux à 375, 700, 1000 et
+1240 px, avec au moins 11 px de marge à droite. À 1000 px, sur trois colonnes
+étroites, le grand chiffre descend à 42 px : c'est la largeur la plus serrée du
+mur, et la seule où il perd de son effet « soirée électorale ».
+
 ## 2026-09-11, nuit, suite — D′ allégé : les chiffres au-dessus, la barre sans texte
 
 **Point de départ.** Avec la barre finale, les panneaux de D′ font très
