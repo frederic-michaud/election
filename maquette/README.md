@@ -46,7 +46,7 @@ généré venait à manquer, la page le dit au lieu de s'afficher vide
 | **B** | Tableau de bord | Aucun objet privilégié, tout en un écran. Une ligne par objet, dot plot dépouillé → projeté. |
 | **C** | Cartes d'abord | La carte plein cadre, onglets, chiffre en surimpression. La seule en carte Mapbox. |
 | **D** | Soirée électorale | Fond sombre, chiffres énormes, pensée pour être projetée ou regardée de loin. |
-| **D′** | Soirée électorale, fond clair | La même page que D sur fond blanc, avec la palette validée sur fond clair. Pour trancher sombre / clair. |
+| **D′** | Soirée électorale, fond clair | **La variante retenue.** D sur fond clair, logo SVG, en-tête compact sur téléphone, et la barre finale des planches pour chaque objet. |
 | **E** | Écart à la majorité | « À 3,1 points » plutôt que « 46,9 % ». Axe centré sur 50 %, la correction de l'extrapolation rendue visible. |
 
 `index.html` les liste ; chaque fichier porte son parti pris en commentaire en
@@ -68,7 +68,7 @@ sépare est un choix, pas un hasard.
 | `barres.html` | planche : dix barres « dépouillé / projeté » à comparer, sans Plotly | oui |
 | `barres-intervalle.html` | planche : neuf variations de l'haltère C avec un intervalle de confiance et sans pastille, quatre scénarios dont la fin du dépouillement, marge réglable | oui |
 | `barres-reperes.html` | planche : huit façons de distinguer le trait du dépouillé de celui de la majorité, sur la forme C2 | oui |
-| `barres-proposition.html` | la barre retenue : moustache + rail teinté, dépouillé en gris seulement hors de l'intervalle, chiffres dessous et mots dessus qui s'écartent, cinq scénarios | oui |
+| `barres-proposition.html` | **la barre finale**, reportée dans D′ : moustache + rail teinté, dépouillé en gris seulement hors de l'intervalle, chiffres dessous et mots dessus qui s'écartent ; reste comme référence avec ses cinq scénarios | oui |
 | `capture.mjs` | capture PNG d'une variante (Playwright), pour discuter par message | oui |
 | `figures.js` | contrat de vue + figures en JSON (`window.VUE`, `FIGURES`, `GEOJSON`) | oui (généré, 1,8 Mo) |
 | `plotly.min.js` | plotly.js, copié du paquet Python — la version qui a produit les figures | oui (généré, 4,6 Mo) |

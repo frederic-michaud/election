@@ -9,6 +9,56 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-11, nuit — La barre est finale, et elle entre dans D′
+
+**Décision.** La barre de `barres-proposition.html`, dans son état du commit
+précédent, est **la version finale**. Elle est reportée dans D′ à la place de
+la piste. Toute évolution de la barre se fait désormais dans D′ ; la planche
+reste comme référence, avec ses cinq scénarios et son curseur.
+
+**La barre finale, en résumé.**
+
+- *Intervalle de confiance de l'extrapolation* : une moustache, trait de 3 px
+  et deux taquets, dans la couleur du verdict. Pas de pastille.
+- *Majorité* : le rail change de teinte à 50, rouge pâle à gauche, bleu pâle à
+  droite. Aucune ligne.
+- *Dépouillé* : un trait gris, avec une flèche grise vers le bord de
+  l'intervalle, **seulement s'il est hors de l'intervalle**. Dedans, rien.
+- *Couleurs* : le gris dit ce qu'on a compté (trait, flèche, mot, chiffre du
+  dépouillé), la couleur du verdict ce qu'on estime (moustache, mot et chiffre
+  de l'extrapolation).
+- *Étiquettes* : les mots « extrapolation » et « dépouillé » en petit au-dessus,
+  les pourcentages en dessous, centrés sur leur marque. S'ils se chevauchent,
+  chacun s'aligne du côté opposé à l'autre ; s'ils se touchent encore, le
+  dépouillé perd son mot et son chiffre. Mesuré dans la page.
+
+**Ce qu'on a fait dans D′.**
+
+- La piste (barre pleine jusqu'au projeté, trait à 50) et la ligne « projeté ·
+  dépouillé : 54,4 % » sont remplacées par la barre finale.
+- *Les marges sont inventées*, les mêmes que la planche par défaut
+  (± 2,1, ± 3, ± 4,2 pour LTr, LSU, LPP), dans une constante `MARGES` commentée ;
+  le pied de page dit « intervalles de confiance illustratifs ».
+- *Les classes sont préfixées `.barre`* pour ne pas heurter celles de D′
+  (`.chiffre` y est le grand pourcentage, `.carte` la carte, `.rail` la jauge
+  d'avancement).
+- *Le placement se recalcule sans redessiner les cartes* : un
+  `ResizeObserver` sur le mur replace les étiquettes quand sa largeur change,
+  y compris quand la barre de défilement apparaît.
+
+**Ce qu'on a vu.** Sur grand écran (barres de 341 px) comme sur téléphone
+(285 px), les trois objets gardent leurs deux chiffres, écartés ; ni
+chevauchement ni débordement, aucune erreur. Le grand pourcentage du panneau
+et le chiffre de l'extrapolation sous la barre disent la même chose : c'est
+voulu par la barre finale, mais c'est un doublon dans D′.
+
+**Ouvert.**
+
+- Le doublon : garder le chiffre de l'extrapolation sous la barre, ou le
+  laisser au grand pourcentage du panneau.
+- La marge réelle : une demande à la voie Moteur, un champ par objet dans le
+  contrat de vue, et `tests/test_contrat.py` qui suit.
+
 ## 2026-09-11, soir, suite — Le dépouillé seulement dehors, deux familles de couleur
 
 **Point de départ.** Trois décisions :

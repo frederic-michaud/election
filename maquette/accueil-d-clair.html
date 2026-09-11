@@ -13,11 +13,18 @@
    Ce qu'on vérifie ici : est-ce que le « mur de résultats » tient sans le
    noir ? Le sombre donne la solennité de la soirée ; le clair donne la
    lisibilité de jour, l'impression papier, et une palette déjà validée.
+   La barre de chaque objet est la barre finale des planches
+   (barres-proposition.html) : la moustache pour l'intervalle de confiance de
+   l'extrapolation, le rail teinté pour la majorité, le dépouillé en gris avec
+   sa flèche seulement quand il est hors de l'intervalle, des mots discrets
+   dessus et les chiffres dessous. L'intervalle n'existe pas encore dans le
+   contrat de vue : ses marges sont inventées, voir MARGES plus bas.
    ════════════════════════════════════════════════════════════════════════ */
 :root {
   --fond: #fcfcfb; --panneau: #ffffff; --bord: #e1e0d9;
   --encre: #1f1f1c; --gris: #5f5e58;
   --oui: #2a78d6; --oui-clair: #86b6ef; --non: #c9352b; --neutre: #ecebe6;
+  --fleche: #9d9c96; --discret: #8f8e88; --rouge-pale: #f1d5d2; --bleu-pale: #d3e2f6;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 * { box-sizing: border-box; }
@@ -59,10 +66,29 @@ header { display: flex; align-items: center; justify-content: space-between; gap
   text-transform: uppercase; padding: 5px 12px; border-radius: 999px; margin-bottom: 16px; }
 .etiquette.oui { background: rgba(42,120,214,.12); }
 .etiquette.non { background: rgba(201,53,43,.12); }
-.piste { position: relative; height: 12px; background: var(--neutre); border-radius: 6px; }
-.piste i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; }
-.piste b { position: absolute; top: -5px; bottom: -5px; left: 50%; width: 2px; background: var(--encre); opacity: .7; }
-.sous { display: flex; justify-content: space-between; font-size: .8rem; color: var(--gris); margin-top: 8px; }
+/* La barre finale (barres-proposition.html). De haut en bas : les mots, le trait
+   et le rail, les chiffres. Le gris dit ce qu'on a compté, la couleur du verdict
+   ce qu'on estime. */
+.barre { position: relative; height: 62px; }
+.barre .rail { position: absolute; left: 0; right: 0; top: 25px; height: 9px; border-radius: 5px;
+  background: linear-gradient(90deg, var(--rouge-pale) 50%, var(--bleu-pale) 50%); }
+.barre .moustache { position: absolute; top: 28px; height: 3px; background: var(--c); }
+.barre .moustache::before, .barre .moustache::after { content: ""; position: absolute; top: -6px; width: 2px; height: 15px; background: var(--c); }
+.barre .moustache::before { left: 0; } .barre .moustache::after { right: 0; }
+.barre .connu { position: absolute; top: 17px; height: 25px; width: 2px; margin-left: -1px; background: var(--fleche); box-shadow: 0 0 0 1.5px #fff; }
+.barre .trajet { position: absolute; top: 28.5px; height: 2px; background: var(--fleche); }
+.barre .fleche { position: absolute; top: 25.5px; width: 0; height: 0; color: var(--fleche); border-top: 4px solid transparent; border-bottom: 4px solid transparent; }
+.barre .fleche.droite { margin-left: -7px; border-left: 7px solid; }
+.barre .fleche.gauche { border-right: 7px solid; }
+.barre em { position: absolute; transform: translateX(-50%); white-space: nowrap; font-style: normal; }
+.barre .mot { top: 0; font-size: .68rem; line-height: 14px; color: var(--discret); letter-spacing: .01em; }
+.barre .nb { top: 42px; font-size: .82rem; line-height: 18px; font-variant-numeric: tabular-nums; }
+.barre .nb-connu { color: var(--gris); }
+.barre .nb-proj { font-weight: 700; }
+.barre .bord-g { transform: none; } .barre .bord-d { transform: translateX(-100%); }
+.barre .vers-g { transform: translateX(-100%) !important; }
+.barre .vers-d { transform: none !important; }
+.barre [hidden] { display: none !important; }
 .carte { margin-top: 12px; }
 footer { color: var(--gris); font-size: .82rem; margin-top: 26px; text-align: center; }
 footer a { color: var(--oui); }
@@ -116,7 +142,7 @@ footer a { color: var(--oui); }
 
 <section class="mur" id="mur"></section>
 
-<footer>Projections extrapolées des communes dépouillées. Maquette — données fictives. <a href="#">La méthode</a></footer>
+<footer>Projections extrapolées des communes dépouillées. Maquette — données fictives, intervalles de confiance illustratifs. <a href="#">La méthode</a></footer>
 
 <script src="plotly.min.js"></script>
 <script src="topojson-stub.js"></script>
@@ -134,6 +160,55 @@ const THEME = {
 };
 const pct = (v, d = 1) => (100 * v).toLocaleString("fr-CH", { minimumFractionDigits: d, maximumFractionDigits: d }) + " %";
 
+// ── La barre finale ──────────────────────────────────────────────────────
+// L'intervalle de confiance n'est pas dans le contrat de vue : ces marges
+// (demi-largeur, en points) sont inventées — celles de la planche par défaut,
+// ± 3 × 0,7, × 1, × 1,4 — en attendant que la voie Moteur en calcule une.
+const MARGES = [2.1, 3, 4.2];
+const ECART = 8;   // pixels minimum entre deux étiquettes voisines
+const bord = (x) => x < 12 ? " bord-g" : x > 88 ? " bord-d" : "";
+
+function barre(s, m) {
+  const k = 100 * s.oui_connu, p = 100 * s.oui_extrapole, c = p >= 50 ? "var(--oui)" : "var(--non)";
+  const lo = Math.max(0, p - m), hi = Math.min(100, p + m), cible = p >= k ? lo : hi;
+  // Le dépouillé ne se dessine que s'il est hors de l'intervalle.
+  const depouille = k >= lo && k <= hi ? "" :
+    `<i class="trajet" style="left:${Math.min(k, cible)}%;width:${Math.abs(cible - k)}%"></i>
+     <i class="fleche ${p >= k ? "droite" : "gauche"}" style="left:${cible}%"></i>
+     <i class="connu" style="left:${k}%"></i>
+     <em class="mot mot-connu${bord(k)}" style="left:${k}%">dépouillé</em>
+     <em class="nb nb-connu${bord(k)}" style="left:${k}%">${pct(s.oui_connu)}</em>`;
+  return `<div class="barre" data-k="${k}" data-p="${p}">
+    <i class="rail"></i>
+    <i class="moustache" style="left:${lo}%;width:${hi - lo}%;--c:${c}"></i>
+    ${depouille}
+    <em class="mot mot-proj${bord(p)}" style="left:${p}%;color:${c}">extrapolation</em>
+    <em class="nb nb-proj${bord(p)}" style="left:${p}%;color:${c}">${pct(s.oui_extrapole)}</em>
+  </div>`;
+}
+
+// Les étiquettes sont centrées sous et sur leur marque. Si elles se chevauchent,
+// chacune s'aligne du côté opposé à l'autre ; si elles se touchent encore, le
+// dépouillé perd son mot et son chiffre. Mesuré dans la page, à chaque largeur.
+const rect = (e) => e.getBoundingClientRect();
+const touche = (a, b) => { const A = rect(a), B = rect(b); return A.left < B.right + ECART && B.left < A.right + ECART; };
+const deborde = (e, h) => { const r = rect(e), H = rect(h); return r.left < H.left - 1 || r.right > H.right + 1; };
+function placer(h) {
+  h.querySelectorAll("em").forEach((e) => { e.hidden = false; e.classList.remove("vers-g", "vers-d"); });
+  const kc = h.querySelector(".nb-connu");
+  if (!kc) return;
+  const pc = h.querySelector(".nb-proj"), pm = h.querySelector(".mot-proj"), km = h.querySelector(".mot-connu");
+  if (!touche(pc, kc) && !touche(pm, km)) return;
+  const kGauche = parseFloat(h.dataset.k) < parseFloat(h.dataset.p);
+  const ext = kGauche ? "vers-d" : "vers-g", dep = kGauche ? "vers-g" : "vers-d";
+  [[pc, ext], [pm, ext], [kc, dep], [km, dep]].forEach(([e, cote]) => e.classList.add(cote));
+  if (touche(pc, kc) || touche(pm, km) || [pc, kc, pm, km].some((e) => deborde(e, h))) {
+    h.querySelectorAll("em").forEach((e) => e.classList.remove("vers-g", "vers-d"));
+    kc.hidden = true; km.hidden = true;
+  }
+}
+const placerTout = () => document.querySelectorAll(".barre").forEach(placer);
+
 document.getElementById("date").textContent =
   new Date(VUE.date).toLocaleDateString("fr-CH", { day: "numeric", month: "long", year: "numeric" });
 document.getElementById("heure").textContent =
@@ -147,13 +222,16 @@ document.getElementById("mur").innerHTML = VUE.sujets.map((s, i) => {
     <div class="nom">${s.nom}</div>
     <div class="chiffre ${g ? "oui" : "non"}">${pct(s.oui_extrapole)}</div>
     <div><span class="etiquette ${g ? "oui" : "non"}">${g ? "accepté" : "refusé"}</span></div>
-    <div class="piste">
-      <i style="width:${100 * s.oui_extrapole}%;background:${g ? "var(--oui)" : "var(--non)"}"></i><b></b>
-    </div>
-    <div class="sous"><span>projeté</span><span>dépouillé : ${pct(s.oui_connu)}</span></div>
+    ${barre(s, MARGES[i] ?? 3)}
     <div class="carte" id="carte-${i}"></div>
   </article>`;
 }).join("");
+
+placerTout();
+// Le mur change de largeur avec la fenêtre, et quand la barre de défilement apparaît.
+let attente;
+new ResizeObserver(() => { cancelAnimationFrame(attente); attente = requestAnimationFrame(placerTout); })
+  .observe(document.getElementById("mur"));
 
 VUE.sujets.forEach((s, i) => tracer("carte-" + i, FIGURES.cartes_svg[s.id], "carte_svg", THEME));
 </script>
