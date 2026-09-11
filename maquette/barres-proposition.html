@@ -5,27 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>La barre retenue · maquette Politiques.ch</title>
 <style>
-/* ═══ La proposition ══════════════════════════════════════════════════════
+/* ═══ La barre retenue ═══════════════════════════════════════════════════
    Une seule barre, assemblée à partir des planches précédentes :
    — la moustache de C4 (barres-intervalle.html) pour l'intervalle de
      confiance de l'extrapolation, sans pastille ;
    — le rail teinté de R4 (barres-reperes.html) pour la majorité : rouge pâle
      à gauche de 50, bleu pâle à droite, aucune ligne ;
-   — le trait noir du dépouillé, et une flèche grise, discrète, vers
+   — le dépouillé, en gris comme sa flèche, qui ne s'affiche que hors de
      l'intervalle.
-   Deux règles d'affichage :
-   — le trait du dépouillé disparaît quand l'intervalle est étroit (moins de
-     5 points de large) ET que le dépouillé tombe dedans ;
-   — les deux pourcentages sont sous la barre, chacun sous sa marque, et deux
-     mots discrets au-dessus disent laquelle est laquelle. Quand les chiffres
-     se chevauchent, seul celui de l'extrapolation reste, avec son mot. Les
-     chevauchements sont mesurés dans la page, à chaque largeur d'écran.
-   Deux variations suivent : les étiquettes qui s'écartent avant de
-   disparaître, et la flèche en pointillé sans pointe.
-   Cinq scénarios : les trois objets du jour, la fin du dépouillement
-   (intervalle étroit, dépouillé dedans) et un mi-parcours (intervalle large,
-   dépouillé dedans). Le curseur de marge fait basculer les règles.
-   Palette de D′.
+   Deux familles de couleur : le gris dit ce qu'on a compté (trait, flèche,
+   mot, chiffre du dépouillé), la couleur du verdict dit ce qu'on estime
+   (moustache, mot et chiffre de l'extrapolation).
+   Les deux pourcentages sont sous la barre, deux mots discrets au-dessus.
+   Quand ils se chevauchent, ils s'écartent d'abord, chacun du côté opposé à
+   l'autre ; si écartés ils se touchent encore, seule l'extrapolation reste.
+   Les chevauchements sont mesurés dans la page, à chaque largeur d'écran.
+   Cinq scénarios : les trois objets du jour, et deux fictifs où le dépouillé
+   est dans l'intervalle, l'un étroit, l'autre large. Palette de D′.
    ════════════════════════════════════════════════════════════════════════ */
 :root {
   --fond: #fcfcfb; --panneau: #ffffff; --bord: #e1e0d9;
@@ -46,18 +42,13 @@ h1 { font-size: 1.4rem; margin: 0 0 4px; letter-spacing: -.01em; }
 .reglage .val { font-weight: 700; min-width: 5.5em; }
 .reglage small { color: var(--gris); }
 
-.carte { background: var(--panneau); border: 1px solid var(--bord); border-radius: 14px; padding: 18px 24px 14px; margin-bottom: 18px; }
-.carte h2 { font-size: 1rem; margin: 0; display: flex; align-items: center; gap: 10px; }
-.lettre { display: inline-block; min-width: 26px; height: 26px; line-height: 26px; padding: 0 6px; text-align: center; border-radius: 6px;
-  background: var(--bleu); color: #fff; font-weight: 700; font-size: .82rem; }
-.carte.variation .lettre { background: var(--gris); }
-.carte .parti { color: var(--gris); font-size: .86rem; margin: 6px 0 12px; }
+.carte { background: var(--panneau); border: 1px solid var(--bord); border-radius: 14px; padding: 18px 24px 14px; }
 .legende { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: .76rem; color: var(--gris); margin: 0 0 16px;
   padding: 8px 12px; background: var(--fond); border-radius: 8px; }
 .legende i { display: inline-block; vertical-align: middle; margin-right: 7px; position: relative; }
+.legende i.trait { width: 2px; height: 14px; background: var(--fleche); }
 .legende i.fl { width: 18px; height: 2px; background: var(--fleche); }
 .legende i.fl::after { content: ""; position: absolute; right: -2px; top: -4px; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 6px solid var(--fleche); }
-.legende i.fl-pointille { width: 22px; height: 2px; background: repeating-linear-gradient(90deg, #7f7e78 0 3px, transparent 3px 6px); }
 .legende i.mous { width: 24px; height: 3px; background: var(--bleu); }
 .legende i.mous::before, .legende i.mous::after { content: ""; position: absolute; top: -5px; width: 2px; height: 13px; background: var(--bleu); }
 .legende i.mous::before { left: 0; } .legende i.mous::after { right: 0; }
@@ -78,13 +69,11 @@ h1 { font-size: 1.4rem; margin: 0 0 4px; letter-spacing: -.01em; }
 .haltere .moustache { position: absolute; top: 28px; height: 3px; background: var(--c); }
 .haltere .moustache::before, .haltere .moustache::after { content: ""; position: absolute; top: -6px; width: 2px; height: 15px; background: var(--c); }
 .haltere .moustache::before { left: 0; } .haltere .moustache::after { right: 0; }
-.haltere .connu { position: absolute; top: 17px; height: 25px; width: 2px; margin-left: -1px; background: var(--encre); box-shadow: 0 0 0 1.5px #fff; }
+.haltere .connu { position: absolute; top: 17px; height: 25px; width: 2px; margin-left: -1px; background: var(--fleche); box-shadow: 0 0 0 1.5px #fff; }
 .haltere .trajet { position: absolute; top: 28.5px; height: 2px; background: var(--fleche); }
 .haltere .fleche { position: absolute; top: 25.5px; width: 0; height: 0; color: var(--fleche); border-top: 4px solid transparent; border-bottom: 4px solid transparent; }
 .haltere .fleche.droite { margin-left: -7px; border-left: 7px solid; }
 .haltere .fleche.gauche { border-right: 7px solid; }
-.haltere.fleche-pointillee .trajet { background: repeating-linear-gradient(90deg, #7f7e78 0 3px, transparent 3px 6px); }
-.haltere.fleche-pointillee .fleche { display: none; }
 .haltere em { position: absolute; transform: translateX(-50%); white-space: nowrap; font-style: normal; }
 .haltere .mot { top: 0; font-size: .68rem; line-height: 14px; color: var(--discret); letter-spacing: .01em; }
 .haltere .chiffre { top: 42px; font-size: .82rem; line-height: 18px; }
@@ -102,13 +91,12 @@ footer a { color: var(--bleu); }
 </head>
 <body>
 <h1>La barre retenue</h1>
-<p class="intro">Une seule proposition, assemblée à partir des planches : la <b>moustache</b> de C4 pour
-l'intervalle de l'extrapolation, le <b>rail teinté</b> de R4 pour la majorité, le <b>trait noir</b> du
-dépouillé et une <b>flèche grise</b> vers l'intervalle. Les deux pourcentages sont sous la barre, deux mots
-discrets au-dessus disent lequel est lequel ; quand les chiffres se chevauchent, seule l'extrapolation
-reste. Le trait du dépouillé s'efface quand l'intervalle fait moins de 5 points de large et qu'il tombe
-dedans. Deux variations suivent. Cinq scénarios, dont deux fictifs ; le curseur fait varier la marge, et
-la mise en page se recalcule à chaque largeur d'écran — à regarder aussi sur téléphone.</p>
+<p class="intro">La moustache pour l'intervalle de l'extrapolation, le rail teinté pour la majorité, et le
+dépouillé en gris, avec sa flèche, <b>seulement quand il est hors de l'intervalle</b>. Le gris dit ce
+qu'on a compté, la couleur du verdict ce qu'on estime. Les deux pourcentages sont sous la barre, deux
+mots discrets au-dessus ; quand ils se chevauchent, ils s'écartent, et si ça ne suffit pas, seule
+l'extrapolation reste. Cinq scénarios, dont deux fictifs ; le curseur fait varier la marge, et la mise
+en page se recalcule à chaque largeur d'écran — à regarder aussi sur téléphone.</p>
 
 <div class="reglage">
   <label for="marge">Marge illustrative</label>
@@ -117,7 +105,19 @@ la mise en page se recalcule à chaque largeur d'écran — à regarder aussi su
   <small>demi-largeur autour de l'extrapolation, avant le facteur par objet</small>
 </div>
 
-<div id="cartes"></div>
+<section class="carte">
+  <div class="legende">
+    <span><i class="moitie"></i>majorité : le rail change de teinte à 50</span>
+    <span><i class="mous"></i>intervalle de l'extrapolation</span>
+    <span><i class="trait"></i><i class="fl"></i>dépouillé et correction, s'il est hors de l'intervalle</span>
+  </div>
+  <div id="objets"></div>
+  <p class="note"><b>Les règles.</b> Le dépouillé — trait, flèche, mot, chiffre — ne s'affiche que s'il est
+  hors de l'intervalle. Chaque pourcentage est centré sous sa marque, son mot au-dessus. Si les chiffres ou
+  les mots se chevauchent, ils s'alignent chacun du côté opposé à l'autre ; si écartés ils se touchent encore,
+  le dépouillé perd son chiffre et son mot, et seule l'extrapolation reste. La ligne en italique à côté de
+  chaque nom dit ce qui s'est appliqué ; elle n'appartient pas à la barre.</p>
+</section>
 
 <footer>Planche de travail — données fictives, marge inventée. <a href="index.html">Retour au sommaire</a></footer>
 
@@ -129,15 +129,14 @@ if (typeof VUE === "undefined") {
   throw new Error("figures.js absent");
 }
 
-const SEUIL = 5;   // largeur d'intervalle, en points, sous laquelle le trait du dépouillé s'efface s'il est dedans
 const ECART = 8;   // pixels minimum entre deux étiquettes voisines
 const P = (v) => v.toLocaleString("fr-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %";
 const N = (v) => v.toLocaleString("fr-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const C = (g) => g ? "var(--bleu)" : "var(--rouge)";
 const bord = (x) => x < 12 ? " bord-g" : x > 88 ? " bord-d" : "";
 
-// Deux scénarios fictifs, en plus des trois objets du jour. Les deux ont le
-// dépouillé dans l'intervalle ; ce qui les sépare, c'est la largeur.
+// Deux scénarios fictifs, en plus des trois objets du jour : le dépouillé est
+// dans l'intervalle, l'un étroit, l'autre large. Dans les deux, il ne s'affiche pas.
 const FIN = { nom: "Scénario fictif : fin du dépouillement, 96 % des communes — intervalle étroit", oui_connu: 0.507, oui_extrapole: 0.510, fictif: true };
 const MI  = { nom: "Scénario fictif : mi-parcours, 60 % des communes — intervalle large", oui_connu: 0.479, oui_extrapole: 0.486, fictif: true };
 const SUJETS = [...VUE.sujets, FIN, MI];
@@ -146,29 +145,23 @@ const FACTEURS = [0.7, 1, 1.4, 0.5, 1.2];
 function base(s, m) {
   const k = 100 * s.oui_connu, p = 100 * s.oui_extrapole, g = p >= 50;
   const lo = Math.max(0, p - m), hi = Math.min(100, p + m);
-  const dedans = k >= lo && k <= hi, largeur = hi - lo;
-  return { k, p, g, m, lo, hi, dedans, largeur, etroit: largeur < SEUIL,
-           cache: dedans && largeur < SEUIL, cible: p >= k ? lo : hi, c: C(g) };
+  return { k, p, g, m, lo, hi, dedans: k >= lo && k <= hi, cible: p >= k ? lo : hi, c: C(g) };
 }
 
-function haltere(s, m, carte) {
+function haltere(s, m) {
   const b = base(s, m);
-  const trajet = b.dedans ? "" :
+  const depouille = b.dedans ? "" :
     `<i class="trajet" style="left:${Math.min(b.k, b.cible)}%;width:${Math.abs(b.cible - b.k)}%"></i>
-     <i class="fleche ${b.p >= b.k ? "droite" : "gauche"}" style="left:${b.cible}%"></i>`;
-  const connu = b.cache ? "" :
-    `<i class="connu" style="left:${b.k}%"></i>
+     <i class="fleche ${b.p >= b.k ? "droite" : "gauche"}" style="left:${b.cible}%"></i>
+     <i class="connu" style="left:${b.k}%"></i>
      <em class="mot mot-connu${bord(b.k)}" style="left:${b.k}%">dépouillé</em>
      <em class="chiffre v-connu tnum${bord(b.k)}" style="left:${b.k}%">${P(b.k)}</em>`;
-  const regle = b.dedans
-    ? `dedans, ${N(b.largeur)} pts ${b.etroit ? "<" : "≥"} ${SEUIL} → trait ${b.cache ? "effacé" : "gardé"}`
-    : "dehors → trait gardé";
-  return `<div class="nom"><span>${s.nom}</span><span class="regle tnum">${regle}</span></div>
-    <div class="haltere fleche-${carte.fleche}" data-ecarter="${carte.ecarter ? 1 : 0}" data-k="${b.k}" data-p="${b.p}">
+  return `<div class="nom"><span>${s.nom}</span><span class="regle tnum">${b.dedans ? "dedans → dépouillé masqué" : "dehors → dépouillé affiché"}</span></div>
+    <div class="haltere" data-k="${b.k}" data-p="${b.p}">
       <i class="rail"></i>
       <i class="moustache" style="left:${b.lo}%;width:${b.hi - b.lo}%;--c:${b.c}"></i>
-      ${trajet}${connu}
-      <em class="mot mot-proj${bord(b.p)}" style="left:${b.p}%">extrapolation</em>
+      ${depouille}
+      <em class="mot mot-proj${bord(b.p)}" style="left:${b.p}%;color:${b.c}">extrapolation</em>
       <em class="chiffre v-proj tnum${bord(b.p)}" style="left:${b.p}%;color:${b.c}">${P(b.p)}</em>
     </div>`;
 }
@@ -181,59 +174,28 @@ const deborde = (e, h) => { const r = rect(e), H = rect(h); return r.left < H.le
 const orienter = (paires, oui) => paires.forEach(([e, cote]) => { e.classList.remove("vers-g", "vers-d"); if (oui) e.classList.add(cote); });
 
 function resoudre(h) {
-  const pc = h.querySelector(".v-proj"), kc = h.querySelector(".v-connu");
-  const pm = h.querySelector(".mot-proj"), km = h.querySelector(".mot-connu");
-  let issue = "extrapolation seule";
-  if (kc) {
+  const kc = h.querySelector(".v-connu");
+  if (!kc) return;   // dépouillé dans l'intervalle : rien à placer
+  const pc = h.querySelector(".v-proj"), pm = h.querySelector(".mot-proj"), km = h.querySelector(".mot-connu");
+  let issue = "deux chiffres";
+  if (touche(pc, kc) || touche(pm, km)) {
     // Écarter : chaque étiquette s'aligne sur sa marque, du côté opposé à l'autre.
     const kGauche = parseFloat(h.dataset.k) < parseFloat(h.dataset.p);
     const ext = kGauche ? "vers-d" : "vers-g", dep = kGauche ? "vers-g" : "vers-d";
     const paires = [[pc, ext], [pm, ext], [kc, dep], [km, dep]];
-    const chiffresOk = !touche(pc, kc), motsOk = !touche(pm, km);
-    if (chiffresOk && motsOk) issue = "deux chiffres";
-    else if (chiffresOk || h.dataset.ecarter === "1") {
-      // La proposition n'écarte que pour loger les mots quand les chiffres tiennent déjà ;
-      // la variation V1 écarte aussi pour sauver le second chiffre.
-      orienter(paires, true);
-      const tient = !touche(pc, kc) && !touche(pm, km) && ![pc, kc, pm, km].some((e) => deborde(e, h));
-      if (tient) issue = "deux chiffres, écartés";
-      else { orienter(paires, false); if (chiffresOk) { km.hidden = true; issue = "deux chiffres"; } }
-    }
-    if (issue === "extrapolation seule") { kc.hidden = true; km.hidden = true; }
+    orienter(paires, true);
+    if (!touche(pc, kc) && !touche(pm, km) && ![pc, kc, pm, km].some((e) => deborde(e, h))) issue = "deux chiffres, écartés";
+    else { orienter(paires, false); kc.hidden = true; km.hidden = true; issue = "extrapolation seule"; }
   }
   h.previousElementSibling.querySelector(".regle").textContent += " · " + issue;
 }
-
-const CARTES = [
-  { lettre: "★", titre: "La proposition", ecarter: false, fleche: "grise",
-    parti: "La moustache pour l'intervalle, le rail teinté pour la majorité, le trait noir du dépouillé et une flèche grise. Les deux pourcentages sous la barre, deux mots discrets au-dessus ; si les chiffres se chevauchent, seule l'extrapolation reste.",
-    note: `<b>Les règles.</b> Le trait du dépouillé s'efface si l'intervalle fait moins de ${SEUIL} points de large <b>et</b> que le dépouillé est dedans. Chaque pourcentage est centré sous sa marque, son mot au-dessus. Si les deux chiffres se chevauchent, le dépouillé perd son chiffre et son mot : il ne reste que l'extrapolation. Si seuls les mots se chevauchent, mots et chiffres s'alignent chacun du côté opposé à l'autre. La ligne en italique à côté de chaque nom dit ce qui s'est appliqué ; elle n'appartient pas à la barre.` },
-  { lettre: "V1", titre: "Les étiquettes s'écartent avant de disparaître", ecarter: true, fleche: "grise", variation: true,
-    parti: "La même, mais quand les deux chiffres centrés se chevauchent, on essaie d'abord de les écarter : chacun s'aligne sur sa marque, du côté opposé à l'autre. Le chiffre du dépouillé ne disparaît que si, même écartés, ils se touchent encore.",
-    note: "C'est sur téléphone que ça compte. La barre y fait moins de 300 px : deux chiffres centrés se chevauchent dès que l'écart est sous une vingtaine de points, et la proposition perd le chiffre du dépouillé sur les trois objets du jour. Écartés, ils tiennent tous les trois. Sur grand écran, les deux donnent le même résultat, et dans les cas vraiment serrés — fin et mi-parcours — aussi. Le prix : l'extrapolation n'est plus centrée sous sa moustache quand elle s'écarte." },
-  { lettre: "V2", titre: "La flèche en pointillé, sans pointe", ecarter: false, fleche: "pointillee", variation: true,
-    parti: "La proposition, avec une flèche encore plus légère : un pointillé gris du trait jusqu'au bord de l'intervalle, sans pointe.",
-    note: "Le sens se lit sans pointe : on part d'un trait noir, on arrive à une moustache colorée. Plus léger encore, et les petites corrections ne portent plus une pointe tassée en quelques pixels. Mais sur le rail pâle, le pointillé se devine plus qu'il ne se voit, et « d'où l'on vient » demande un temps de plus." },
-];
-
-const legende = (c) => `<div class="legende">
-  <span><i class="moitie"></i>majorité : le rail change de teinte à 50</span>
-  <span><i class="mous"></i>intervalle de l'extrapolation</span>
-  <span><i class="${c.fleche === "pointillee" ? "fl-pointille" : "fl"}"></i>correction, depuis le dépouillé</span>
-</div>`;
 
 const curseur = document.getElementById("marge");
 function dessiner() {
   const m0 = parseFloat(curseur.value);
   document.getElementById("marge-val").textContent = "± " + N(m0) + " pts";
-  document.getElementById("cartes").innerHTML = CARTES.map((c) => `
-    <section class="carte${c.variation ? " variation" : ""}">
-      <h2><span class="lettre">${c.lettre}</span>${c.titre}</h2>
-      <p class="parti">${c.parti}</p>
-      ${legende(c)}
-      ${SUJETS.map((s, i) => `<div class="objet${s.fictif ? " fictif" : ""}">${haltere(s, m0 * FACTEURS[i], c)}</div>`).join("")}
-      <p class="note">${c.note}</p>
-    </section>`).join("");
+  document.getElementById("objets").innerHTML = SUJETS.map((s, i) =>
+    `<div class="objet${s.fictif ? " fictif" : ""}">${haltere(s, m0 * FACTEURS[i])}</div>`).join("");
   document.querySelectorAll(".haltere").forEach(resoudre);
 }
 curseur.addEventListener("input", dessiner);

@@ -9,6 +9,41 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-11, soir, suite — Le dépouillé seulement dehors, deux familles de couleur
+
+**Point de départ.** Trois décisions :
+
+- on laisse tomber d'afficher le dépouillé quand il est dans l'intervalle de
+  confiance ; on ne le met que quand il est dehors ;
+- le trait du dépouillé prend la couleur de la flèche, et le mot
+  « extrapolation » celle de l'intervalle ;
+- on ne garde que la variation V1, les étiquettes qui s'écartent ; la
+  proposition précédente et V2 paraissent moins bien.
+
+**Ce qu'on a fait.** `barres-proposition.html` ne contient plus qu'une barre.
+
+- *La règle des 5 points disparaît*, remplacée par une règle simple : dedans,
+  le dépouillé n'est pas dessiné du tout — ni trait, ni flèche, ni mot, ni
+  chiffre ; dehors, il l'est. La largeur de l'intervalle ne compte plus.
+- *Deux familles de couleur.* Le gris de la flèche (`#9d9c96`) dit ce qu'on a
+  compté : trait, flèche, et en gris plus soutenu pour rester lisibles le mot
+  et le chiffre du dépouillé. La couleur du verdict dit ce qu'on estime :
+  moustache, mot « extrapolation » et chiffre.
+- *Le placement des étiquettes est celui de V1* : centrées tant qu'elles
+  tiennent, écartées chacune du côté opposé à l'autre sinon, et
+  l'extrapolation seule si même écartées elles se touchent.
+- *Les deux scénarios fictifs restent.* Ils ne servent plus à comparer étroit
+  et large, mais montrent que dedans, quelle que soit la largeur, la barre se
+  réduit à la moustache et à son chiffre.
+
+**Ce qu'on a vu.** Sur téléphone comme sur grand écran, les trois objets du
+jour gardent leurs deux chiffres ; aucun chevauchement ni débordement de la
+marge ± 0,5 à ± 8. Le trait gris, moins contrasté que le noir, reste lisible
+grâce à son halo blanc et parce qu'il dépasse du rail. La barre est plus calme :
+seule la couleur du verdict attire l'œil, et elle est sur ce qui compte.
+
+**Ouvert.** Le report dans D′, à la place de la piste actuelle.
+
 ## 2026-09-11, soir — Alléger la barre retenue
 
 **Point de départ.** Quatre retouches sur la barre retenue, et une ou deux
