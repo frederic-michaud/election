@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Haltère et intervalle de confiance · maquette Politiques.ch</title>
+<style>
+/* ═══ Planche « haltère + intervalle » ════════════════════════════════════
+   Variations sur le concept C de barres.html — un trait pour le dépouillé,
+   une pastille pour le projeté, un trajet entre les deux — auquel on ajoute
+   un intervalle de confiance autour du projeté. Huit façons de le dessiner.
+   Le site ne calcule pas encore de marge : celle-ci est illustrative, et un
+   curseur la fait varier pour juger chaque forme avec un intervalle étroit
+   ou large. Palette de D′.
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --fond: #fcfcfb; --panneau: #ffffff; --bord: #e1e0d9;
+  --encre: #1f1f1c; --gris: #5f5e58; --neutre: #ecebe6;
+  --bleu: #2a78d6; --bleu-clair: #86b6ef; --rouge: #c9352b; --rouge-clair: #e6a9a3;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--fond); color: var(--encre); font: 15px/1.5 var(--sans); }
+body { margin: 0 auto; max-width: 1320px; padding: 28px 22px 60px; }
+h1 { font-size: 1.4rem; margin: 0 0 4px; letter-spacing: -.01em; }
+.intro { color: var(--gris); max-width: 78ch; margin: 0 0 14px; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+.reglage { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0 0 24px; padding: 12px 16px;
+  background: var(--panneau); border: 1px solid var(--bord); border-radius: 10px; font-size: .9rem; }
+.reglage input[type=range] { flex: 1 1 200px; max-width: 360px; accent-color: var(--bleu); }
+.reglage .val { font-weight: 700; min-width: 5.5em; }
+.reglage small { color: var(--gris); }
+
+.grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(390px, 1fr)); gap: 18px; }
+.carte { background: var(--panneau); border: 1px solid var(--bord); border-radius: 14px; padding: 18px 20px 14px; }
+.carte h2 { font-size: 1rem; margin: 0; display: flex; align-items: center; gap: 10px; }
+.lettre { display: inline-block; min-width: 26px; height: 26px; line-height: 26px; padding: 0 6px; text-align: center; border-radius: 6px;
+  background: var(--bleu); color: #fff; font-weight: 700; font-size: .82rem; }
+.carte .parti { color: var(--gris); font-size: .86rem; margin: 6px 0 12px; }
+.legende { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .76rem; color: var(--gris); margin: 0 0 14px;
+  padding: 8px 10px; background: var(--fond); border-radius: 8px; }
+.legende i { display: inline-block; vertical-align: middle; margin-right: 6px; }
+.legende i.trait { width: 2px; height: 14px; background: var(--encre); }
+.legende i.barre { width: 18px; height: 7px; background: var(--encre); border-radius: 0 3px 3px 0; }
+.legende i.rond { width: 11px; height: 11px; border-radius: 50%; }
+.legende i.zone { width: 22px; height: 12px; border-radius: 3px; }
+.legende i.hachure { background: repeating-linear-gradient(45deg, var(--bleu) 0 2px, transparent 2px 5px); }
+.legende i.fl { width: 18px; height: 2px; background: var(--encre); position: relative; }
+.legende i.fl::after { content: ""; position: absolute; right: -2px; top: -4px; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 6px solid var(--encre); }
+.legende i.mous { width: 22px; height: 2px; background: var(--bleu); position: relative; }
+.legende i.mous::before, .legende i.mous::after { content: ""; position: absolute; top: -4px; width: 2px; height: 10px; background: var(--bleu); }
+.legende i.mous::before { left: 0; } .legende i.mous::after { right: 0; }
+.note { font-size: .8rem; color: var(--gris); border-top: 1px dashed var(--bord); padding-top: 10px; margin-top: 6px; }
+
+.objet { margin: 0 0 14px; }
+.objet .nom { font-size: .82rem; color: var(--gris); margin-bottom: 2px; }
+
+/* L'haltère : un rail 0–100, la majorité, et par-dessus ce que chaque variation ajoute. */
+.haltere { position: relative; height: 56px; }
+.haltere .rail { position: absolute; left: 0; right: 0; top: 27px; height: 3px; background: var(--neutre); border-radius: 2px; }
+.haltere .seuil { position: absolute; top: 15px; bottom: 15px; left: 50%; width: 2px; margin-left: -1px; background: var(--encre); opacity: .45; }
+.haltere .zone { position: absolute; top: 20px; height: 17px; border-radius: 4px; }
+.haltere .zone.hachure { background: repeating-linear-gradient(45deg, var(--c) 0 2.5px, transparent 2.5px 6px); }
+.haltere .zone.pleine { background: var(--c); }
+.haltere .zone.fondu { background: linear-gradient(90deg, transparent, var(--c) 35%, var(--c) 65%, transparent); opacity: .55; }
+.haltere .zone.coeur { top: 23px; height: 11px; }
+.haltere .moustache { position: absolute; top: 27.5px; height: 2px; background: var(--c); }
+.haltere .moustache::before, .haltere .moustache::after { content: ""; position: absolute; top: -5px; width: 2px; height: 12px; background: var(--c); }
+.haltere .moustache::before { left: 0; } .haltere .moustache::after { right: 0; }
+.haltere .connu { position: absolute; top: 16px; height: 25px; width: 2px; margin-left: -1px; background: var(--encre); }
+.haltere .barre-noire { position: absolute; left: 0; top: 24px; height: 9px; background: var(--encre); border-radius: 0 4px 4px 0; }
+.haltere .trajet { position: absolute; top: 27.5px; height: 2px; }
+.haltere .fleche { position: absolute; top: 23.5px; width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+.haltere .fleche.droite { margin-left: -8px; border-left: 8px solid; }
+.haltere .fleche.gauche { border-right: 8px solid; }
+.haltere .projete { position: absolute; top: 21px; width: 15px; height: 15px; margin-left: -7.5px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.1); }
+.haltere .v-connu { position: absolute; top: -1px; transform: translateX(-50%); font-size: .72rem; color: var(--gris); white-space: nowrap; font-style: normal;
+  background: rgba(255,255,255,.9); padding: 0 3px; border-radius: 3px; }
+.haltere .v-proj { position: absolute; top: 39px; transform: translateX(-50%); font-size: .8rem; font-weight: 700; white-space: nowrap; font-style: normal; }
+.haltere .v-proj .marge { font-weight: 400; color: var(--gris); font-size: .7rem; }
+.haltere .bord-g { transform: none; } .haltere .bord-d { transform: translateX(-100%); }
+
+footer { color: var(--gris); font-size: .82rem; margin-top: 30px; text-align: center; }
+footer a { color: var(--bleu); }
+.absent { margin: 16px 0; padding: 14px 18px; border: 1px solid #e0b400; border-left: 5px solid #e0b400; border-radius: 8px; background: #fffbe8; }
+</style>
+</head>
+<body>
+<h1>L'haltère avec un intervalle de confiance</h1>
+<p class="intro">Huit variations sur le concept C de la <a href="barres.html">planche des barres</a> :
+un trait pour le dépouillé, une pastille pour le projeté, un trajet de l'un à l'autre — et autour du
+projeté, un intervalle de confiance. Le site ne calcule pas encore de marge : celle-ci est
+<b>illustrative</b>, différente pour chaque objet (× 0,7, × 1, × 1,4) pour voir un intervalle étroit
+et un large, et le curseur la fait varier.</p>
+
+<div class="reglage">
+  <label for="marge">Marge illustrative</label>
+  <input type="range" id="marge" min="1" max="8" step="0.5" value="3">
+  <span class="val tnum" id="marge-val"></span>
+  <small>autour du projeté, avant le facteur par objet</small>
+</div>
+
+<div class="grille" id="grille"></div>
+
+<footer>Planche de travail — données fictives, marge inventée. <a href="index.html">Retour au sommaire</a></footer>
+
+<script src="figures.js"></script>
+<script>
+if (typeof VUE === "undefined") {
+  document.body.insertAdjacentHTML("afterbegin", `<div class="absent"><b>Il manque <code>figures.js</code>.</b>
+    Depuis la racine du dépôt : <code>python maquette/construire.py</code>, puis recharger.</div>`);
+  throw new Error("figures.js absent");
+}
+
+const P = (v) => v.toLocaleString("fr-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %";
+const N = (v) => v.toLocaleString("fr-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const C = (g) => g ? "var(--bleu)" : "var(--rouge)";
+const CL = (g) => g ? "var(--bleu-clair)" : "var(--rouge-clair)";
+const FACTEURS = [0.7, 1, 1.4];
+const bord = (x) => x < 12 ? " bord-g" : x > 88 ? " bord-d" : "";
+
+// Ce que toutes les variations partagent : les deux valeurs, l'intervalle, et
+// le bord de l'intervalle vers lequel pointe le trajet (aucun trajet si le
+// dépouillé est déjà dedans).
+function base(s, m) {
+  const k = 100 * s.oui_connu, p = 100 * s.oui_extrapole, g = p >= 50;
+  const lo = Math.max(0, p - m), hi = Math.min(100, p + m);
+  const dedans = k >= lo && k <= hi;
+  return { k, p, g, m, lo, hi, dedans, cible: p >= k ? lo : hi, c: C(g), cl: CL(g) };
+}
+const nom = (s) => `<div class="nom">${s.nom}</div>`;
+const rail = `<i class="rail"></i><i class="seuil"></i>`;
+const connu = (b) => `<i class="connu" style="left:${b.k}%"></i>`;
+const trajet = (b, couleur, vers = b.cible) => b.dedans ? "" :
+  `<i class="trajet" style="left:${Math.min(b.k, vers)}%;width:${Math.abs(vers - b.k)}%;background:${couleur}"></i>
+   <i class="fleche ${b.p >= b.k ? "droite" : "gauche"}" style="left:${vers}%;border-color:transparent ${couleur}"></i>`;
+const pastille = (b) => `<i class="projete" style="left:${b.p}%;background:${b.c}"></i>`;
+const zone = (b, genre, style = "") => `<i class="zone ${genre}" style="left:${b.lo}%;width:${b.hi - b.lo}%;--c:${b.c};${style}"></i>`;
+const vConnu = (b) => `<em class="v-connu tnum${bord(b.k)}" style="left:${b.k}%">${P(b.k)}</em>`;
+const vProj = (b) => `<em class="v-proj tnum${bord(b.p)}" style="left:${b.p}%;color:${b.c}">${P(b.p)} <span class="marge">± ${N(b.m)}</span></em>`;
+const haltere = (...morceaux) => `<div class="haltere">${rail}${morceaux.join("")}</div>`;
+
+const VARIATIONS = [
+  {
+    lettre: "C1", titre: "Barre noire vers la zone hachurée",
+    parti: "La proposition de départ : le dépouillé est une barre noire pleine, qui pointe vers une zone hachurée — l'intervalle — où se pose le projeté.",
+    legende: `<span><i class="barre"></i>dépouillé</span><span><i class="fl"></i>vers l'intervalle</span>
+              <span><i class="zone hachure"></i>intervalle, hachuré</span><span><i class="rond" style="background:var(--bleu)"></i>projeté</span>`,
+    note: "La barre pleine donne du poids au fait. Quand la projection descend (LTr), la flèche revient sur la barre noire : elle prend la couleur du verdict pour rester visible. Quand le dépouillé est déjà dans l'intervalle, plus de flèche : c'est une information en soi.",
+    rendu: (s, m) => { const b = base(s, m); return nom(s) + haltere(
+      zone(b, "hachure"), `<i class="barre-noire" style="width:${b.k}%"></i>`, trajet(b, b.c), pastille(b), vConnu(b), vProj(b)); },
+  },
+  {
+    lettre: "C2", titre: "Trait vers la zone hachurée",
+    parti: "La même, avec le trait du C d'origine à la place de la barre : plus léger, la flèche est noire, l'intervalle hachuré.",
+    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="fl"></i>vers l'intervalle</span>
+              <span><i class="zone hachure"></i>intervalle, hachuré</span><span><i class="rond" style="background:var(--bleu)"></i>projeté</span>`,
+    note: "Le trait et la flèche sont noirs : ce sont les faits (d'où l'on part, de combien on corrige). Seuls l'intervalle et la pastille portent le verdict. Le hachuré dit « estimé » sans qu'on ait à l'expliquer.",
+    rendu: (s, m) => { const b = base(s, m); return nom(s) + haltere(
+      zone(b, "hachure"), trajet(b, "var(--encre)"), connu(b), pastille(b), vConnu(b), vProj(b)); },
+  },
+  {
+    lettre: "C3", titre: "Bande pleine, en clair",
+    parti: "L'intervalle est une bande pleine dans la couleur claire du verdict, comme les cartes disent « estimé » : même teinte, plus clair.",
+    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="fl"></i>vers l'intervalle</span>
+              <span><i class="zone" style="background:var(--bleu-clair)"></i>intervalle</span><span><i class="rond" style="background:var(--bleu)"></i>projeté</span>`,
+    note: "Plus calme que le hachuré, et cohérent avec la charte (bleu clair = extrapolé). Mais une bande pleine ressemble à une barre : on peut la lire comme « de 44 à 50 % de oui », ce qui n'est pas ça.",
+    rendu: (s, m) => { const b = base(s, m); return nom(s) + haltere(
+      zone(b, "pleine", `--c:${b.cl}`), trajet(b, "var(--encre)"), connu(b), pastille(b), vConnu(b), vProj(b)); },
+  },
+  {
+    lettre: "C4", titre: "Moustaches",
+    parti: "Le vocabulaire des scientifiques : la pastille, et de part et d'autre une moustache terminée par un taquet.",
+    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="fl"></i>vers l'intervalle</span>
+              <span><i class="mous"></i>intervalle</span><span><i class="rond" style="background:var(--bleu)"></i>projeté</span>`,
+    note: "Tout le monde a vu une barre d'erreur ; personne n'a besoin de légende. Mais c'est fin, et le trait du dépouillé, les taquets et la majorité sont trois traits verticaux — ça se confond quand ils sont proches (LSU).",
+    rendu: (s, m) => { const b = base(s, m); return nom(s) + haltere(
+      `<i class="moustache" style="left:${b.lo}%;width:${b.hi - b.lo}%;--c:${b.c}"></i>`,
+      trajet(b, "var(--encre)"), connu(b), pastille(b), vConnu(b), vProj(b)); },
+  },
+  {
+    lettre: "C5", titre: "Fondu",
+    parti: "L'intervalle n'a pas de bord : la couleur est dense au centre et s'évanouit vers les extrémités, comme une probabilité.",
+    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="fl"></i>vers l'intervalle</span>
+              <span><i class="zone" style="background:linear-gradient(90deg,transparent,var(--bleu),transparent)"></i>intervalle, fondu</span><span><i class="rond" style="background:var(--bleu)"></i>projeté</span>`,
+    note: "Le plus honnête sur ce qu'est une marge : pas une frontière nette, une vraisemblance qui décroît. Le plus dur à lire précisément — où s'arrête-t-il ? — et la flèche vise un bord qu'on ne voit pas.",
+    rendu: (s, m) => { const b = base(s, m); return nom(s) + haltere(
+      zone(b, "fondu"), trajet(b, "var(--encre)"), connu(b), pastille(b), vConnu(b), vProj(b)); },
+  },
+  {
+    lettre: "C6", titre: "Deux niveaux",
+    parti: "Deux intervalles emboîtés : un cœur dense pour le probable, une bande claire pour le possible.",
+    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="zone" style="background:var(--bleu-clair)"></i>possible</span>
+              <span><i class="zone" style="background:var(--bleu);opacity:.6;width:12px"></i>probable</span><span><i class="rond" style="background:var(--bleu)"></i>projeté</span>`,
+    note: "Dit deux choses d'un coup : le probable et le possible. Demande deux marges à la voie Moteur au lieu d'une — et une légende, car rien n'indique de lui-même ce que valent les deux niveaux.",
+    rendu: (s, m) => { const b = base(s, m); const bi = base(s, m / 2); return nom(s) + haltere(
+      zone(b, "pleine", `--c:${b.cl}`), zone(bi, "pleine coeur", `--c:${b.c};opacity:.55`),
+      trajet(b, "var(--encre)"), connu(b), pastille(b), vConnu(b), vProj(b)); },
+  },
+  {
+    lettre: "C7", titre: "La majorité en jeu",
+    parti: "L'intervalle hachuré change de couleur à 50 : rouge à gauche, bleu à droite. On voit d'un coup si la majorité est acquise ou encore en jeu.",
+    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="zone hachure" style="background:repeating-linear-gradient(45deg,var(--rouge) 0 2px,transparent 2px 5px)"></i>part sous 50</span>
+              <span><i class="zone hachure"></i>part au-dessus</span><span><i class="rond" style="background:var(--bleu)"></i>projeté</span>`,
+    note: "La seule variation où la couleur ne vient pas du verdict mais du côté de la majorité : quand l'intervalle chevauche 50, il est bicolore, et la proportion des deux dit combien c'est serré. Élargissez la marge : LTr devient à moitié bleu.",
+    rendu: (s, m) => { const b = base(s, m); const parts = [];
+      if (b.lo < 50) parts.push(`<i class="zone hachure" style="left:${b.lo}%;width:${Math.min(b.hi, 50) - b.lo}%;--c:var(--rouge)"></i>`);
+      if (b.hi > 50) parts.push(`<i class="zone hachure" style="left:${Math.max(b.lo, 50)}%;width:${b.hi - Math.max(b.lo, 50)}%;--c:var(--bleu)"></i>`);
+      return nom(s) + haltere(parts.join(""), trajet(b, "var(--encre)"), connu(b), pastille(b), vConnu(b), vProj(b)); },
+  },
+  {
+    lettre: "C8", titre: "Sans pastille",
+    parti: "Le projeté n'est pas un point, alors on ne le dessine pas : la flèche mène à une zone, et le chiffre se lit au centre.",
+    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="fl"></i>vers l'intervalle</span>
+              <span><i class="zone hachure"></i>intervalle — le projeté est dedans</span>`,
+    note: "Le plus radical : refuser de faire croire à une précision qu'on n'a pas. En retour, l'œil n'a plus de cible ; un trait fin au centre de la zone pourrait la lui rendre sans redevenir une pastille.",
+    rendu: (s, m) => { const b = base(s, m); return nom(s) + haltere(
+      zone(b, "hachure"), `<i class="zone pleine" style="left:${b.p}%;width:2px;margin-left:-1px;--c:${b.c};top:18px;height:21px;opacity:.9"></i>`,
+      trajet(b, "var(--encre)"), connu(b), vConnu(b), vProj(b)); },
+  },
+];
+
+const curseur = document.getElementById("marge");
+function dessiner() {
+  const m0 = parseFloat(curseur.value);
+  document.getElementById("marge-val").textContent = "± " + N(m0) + " pts";
+  document.getElementById("grille").innerHTML = VARIATIONS.map((v) => `
+    <section class="carte">
+      <h2><span class="lettre">${v.lettre}</span>${v.titre}</h2>
+      <p class="parti">${v.parti}</p>
+      <div class="legende">${v.legende}</div>
+      ${VUE.sujets.map((s, i) => `<div class="objet">${v.rendu(s, m0 * FACTEURS[i])}</div>`).join("")}
+      <p class="note">${v.note}</p>
+    </section>`).join("");
+}
+curseur.addEventListener("input", dessiner);
+dessiner();
+</script>
+</body>
+</html>

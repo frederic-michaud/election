@@ -9,6 +9,53 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-11, plus tard — L'haltère C avec un intervalle de confiance
+
+**Point de départ.** Sur la planche des barres, c'est C (l'haltère avec sens)
+qui plaît. Demande : y ajouter un intervalle de confiance, sur une nouvelle
+page, en gardant `barres.html` tel quel. Exemple donné : une barre noire pour
+la valeur initiale, qui pointe vers une zone hachurée, l'intervalle.
+
+**Ce qu'on a fait.** `barres-intervalle.html`, huit variations de C avec un
+intervalle autour du projeté. La première (C1) est l'exemple donné, mot pour
+mot ; les suivantes déclinent la forme de l'intervalle.
+
+- *C1 — Barre noire vers la zone hachurée.* Le dépouillé est une barre pleine
+  depuis 0, la flèche va au bord de l'intervalle.
+- *C2 — Trait vers la zone hachurée.* Le trait de C, la flèche noire.
+- *C3 — Bande pleine, en clair.* Bleu clair = extrapolé, comme sur les cartes.
+- *C4 — Moustaches.* La barre d'erreur des scientifiques.
+- *C5 — Fondu.* Pas de bord : une densité qui décroît.
+- *C6 — Deux niveaux.* Probable au centre, possible autour.
+- *C7 — La majorité en jeu.* L'intervalle hachuré change de couleur à 50 :
+  bicolore quand la majorité est encore en jeu.
+- *C8 — Sans pastille.* Le projeté n'est pas un point, on ne le dessine pas.
+
+**Décisions.**
+
+- *La marge est inventée, et dite telle.* Le site ne la calcule pas ; la page
+  l'annonce en tête et au pied. Un curseur (± 1 à ± 8) la fait varier, et un
+  facteur par objet (× 0,7, × 1, × 1,4) donne à voir un intervalle étroit et
+  un large sur la même page.
+- *La flèche vise le bord de l'intervalle, pas la pastille.* C'est ce que
+  l'exemple demandait, et c'est plus juste : on corrige vers une zone. Quand le
+  dépouillé est déjà dans l'intervalle, il n'y a pas de flèche du tout — c'est
+  une information.
+- *Dans C1, la flèche prend la couleur du verdict* : quand la projection
+  descend, elle revient sur la barre noire et une flèche noire y disparaîtrait.
+  Partout ailleurs, elle est noire, comme le trait : les faits en encre, le
+  verdict en couleur.
+
+**Ce qu'on a vu.** À ± 3 la zone hachurée est presque cachée par la pastille
+(15 px) ; elle prend son sens à partir de ± 4 ou sur écran large. Si une
+variante à intervalle est retenue, réduire la pastille ou la creuser en anneau.
+C7 est la plus parlante sur le cas qui fâche : à ± 5, LTr devient à moitié
+bleu, à moitié rouge.
+
+**Ouvert.** Quelle forme d'intervalle, et faut-il une vraie marge ? Si oui,
+c'est une demande à la voie Moteur (une marge par objet dans le contrat de
+vue), et `tests/test_contrat.py` suit.
+
 ## 2026-09-11 — Planche : dix barres pour un dépouillé et un projeté
 
 **Point de départ.** Les barres de la variante B plaisent : montrer sur une
