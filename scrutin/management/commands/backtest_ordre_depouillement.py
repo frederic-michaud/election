@@ -206,8 +206,10 @@ def balayer(composantes, pourcentage_oui, participation, bulletins, exprimes,
     levier_max = np.where(manquante, leviers, -np.inf).max(axis=1)
     levier_max[effectifs >= nb] = np.nan
 
-    return {"avance": cumul_exprimes[pos] / total_final,
+    return {"avance": cumul_exprimes[pos] / cumul_exprimes[-1],
+            "avance_affichee": cumul_exprimes[pos] / total_final,
             "oui_projete": oui_final / total_final,
+            "oui_depouille": cumul_oui[pos] / cumul_exprimes[pos],
             "cond": np.linalg.cond(grammes),
             "levier_max": levier_max,
             "nb_depouillees": effectifs.astype(float),
@@ -325,7 +327,8 @@ class Command(BaseCommand):
         resultats = {}
         for scenario in COULEURS:
             nb_tirages = options["tirages"] if scenario == "realiste" else 1
-            empile = {cle: [] for cle in ("oui_projete", "cond", "levier_max",
+            empile = {cle: [] for cle in ("oui_projete", "oui_depouille",
+                                          "avance_affichee", "cond", "levier_max",
                                           "nb_depouillees")}
             for _ in range(nb_tirages):
                 ordre = ordres(scenario, ctx["pourcentage_oui"], ctx["electeurs"], rng)
@@ -333,11 +336,12 @@ class Command(BaseCommand):
                                ctx["participation"], ctx["bulletins"], ctx["exprimes"],
                                ctx["oui_absolus"], ctx["electeurs_precedents"],
                                ordre, effectifs)
-                tri = np.argsort(brut["avance"])
-                avance = brut["avance"][tri]
+                avance = brut["avance"]
+                if np.any(np.diff(avance) <= 0):
+                    raise CommandError("avance non monotone : l'interpolation "
+                                       "déplacerait des points de la courbe")
                 for cle in empile:
-                    valeurs = brut[cle][tri]
-                    interpolee = np.interp(grille_avance, avance, valeurs,
+                    interpolee = np.interp(grille_avance, avance, brut[cle],
                                            left=np.nan, right=np.nan)
                     interpolee[grille_avance < avance[0]] = np.nan
                     empile[cle].append(interpolee)
@@ -396,7 +400,8 @@ class Command(BaseCommand):
         with gzip.open(chemin, "wt", newline="") as fichier:
             plume = csv.writer(fichier)
             plume.writerow(["date", "sujet", "scenario", "tirage", "avance",
-                            "oui_projete", "cond", "levier_max", "nb_depouillees"])
+                            "oui_projete", "oui_depouille", "avance_affichee",
+                            "cond", "levier_max", "nb_depouillees"])
             for ctx in meta:
                 for scenario, donnees in toutes[ctx["sujet_id"]].items():
                     for tirage in range(len(donnees["oui_projete"])):
@@ -406,6 +411,8 @@ class Command(BaseCommand):
                                 continue
                             plume.writerow([ctx["date"], ctx["sujet_id"], scenario, tirage,
                                             f"{avance:.6f}", f"{valeur:.6f}",
+                                            f"{donnees['oui_depouille'][tirage, k]:.6f}",
+                                            f"{donnees['avance_affichee'][tirage, k]:.6f}",
                                             f"{donnees['cond'][tirage, k]:.6g}",
                                             f"{donnees['levier_max'][tirage, k]:.6g}",
                                             f"{donnees['nb_depouillees'][tirage, k]:.1f}"])
@@ -459,7 +466,10 @@ class Command(BaseCommand):
         for ctx in meta:
             for scenario in COULEURS:
                 donnees = toutes[ctx["sujet_id"]][scenario]
-                variantes = [("", np.nanmean(donnees["oui_projete"], axis=0))]
+                variantes = [("", np.nanmean(donnees["oui_projete"], axis=0)),
+                             ("mediane", np.nanmedian(donnees["oui_projete"], axis=0)),
+                             ("depouillement",
+                              np.nanmean(donnees["oui_depouille"], axis=0))]
                 if scenario == "realiste" and donnees["oui_projete"].shape[0] > 1:
                     haut = np.nanpercentile(donnees["oui_projete"], 97.5, axis=0)
                     bas = np.nanpercentile(donnees["oui_projete"], 2.5, axis=0)
@@ -531,6 +541,10 @@ class Command(BaseCommand):
             moyenne = np.nanmean(donnees, axis=0)
             axe.plot(grille_avance, moyenne, color=couleur, lw=1.2,
                      label=scenario.replace("_", " "))
+            nu = np.nanmean(courbes[scenario]["oui_depouille"], axis=0) * 100
+            axe.plot(grille_avance, nu, color=couleur, lw=1.0, ls="--", alpha=0.55,
+                     label=None if compact else
+                     scenario.replace("_", " ") + " — dépouillement nu")
             if scenario == "realiste" and donnees.shape[0] > 1:
                 axe.fill_between(grille_avance,
                                  np.nanpercentile(donnees, 2.5, axis=0),
