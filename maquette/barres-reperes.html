@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dépouillé contre majorité · maquette Politiques.ch</title>
+<style>
+/* ═══ Planche « repères » ════════════════════════════════════════════════
+   Sur toutes les barres, deux traits verticaux noirs se ressemblent : celui
+   du dépouillé (une valeur) et celui de la majorité (un seuil, toujours au
+   même endroit). Quand ils sont proches — et ils le sont toute la fin de
+   soirée — le graphique devient difficile à lire. Huit façons de les
+   distinguer, sur la forme C2 de barres-intervalle.html (trait, flèche, zone
+   hachurée, sans pastille), avec les mêmes quatre scénarios et le même
+   curseur de marge. Quatre options travaillent la majorité, quatre le
+   dépouillé ; elles se combinent. Palette de D′.
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --fond: #fcfcfb; --panneau: #ffffff; --bord: #e1e0d9;
+  --encre: #1f1f1c; --gris: #5f5e58; --neutre: #ecebe6;
+  --bleu: #2a78d6; --bleu-clair: #86b6ef; --rouge: #c9352b; --rouge-clair: #e6a9a3;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--fond); color: var(--encre); font: 15px/1.5 var(--sans); }
+body { margin: 0 auto; max-width: 1320px; padding: 28px 22px 60px; }
+h1 { font-size: 1.4rem; margin: 0 0 4px; letter-spacing: -.01em; }
+.intro { color: var(--gris); max-width: 78ch; margin: 0 0 14px; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+.reglage { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0 0 24px; padding: 12px 16px;
+  background: var(--panneau); border: 1px solid var(--bord); border-radius: 10px; font-size: .9rem; }
+.reglage input[type=range] { flex: 1 1 200px; max-width: 360px; accent-color: var(--bleu); }
+.reglage .val { font-weight: 700; min-width: 5.5em; }
+.reglage small { color: var(--gris); }
+
+.grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(390px, 1fr)); gap: 18px; }
+.carte { background: var(--panneau); border: 1px solid var(--bord); border-radius: 14px; padding: 18px 20px 14px; }
+.carte h2 { font-size: 1rem; margin: 0; display: flex; align-items: center; gap: 10px; }
+.lettre { display: inline-block; min-width: 26px; height: 26px; line-height: 26px; padding: 0 6px; text-align: center; border-radius: 6px;
+  background: var(--bleu); color: #fff; font-weight: 700; font-size: .82rem; }
+.carte.depouille .lettre { background: var(--encre); }
+.carte .parti { color: var(--gris); font-size: .86rem; margin: 6px 0 12px; }
+.legende { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .76rem; color: var(--gris); margin: 0 0 14px;
+  padding: 8px 10px; background: var(--fond); border-radius: 8px; }
+.legende i { display: inline-block; vertical-align: middle; margin-right: 6px; position: relative; }
+.legende i.trait { width: 2px; height: 14px; background: var(--encre); }
+.legende i.pointille { width: 2px; height: 14px; background: repeating-linear-gradient(180deg, var(--encre) 0 3px, transparent 3px 5px); }
+.legende i.filet { width: 1px; height: 16px; background: #c4c3bd; }
+.legende i.tri { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid var(--encre); }
+.legende i.moitie { width: 22px; height: 7px; border-radius: 3px; background: linear-gradient(90deg, #f1d5d2 50%, #d3e2f6 50%); }
+.legende i.losange { width: 9px; height: 9px; background: var(--encre); transform: rotate(45deg); margin: 0 8px 0 3px; }
+.legende i.epingle { width: 2px; height: 14px; background: var(--encre); margin-left: 4px; }
+.legende i.epingle::before { content: ""; position: absolute; top: -5px; left: -4px; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--encre); }
+.legende i.pilule { width: 5px; height: 14px; background: var(--encre); border-radius: 3px; }
+.legende i.coupe { width: 22px; height: 3px; background: linear-gradient(90deg, var(--neutre) 40%, transparent 40%, transparent 60%, var(--neutre) 60%); }
+.legende i.zone { width: 22px; height: 12px; border-radius: 3px; background: repeating-linear-gradient(45deg, var(--bleu) 0 2px, transparent 2px 5px); }
+.note { font-size: .8rem; color: var(--gris); border-top: 1px dashed var(--bord); padding-top: 10px; margin-top: 6px; }
+
+.objet { margin: 0 0 14px; }
+.objet .nom { font-size: .82rem; color: var(--gris); margin-bottom: 2px; }
+.objet.fin { border-top: 1px dashed var(--bord); padding-top: 10px; }
+.objet.fin .nom { color: var(--bleu); }
+
+/* L'haltère de C2, tel quel — chaque option ne change que .seuil ou .connu. */
+.haltere { position: relative; height: 56px; }
+.haltere .rail { position: absolute; left: 0; right: 0; top: 27px; height: 3px; background: var(--neutre); border-radius: 2px; }
+.haltere .seuil { position: absolute; top: 14px; bottom: 14px; left: 50%; width: 2px; margin-left: -1px; background: var(--encre); opacity: .7; }
+.haltere .zone { position: absolute; top: 20px; height: 17px; border-radius: 4px;
+  background: repeating-linear-gradient(45deg, var(--c) 0 2.5px, transparent 2.5px 6px); }
+.haltere .connu { position: absolute; top: 16px; height: 25px; width: 2px; margin-left: -1px; background: var(--encre); box-shadow: 0 0 0 1.5px #fff; }
+.haltere .trajet { position: absolute; top: 27.5px; height: 2px; background: var(--encre); }
+.haltere .fleche { position: absolute; top: 23.5px; width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-color: transparent var(--encre); }
+.haltere .fleche.droite { margin-left: -8px; border-left: 8px solid; }
+.haltere .fleche.gauche { border-right: 8px solid; }
+.haltere .v-connu { position: absolute; top: -1px; transform: translateX(-50%); font-size: .72rem; color: var(--gris); white-space: nowrap; font-style: normal;
+  background: rgba(255,255,255,.9); padding: 0 3px; border-radius: 3px; }
+.haltere .v-proj { position: absolute; top: 39px; transform: translateX(-50%); font-size: .8rem; font-weight: 700; white-space: nowrap; font-style: normal; }
+.haltere .v-proj .marge { font-weight: 400; color: var(--gris); font-size: .7rem; }
+.haltere .bord-g { transform: none; } .haltere .bord-d { transform: translateX(-100%); }
+
+/* ── Quatre options sur la majorité ───────────────────────────────────── */
+/* R1 : en pointillé. */
+.r1 .seuil { background: repeating-linear-gradient(180deg, var(--encre) 0 3px, transparent 3px 5px); opacity: .85; }
+/* R2 : un filet gris, pleine hauteur — une ligne de grille, pas une marque. */
+.r2 .seuil { top: 0; bottom: 0; width: 1px; margin-left: -.5px; background: #c4c3bd; opacity: 1; }
+/* R3 : pas de ligne ; un triangle sous le rail. */
+.r3 .seuil { top: 32px; bottom: auto; width: 0; height: 0; margin-left: -5px; background: none; opacity: 1;
+  border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 8px solid var(--encre); }
+/* R4 : pas de ligne ; le rail change de teinte à 50. */
+.r4 .seuil { display: none; }
+.r4 .rail { top: 24px; height: 9px; border-radius: 5px; background: linear-gradient(90deg, #f1d5d2 50%, #d3e2f6 50%); }
+
+/* ── Quatre options sur le dépouillé ──────────────────────────────────── */
+/* R5 : un losange sur le rail, plus de trait. */
+.r5 .connu { top: 23.5px; height: 10px; width: 10px; margin-left: -5px; transform: rotate(45deg); box-shadow: 0 0 0 1.5px #fff; }
+/* R6 : une épingle — le trait garde une tête. */
+.r6 .connu { top: 18px; height: 22px; }
+.r6 .connu::before { content: ""; position: absolute; top: -7px; left: -5px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid var(--encre); }
+/* R7 : une pilule épaisse, contre une majorité fine. */
+.r7 .connu { width: 5px; margin-left: -2.5px; border-radius: 3px; }
+.r7 .seuil { width: 1px; margin-left: -.5px; background: var(--gris); opacity: .7; }
+/* R8 : le rail s'interrompt à 50 ; le trait est le seul vertical. */
+.r8 .seuil { display: none; }
+.r8 .rail { background: linear-gradient(90deg, var(--neutre) calc(50% - 4px), transparent calc(50% - 4px), transparent calc(50% + 4px), var(--neutre) calc(50% + 4px)); }
+
+footer { color: var(--gris); font-size: .82rem; margin-top: 30px; text-align: center; }
+footer a { color: var(--bleu); }
+.absent { margin: 16px 0; padding: 14px 18px; border: 1px solid #e0b400; border-left: 5px solid #e0b400; border-radius: 8px; background: #fffbe8; }
+</style>
+</head>
+<body>
+<h1>Le trait du dépouillé contre celui de la majorité</h1>
+<p class="intro">Sur toutes les barres, deux traits verticaux noirs se ressemblent : le <b>dépouillé</b>, une
+valeur qui bouge, et la <b>majorité</b>, un seuil toujours au même endroit. Quand ils sont proches — toute
+la fin de soirée — le graphique devient difficile à lire. Huit façons de les distinguer, sur la forme C2
+de la <a href="barres-intervalle.html">planche de l'intervalle</a>. Quatre options travaillent la
+majorité (R1–R4), quatre le dépouillé (R5–R8) ; une de chaque groupe peut se combiner. Mêmes quatre
+scénarios, même marge illustrative au curseur.</p>
+
+<div class="reglage">
+  <label for="marge">Marge illustrative</label>
+  <input type="range" id="marge" min="1" max="8" step="0.5" value="3">
+  <span class="val tnum" id="marge-val"></span>
+  <small>autour du projeté, avant le facteur par objet</small>
+</div>
+
+<div class="grille" id="grille"></div>
+
+<footer>Planche de travail — données fictives, marge inventée. <a href="index.html">Retour au sommaire</a></footer>
+
+<script src="figures.js"></script>
+<script>
+if (typeof VUE === "undefined") {
+  document.body.insertAdjacentHTML("afterbegin", `<div class="absent"><b>Il manque <code>figures.js</code>.</b>
+    Depuis la racine du dépôt : <code>python maquette/construire.py</code>, puis recharger.</div>`);
+  throw new Error("figures.js absent");
+}
+
+const P = (v) => v.toLocaleString("fr-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %";
+const N = (v) => v.toLocaleString("fr-CH", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const C = (g) => g ? "var(--bleu)" : "var(--rouge)";
+const FIN = { nom: "Scénario fictif : fin du dépouillement, 96 % des communes", oui_connu: 0.507, oui_extrapole: 0.510 };
+const SUJETS = [...VUE.sujets, FIN];
+const FACTEURS = [0.7, 1, 1.4, 0.5];
+const bord = (x) => x < 12 ? " bord-g" : x > 88 ? " bord-d" : "";
+
+function base(s, m) {
+  const k = 100 * s.oui_connu, p = 100 * s.oui_extrapole, g = p >= 50;
+  const lo = Math.max(0, p - m), hi = Math.min(100, p + m);
+  return { k, p, g, m, lo, hi, dedans: k >= lo && k <= hi, cible: p >= k ? lo : hi, c: C(g) };
+}
+
+// La forme C2, une fois pour toutes ; l'option ne change que la classe du conteneur.
+function haltere(s, m, classe) {
+  const b = base(s, m);
+  const trajet = b.dedans ? "" :
+    `<i class="trajet" style="left:${Math.min(b.k, b.cible)}%;width:${Math.abs(b.cible - b.k)}%"></i>
+     <i class="fleche ${b.p >= b.k ? "droite" : "gauche"}" style="left:${b.cible}%"></i>`;
+  return `<div class="nom">${s.nom}</div><div class="haltere ${classe}">
+    <i class="rail"></i><i class="seuil"></i>
+    <i class="zone" style="left:${b.lo}%;width:${b.hi - b.lo}%;--c:${b.c}"></i>
+    ${trajet}<i class="connu" style="left:${b.k}%"></i>
+    <em class="v-connu tnum${bord(b.k)}" style="left:${b.k}%">${P(b.k)}</em>
+    <em class="v-proj tnum${bord(b.p)}" style="left:${b.p}%;color:${b.c}">${P(b.p)} <span class="marge">± ${N(b.m)}${b.dedans ? " · dépouillé dans la marge" : ""}</span></em>
+  </div>`;
+}
+
+const OPTIONS = [
+  { lettre: "R0", classe: "", groupe: "majorite", titre: "Aujourd'hui, pour comparer",
+    parti: "Les deux traits tels qu'ils sont sur les autres planches : même largeur, même noir, la majorité à peine plus pâle.",
+    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="trait" style="opacity:.7"></i>majorité</span><span><i class="zone"></i>intervalle</span>`,
+    note: "Le problème posé : sur LSU (52,8 %) et sur le scénario de fin (50,7 %), il faut regarder deux fois pour savoir quel trait est le seuil." },
+  { lettre: "R1", classe: "r1", groupe: "majorite", titre: "Majorité en pointillé",
+    parti: "Le seuil est une ligne pointillée, la valeur un trait plein : le vocabulaire habituel des lignes de référence.",
+    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="pointille"></i>majorité</span><span><i class="zone"></i>intervalle</span>`,
+    note: "Le plus petit changement possible, et il suffit souvent : un pointillé se lit comme « une référence », pas comme « une donnée ». Reste noir, donc reste bien visible à travers la zone hachurée — mais pointillé et hachures se brouillent un peu quand ils se superposent." },
+  { lettre: "R2", classe: "r2", groupe: "majorite", titre: "Majorité en filet gris, pleine hauteur",
+    parti: "Le seuil devient une ligne de grille : fine, grise, qui traverse toute la rangée, du chiffre du haut à celui du bas.",
+    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="filet"></i>majorité</span><span><i class="zone"></i>intervalle</span>`,
+    note: "La majorité n'est plus une marque parmi les marques, c'est le décor : la seule chose noire et courte, c'est le dépouillé. Très lisible. Le filet doit rester visible à travers la zone hachurée — il passe derrière, et on le devine plutôt qu'on le voit quand la zone le couvre. Sur la page entière, huit filets alignés à 50 forment une colonne : c'est un atout." },
+  { lettre: "R3", classe: "r3", groupe: "majorite", titre: "Majorité par un triangle sous le rail",
+    parti: "Plus de ligne du tout : un petit triangle sous le rail marque 50. Le seul trait vertical de la rangée est le dépouillé.",
+    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="tri"></i>majorité</span><span><i class="zone"></i>intervalle</span>`,
+    note: "Tranche net : une forme différente, aucune confusion possible. Mais le triangle est petit et sous le rail, là où passe le chiffre du projeté quand il est proche de 50 — précisément les cas serrés qu'on veut lire. Et « la zone passe-t-elle 50 ? » demande de prolonger mentalement une pointe vers le haut." },
+  { lettre: "R4", classe: "r4", groupe: "majorite", titre: "Le rail change de teinte à 50",
+    parti: "Plus de ligne non plus : le rail est teinté, rouge très pâle à gauche de 50, bleu très pâle à droite. Le seuil est une frontière de couleur.",
+    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="moitie"></i>rail, teinté de part et d'autre de 50</span><span><i class="zone"></i>intervalle</span>`,
+    note: "La question « l'intervalle passe-t-il 50 ? » devient « la zone chevauche-t-elle la frontière ? », et on la voit sans chercher de ligne. Reprend l'idée de E et de C7 avec le fond plutôt que la zone. Le rail plus épais alourdit un peu, et la teinte doit rester assez pâle pour ne pas concurrencer le hachuré." },
+  { lettre: "R5", classe: "r5", groupe: "depouille", titre: "Dépouillé en losange",
+    parti: "Le dépouillé n'est plus un trait mais un losange noir posé sur le rail ; le seul trait vertical est la majorité.",
+    legende: `<span><i class="losange"></i>dépouillé</span><span><i class="trait" style="opacity:.7"></i>majorité</span><span><i class="zone"></i>intervalle</span>`,
+    note: "Deux formes, deux rôles : le point-valeur, la ligne-seuil. Le losange reste visible sur la zone hachurée grâce à son halo. À la fin, il est dedans, coupé par le trait de majorité : ça se lit. Mais c'est une forme ronde-ish qui revient à la porte après qu'on a chassé la pastille — même si elle est noire et petite." },
+  { lettre: "R6", classe: "r6", groupe: "depouille", titre: "Dépouillé en épingle",
+    parti: "Le trait garde sa hauteur mais reçoit une tête : un triangle pointé vers le bas, comme une épingle plantée à la valeur.",
+    legende: `<span><i class="epingle"></i>dépouillé</span><span><i class="trait" style="opacity:.7"></i>majorité</span><span><i class="zone"></i>intervalle</span>`,
+    note: "La tête dit « ici », comme un repère sur une carte ; la majorité, sans tête, reste une ligne. Le trait garde l'avantage du trait — précis, fin — et la flèche du trajet part de son pied sans se mêler à la tête. Bonne compatibilité avec R1 ou R2." },
+  { lettre: "R7", classe: "r7", groupe: "depouille", titre: "Dépouillé en pilule, majorité fine",
+    parti: "Un contraste de poids : le dépouillé est un trait épais et arrondi, la majorité un fil d'un pixel, gris.",
+    legende: `<span><i class="pilule"></i>dépouillé</span><span><i class="filet" style="background:var(--gris)"></i>majorité</span><span><i class="zone"></i>intervalle</span>`,
+    note: "Le regard va au plus gras, et le plus gras est la donnée. Simple et robuste, mais la majorité fine risque de disparaître à travers la zone hachurée, et sur un écran de téléphone un pixel gris se perd." },
+  { lettre: "R8", classe: "r8", groupe: "depouille", titre: "Le rail s'interrompt à 50",
+    parti: "Plus de ligne, plus de triangle : le rail est coupé à 50, une brèche de huit pixels. Le trait du dépouillé est le seul vertical.",
+    legende: `<span><i class="trait"></i>dépouillé</span><span><i class="coupe"></i>rail interrompu à 50</span><span><i class="zone"></i>intervalle</span>`,
+    note: "Le plus discret. La brèche se voit sur le rail nu, mais la zone hachurée la recouvre exactement dans les cas serrés — quand l'intervalle passe 50, on ne voit plus où est 50. À écarter seul ; en complément d'un autre repère, il donne une respiration." },
+];
+
+const curseur = document.getElementById("marge");
+function dessiner() {
+  const m0 = parseFloat(curseur.value);
+  document.getElementById("marge-val").textContent = "± " + N(m0) + " pts";
+  document.getElementById("grille").innerHTML = OPTIONS.map((o) => `
+    <section class="carte ${o.groupe}">
+      <h2><span class="lettre">${o.lettre}</span>${o.titre}</h2>
+      <p class="parti">${o.parti}</p>
+      <div class="legende">${o.legende}</div>
+      ${SUJETS.map((s, i) => `<div class="objet${i === 3 ? " fin" : ""}">${haltere(s, m0 * FACTEURS[i], o.classe)}</div>`).join("")}
+      <p class="note">${o.note}</p>
+    </section>`).join("");
+}
+curseur.addEventListener("input", dessiner);
+dessiner();
+</script>
+</body>
+</html>

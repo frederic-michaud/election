@@ -9,6 +9,47 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-11, suite — La barre noire change de côté ; deux traits qui se ressemblent
+
+**Point de départ.** Deux suggestions. Sur C1, mettre la barre noire toujours
+du côté opposé à la flèche, pour qu'on voie la flèche : elle part donc parfois
+de la gauche, parfois de la droite. Et un problème qu'on voit partout : le
+trait du dépouillé et celui de la majorité se ressemblent, ce qui rend les
+graphiques difficiles à lire — explorer différentes options.
+
+**Ce qu'on a fait.**
+
+- *C1.* La barre part de la gauche quand la projection monte, de la droite
+  quand elle descend. La flèche est toujours sur le rail gris, jamais sur la
+  barre : elle redevient noire, comme sur les autres formes. Le prix, noté
+  dans la carte : quand la barre part de la droite, sa longueur est la part de
+  *non* — seule son extrémité compte, et il faut le savoir.
+- *Une nouvelle planche, `barres-reperes.html`.* Huit options pour distinguer
+  les deux traits, sur la forme C2, avec les quatre scénarios et le curseur,
+  plus l'état actuel (R0) pour comparer. Quatre travaillent la majorité :
+  pointillé (R1), filet gris pleine hauteur (R2), triangle sous le rail (R3),
+  rail teinté rouge/bleu de part et d'autre de 50 (R4). Quatre travaillent le
+  dépouillé : losange (R5), épingle (R6), pilule épaisse contre majorité fine
+  (R7), rail interrompu à 50 (R8). Une option de chaque groupe se combine.
+
+**Décisions.**
+
+- *La planche n'applique rien aux autres pages.* On choisit d'abord, on
+  reporte ensuite — sur `barres-intervalle.html`, puis sur D′.
+- *Les options changent une seule chose à la fois*, le trait du seuil ou celui
+  de la valeur, pour qu'on compare des repères et pas des styles.
+
+**Ce qu'on a vu.** R2 (filet gris pleine hauteur) est le plus lisible : la
+majorité devient le décor, la seule chose noire et courte est la donnée, et
+sur une page entière les filets alignés forment une colonne à 50. R6
+(épingle) est le meilleur côté dépouillé : le trait garde sa précision, la tête
+dit « ici ». R4 (rail teinté) répond le plus directement à la question « la
+zone passe-t-elle 50 ? » sans aucune ligne. R3 et R8 s'effacent dans les cas
+serrés, ceux qu'on veut justement lire ; R5 fait revenir une forme ronde
+qu'on vient de chasser. Combinaison à essayer en premier : R2 + R6.
+
+**Ouvert.** Choisir un repère, ou une paire, et le reporter partout.
+
 ## 2026-09-11, toujours — Plus de pastille : la question, c'est 50 %
 
 **Point de départ.** Refaire toutes les variations sans la pastille centrale.

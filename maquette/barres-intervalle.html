@@ -79,6 +79,8 @@ h1 { font-size: 1.4rem; margin: 0 0 4px; letter-spacing: -.01em; }
 .haltere .connu { position: absolute; top: 16px; height: 25px; width: 2px; margin-left: -1px; background: var(--encre); box-shadow: 0 0 0 1.5px #fff; }
 .haltere .barre-noire { position: absolute; left: 0; top: 24px; height: 9px; background: var(--encre); border-radius: 0 4px 4px 0; }
 .haltere .barre-noire::after { content: ""; position: absolute; right: -1px; top: -8px; height: 25px; width: 2px; background: var(--encre); box-shadow: 0 0 0 1.5px #fff; }
+.haltere .barre-noire.depuis-droite { left: auto; right: 0; border-radius: 4px 0 0 4px; }
+.haltere .barre-noire.depuis-droite::after { right: auto; left: -1px; }
 .haltere .trajet { position: absolute; top: 27.5px; height: 2px; }
 .haltere .fleche { position: absolute; top: 23.5px; width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
 .haltere .fleche.droite { margin-left: -8px; border-left: 8px solid; }
@@ -108,7 +110,8 @@ calcule pas encore de marge : celle-ci est <b>illustrative</b>, différente pour
 × 1, × 1,4) pour voir un intervalle étroit et un large, et le curseur la fait varier. Un <b>quatrième
 scénario, fictif</b>, est ajouté aux trois objets du jour : la fin du dépouillement, quand le dépouillé
 tombe dans l'intervalle et que la correction est plus petite que la marge — l'état le plus fréquent
-de la soirée. Toutes les variations y sont jugées.</p>
+de la soirée. Toutes les variations y sont jugées. Le trait du dépouillé et celui de la majorité se
+ressemblent : la <a href="barres-reperes.html">planche des repères</a> explore comment les distinguer.</p>
 
 <div class="reglage">
   <label for="marge">Marge illustrative</label>
@@ -175,12 +178,14 @@ const haltere = (...m) => `<div class="haltere">${std.rail}${m.join("")}</div>`;
 const VARIATIONS = [
   {
     lettre: "C1", titre: "Barre noire vers la zone hachurée",
-    parti: "La proposition de départ : le dépouillé est une barre noire pleine, qui pointe vers une zone hachurée — l'intervalle. Le projeté n'est qu'un chiffre, sous la zone.",
+    parti: "La proposition de départ : le dépouillé est une barre noire pleine, qui pointe vers une zone hachurée — l'intervalle. La barre part toujours du côté opposé à la flèche : de la gauche quand la projection monte, de la droite quand elle descend.",
     legende: `<span><i class="barre"></i>dépouillé</span><span><i class="fl"></i>vers l'intervalle</span>
               <span><i class="zone hachure"></i>intervalle du projeté</span><span><i class="seuil"></i>majorité</span>`,
-    note: "La barre pleine donne du poids au fait. Quand la projection descend (LTr), la flèche revient sur la barre noire et prend la couleur du verdict pour rester visible. À la fin : la barre entre dans la zone et s'y arrête, son extrémité marquée d'un trait — « le compté a rejoint l'estimé ». Mais l'image « une barre qui pointe vers une zone » n'a plus lieu d'être : une forme de début de soirée.",
+    note: "La barre pleine donne du poids au fait, et la flèche est toujours sur le rail gris, jamais sur la barre : lisible, et noire comme ailleurs. Le prix : quand la barre part de la droite (LTr), sa longueur est la part de non, pas la part de oui — seule son extrémité compte, et il faut le savoir. À la fin : la barre entre dans la zone et s'y arrête, son extrémité marquée d'un trait — « le compté a rejoint l'estimé ».",
     rendu: (s, m) => { const b = base(s, m); return nom(s) + haltere(
-      std.zone(b, "hachure"), std.trajet(b, b.c), `<i class="barre-noire" style="width:${b.k}%"></i>`, std.vConnu(b), std.vProj(b)); },
+      std.zone(b, "hachure"), std.trajet(b, "var(--encre)"),
+      b.p >= b.k ? `<i class="barre-noire" style="width:${b.k}%"></i>` : `<i class="barre-noire depuis-droite" style="width:${100 - b.k}%"></i>`,
+      std.vConnu(b), std.vProj(b)); },
   },
   {
     lettre: "C2", titre: "Trait vers la zone hachurée",

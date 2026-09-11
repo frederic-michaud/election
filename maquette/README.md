@@ -67,6 +67,7 @@ sépare est un choix, pas un hasard.
 | `accueil-*.html`, `index.html` | les variantes et leur sommaire | oui |
 | `barres.html` | planche : dix barres « dépouillé / projeté » à comparer, sans Plotly | oui |
 | `barres-intervalle.html` | planche : neuf variations de l'haltère C avec un intervalle de confiance et sans pastille, quatre scénarios dont la fin du dépouillement, marge réglable | oui |
+| `barres-reperes.html` | planche : huit façons de distinguer le trait du dépouillé de celui de la majorité, sur la forme C2 | oui |
 | `capture.mjs` | capture PNG d'une variante (Playwright), pour discuter par message | oui |
 | `figures.js` | contrat de vue + figures en JSON (`window.VUE`, `FIGURES`, `GEOJSON`) | oui (généré, 1,8 Mo) |
 | `plotly.min.js` | plotly.js, copié du paquet Python — la version qui a produit les figures | oui (généré, 4,6 Mo) |
