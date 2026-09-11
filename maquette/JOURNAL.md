@@ -9,6 +9,40 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-11, nuit, épilogue ter — La fourchette à droite de la pastille
+
+**Point de départ.** Malentendu sur le placement : la fourchette était attendue
+à droite de la pastille « extrapolé », pas au-dessus.
+
+**Ce qu'on a fait.** Le bloc des valeurs passe d'un flex à deux colonnes à une
+grille de deux rangées et trois colonnes :
+
+    46,9 %                          54,4 %
+    [EXTRAPOLÉ]  fourchette      [DÉPOUILLÉ]
+                 44,8 – 49,0 %
+
+- *Première rangée* : le grand chiffre à gauche, le chiffre gris du dépouillé
+  dans la dernière colonne.
+- *Seconde rangée* : la pastille « extrapolé », la fourchette sur deux lignes
+  à sa droite, la pastille « dépouillé ». Les deux pastilles sont centrées sur
+  la même ligne, la fourchette centrée entre elles.
+- *La dernière colonne* garde le dépouillé, chiffre et pastille centrés l'un
+  sur l'autre, calé sur la fin de la barre.
+- *Le balisage suit l'ordre de lecture* — chiffre, pastille et fourchette de
+  l'extrapolé, puis chiffre et pastille du dépouillé — et la grille le place.
+
+**La contrainte.** La seconde rangée est la plus large : deux pastilles et une
+fourchette doivent tenir dans le panneau le plus étroit du mur, 254 px de
+contenu (trois colonnes à 980 px de large). Pastilles et fourchette sont donc,
+elles aussi, dimensionnées sur la largeur du panneau, avec un espacement des
+lettres des pastilles un peu resserré (0,08 em au lieu de 0,1).
+
+**Vérifié.** À 375, 700, 980, 1000 et 1240 px : fourchette à droite de sa
+pastille, toujours sur deux lignes, bornes jamais coupées, pastilles sur la même
+ligne, dépouillé calé sur la barre, aucun débordement. Au plus serré (980 px),
+10 px séparent la fourchette de la pastille « dépouillé », et le texte des
+pastilles descend à 9,7 px : lisible, mais c'est la limite.
+
 ## 2026-09-11, nuit, épilogue bis — La fourchette chiffrée sous l'extrapolé
 
 **Point de départ.** Mettre en petit, à gauche sous le chiffre en couleur et
