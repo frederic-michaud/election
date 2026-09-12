@@ -265,6 +265,9 @@ class Command(BaseCommand):
                             help="Compare lstsq et scipy.optimize.minimize, puis sort")
         parser.add_argument("--chronometre", action="store_true",
                             help="Chronomètre une cible et extrapole le coût, puis sort")
+        parser.add_argument("--scenarios", default=None,
+                            help="Sous-ensemble de scénarios, séparés par des virgules "
+                                 "(défaut : tous). Ex. profil_bas,profil_haut,realiste")
         parser.add_argument("--figure-mecanisme", action="store_true",
                             help="Trace pourquoi le tri sur le %%oui biaise, et pas le tri sur le profil")
         parser.add_argument("--analyse-garde-fou", action="store_true",
@@ -338,7 +341,7 @@ class Command(BaseCommand):
         rng = np.random.default_rng(options["graine"] + ctx["sujet_id"])
         effectifs = self.effectifs(ctx["nb_communes"], options["grille"])
         resultats = {}
-        for scenario in COULEURS:
+        for scenario in self.scenarios:
             nb_tirages = options["tirages"] if scenario == "realiste" else 1
             empile = {cle: [] for cle in ("oui_projete", "oui_depouille",
                                           "avance_affichee", "cond", "levier_max",
@@ -376,8 +379,17 @@ class Command(BaseCommand):
         if options["figure_mecanisme"]:
             return self.figure_mecanisme(options)
 
+        self.scenarios = dict(COULEURS)
+        if options["scenarios"]:
+            voulus = [x.strip() for x in options["scenarios"].split(",")]
+            inconnus = [x for x in voulus if x not in COULEURS]
+            if inconnus:
+                raise CommandError(f"Scénario inconnu : {inconnus} — "
+                                   f"choix possibles {list(COULEURS)}")
+            self.scenarios = {x: COULEURS[x] for x in voulus}
         sujets, communes, oui, non, elec, bul, cibles = self.preparer(options)
-        self.journal(f"{len(cibles)} cible(s), base {options['base']}")
+        self.journal(f"{len(cibles)} cible(s), {len(self.scenarios)} scénario(s), "
+                     f"base {options['base']}")
         if not cibles:
             raise CommandError("Aucune cible sélectionnée")
 
@@ -480,7 +492,7 @@ class Command(BaseCommand):
         lignes = []
         marge = options["marge_graphique"] / 100
         for ctx in meta:
-            for scenario in COULEURS:
+            for scenario in self.scenarios:
                 donnees = toutes[ctx["sujet_id"]][scenario]
                 variantes = [("", np.nanmean(donnees["oui_projete"], axis=0)),
                              ("mediane", np.nanmedian(donnees["oui_projete"], axis=0)),
@@ -569,7 +581,7 @@ class Command(BaseCommand):
         for axe, cle, titre in (
                 (haut, "oui_projete", "Extrapolation"),
                 (bas, "oui_depouille", "Dépouillement nu (sans extrapolation)")):
-            for scenario, couleur in COULEURS.items():
+            for scenario, couleur in self.scenarios.items():
                 ecarts = np.array([
                     np.nanmean(toutes[ctx["sujet_id"]][scenario][cle], axis=0)
                     - ctx["vrai_oui"] for ctx in meta]) * 100
@@ -594,7 +606,7 @@ class Command(BaseCommand):
 
     def tracer(self, axe, ctx, courbes, grille_avance, marge, compact=False):
         vrai = 100 * ctx["vrai_oui"]
-        for scenario, couleur in COULEURS.items():  # noqa: B007
+        for scenario, couleur in self.scenarios.items():
             donnees = courbes[scenario]["oui_projete"] * 100
             moyenne = np.nanmean(donnees, axis=0)
             axe.plot(grille_avance, moyenne, color=couleur, lw=1.2,
@@ -636,6 +648,8 @@ class Command(BaseCommand):
                          f"{med('avance_err_1pt'):7.3f} "
                          f"{med('avance_levier_sous_seuil'):9.3f}")
 
+        if not {"adversarial_bas", "adversarial_haut"} <= set(self.scenarios):
+            return
         rejoints = []
         for ctx in meta:
             courbes = toutes[ctx["sujet_id"]]
