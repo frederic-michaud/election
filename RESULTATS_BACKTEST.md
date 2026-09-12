@@ -112,6 +112,11 @@ Frédéric a objecté qu'un biais aussi systématique sur la courbe *extrapolée
 n'avait pas de raison d'être. Vérification faite, **le code est juste, mais
 l'objection touchait juste** : le protocole était trop pessimiste.
 
+Recoupement supplémentaire : sur un ordre adversarial, le balayage vectorisé
+et les fonctions de production elles-mêmes (`get_linear_parameter`, donc
+`scipy.optimize.minimize`) donnent le même %oui projeté à **3·10⁻⁶ – 3·10⁻⁵
+point** près, à k = 50, 200, 800 et 1 500.
+
 **Le code d'abord.** Sur des données engendrées exactement par le modèle
 (résidu nul), le biais adversarial vaut **2·10⁻¹² point** — fit, agrégation,
 ordre et balayage sont donc corrects. Et sur un objet réel, une projection
@@ -149,6 +154,54 @@ Le vrai pire cas atteignable est un ordre corrélé à quelque chose d'observabl
 d'avance : le profil politique, la langue, le canton. D'où les deux scénarios
 `profil_bas` / `profil_haut`, qui trient sur la 1ʳᵉ composante ACP.
 
+### Biais systématique contre dispersion
+
+Distinction essentielle, et que la première version du rapport confondait : la
+médiane de |erreur| mélange un décalage systématique et de la dispersion autour
+de zéro. Colonne de gauche |erreur|, colonne du milieu l'écart **signé**,
+médianes sur 30 objets à 10 % d'avance :
+
+| scénario | \|erreur\| | **biais signé** | objets sous la vérité |
+|---|---|---|---|
+| adversarial bas (oracle) | 8,45 | **−8,45** | 100 % |
+| adversarial haut (oracle) | 8,49 | **+8,49** | 7 % |
+| profil bas | 1,68 | **+0,31** | 47 % |
+| profil haut | 4,61 | **−0,68** | 57 % |
+| réaliste | 0,54 | **+0,11** | 43 % |
+| *dépouillement nu — réaliste* | 3,74 | **−2,17** | 80 % |
+| *dépouillement nu — profil bas* | 11,82 | **−8,21** | 80 % |
+| *dépouillement nu — profil haut* | 12,41 | **+7,97** | 20 % |
+
+**Le dépouillement nu a un biais systématique dans tous les scénarios, et
+l'extrapolation le supprime quasi entièrement** : −2,17 → +0,11 en réaliste,
+−8,21 → +0,31 en profil bas, +7,97 → −0,68 en profil haut. Pour tout ordre
+d'arrivée atteignable, le biais résiduel de la projection est **sous 0,7 point
+et de direction aléatoire** (47 % / 57 % / 43 % d'objets sous la vérité, soit
+du 50-50). Ce qui reste dans la colonne |erreur| est de la dispersion, pas un
+décalage.
+
+Les deux seuls scénarios à biais systématique sont ceux qui trient sur le
+résultat lui-même — 100 % et 93 % des objets du même côté.
+
+### Pourquoi le tri sur le %oui biaise, et pas le tri sur le profil
+
+Simulation directe, `y = 0,10·x + 0,45 + ε`, σ(ε) = 3,3 pt, 4 000 tirages :
+
+| sélection | k | biais moyen | écart-type | P(biais < 0) |
+|---|---|---|---|---|
+| sur **x** | 5 | +0,13 | 33,8 | 51,3 % |
+| sur **x** | 20 | −0,01 | 7,4 | 49,6 % |
+| sur **x** | 200 | −0,00 | 1,0 | 50,6 % |
+| sur **y** | 5 | −20,2 | 11,4 | 96,8 % |
+| sur **y** | 20 | −15,2 | 4,2 | **100 %** |
+| sur **y** | 200 | −7,3 | 0,8 | **100 %** |
+
+Sélectionner sur la variable explicative donne un estimateur non biaisé, juste
+très dispersé à petit k — l'erreur de **pente** est symétrique. Sélectionner
+sur la variable expliquée biaise le **niveau** : la droite ajustée passe par le
+centroïde des points retenus, qui ont tous un résidu du même signe, et la
+constante étant partagée, la prédiction est décalée partout.
+
 ### Les quatre bornes, médianes sur 30 objets
 
 | scénario | err@10 % | err@25 % | err@50 % | nu @10 % |
@@ -168,7 +221,8 @@ Avance à laquelle les deux bornes se rejoignent (écart < 1 point) :
 
 **La borne pessimiste réellement atteignable est donc ~50 % d'avance, pas
 84 %.** Et sous un ordre hostile mais prévisible, l'extrapolation tient déjà
-sous 2 points dès 10 % d'avance — contre 12 points pour le dépouillement nu.
+sous 2 points dès 10 % d'avance — contre 12 points pour le dépouillement nu —
+sans biais systématique (voir ci-dessus) : ce qui reste est de la dispersion.
 
 **Une réserve sérieuse malgré tout** : `profil_haut` explose à très faible
 avance — erreur médiane **21,6 points** en dessous de 2 % d'avance, jusqu'à
@@ -177,57 +231,3 @@ régression à extrapoler vers l'autre extrémité du spectre, avec un levier
 énorme. C'est un mode de défaillance physiquement atteignable (un canton qui
 dépouille vite et vote d'un bloc), et c'est exactement ce que le levier détecte.
 
-## Le levier remplace-t-il le « ≥ 7 communes » ?
-
-Pouvoir discriminant (AUC sur « erreur < 1 point »), pool équilibré = les trois
-ordres à poids égal :
-
-| prédicteur | pool équilibré | réaliste seul | adversariaux |
-|---|---|---|---|
-| **levier max** | **0,787** | 0,711 | 0,918 |
-| communes dépouillées | 0,757 | 0,711 | 0,894 |
-| avance | 0,638 | 0,712 | 0,955 |
-
-L'avance est le meilleur prédicteur *dans* un scénario et le pire *entre*
-scénarios : elle ne sait pas qui manque. Le levier est le seul prédicteur
-agnostique à l'ordre d'arrivée.
-
-Sur son vrai métier — bloquer l'absurde : les 55 instantanés au-delà de 100
-points d'erreur ont tous **7 à 9 communes** et un levier ≥ 1,7.
-
-- seuil **levier ≤ 1,7** : les élimine tous, garde **99,1 %** du pool ;
-- seuil **≥ 10 communes** : les élimine tous, garde **97,8 %**.
-
-À pire-cas égal, part du pool admise : 1,42× plus de points admis par le levier
-à 10 points de pire cas, 1,30× à 2 points, mais 0,86× à 20 points — l'avantage
-est réel mais modeste et pas uniforme.
-
-**Recommandation.** Remplacer `if len(...) < 7` par un test sur `max hᵢ` des
-communes manquantes :
-
-1. **levier > 1,7** → ne rien afficher (remplaçant direct du « ≥ 7 communes »,
-   il est strictement plus sûr : le seuil actuel laisse passer 55 projections
-   au-delà de 100 points d'erreur, dont certaines au-dessus de 100 % de oui) ;
-2. **levier > ~1,5·10⁻⁴** → afficher en signalant que c'est indicatif.
-
-Ce n'est pas un certificat de fiabilité : même au seuil le plus sévère, la
-précision sur « erreur < 1 point » plafonne vers 90 %. Le levier est un bon
-filtre d'absurdité ; le certificat, lui, n'existe pas avant ~84 % d'avance, et
-c'est un fait sur la méthode, pas sur son implémentation.
-
-## Limites
-
-- Les communes arrivent **une par une**, jamais par blocs cantonaux. Les vrais
-  scrutins arrivent par blocs, ce qui devrait dégrader le réaliste. Étape
-  suivante.
-- `electeur_election_precedente` vient de l'objet précédent de la base : les
-  communes fusionnées entre-temps ne sont pas rejouées à la frontière de
-  l'époque.
-- La loi d'arrivée est calibrée sur 5 cantons (ZH/AG/GR/SZ/ZG), R² = 0,29,
-  σ = 46 min. Les cantons romands, plus rapides, ne sont pas représentés.
-
-## Fichiers
-
-Commités : le script, `backtest_synthese.csv`, ce document. Non commités
-(`var/` ignoré) : `courbes.csv.gz` (588 k instantanés), `objet_*.png`,
-`recapitulatif.png`, `snapshot.sqlite3`.

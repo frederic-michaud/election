@@ -491,7 +491,9 @@ class Command(BaseCommand):
                     variantes.append(("enveloppe", enveloppe))
                 levier = np.nanmean(donnees["levier_max"], axis=0)
                 for suffixe, courbe in variantes:
-                    erreur = np.abs(courbe - ctx["vrai_oui"]) * 100
+                    # Signé : sépare le biais (systématique) de la dispersion.
+                    ecart = (courbe - ctx["vrai_oui"]) * 100
+                    erreur = np.abs(ecart)
                     lignes.append({
                         "date": ctx["date"], "sujet": ctx["sujet_id"],
                         "nom": ctx["nom"][:70],
@@ -504,6 +506,9 @@ class Command(BaseCommand):
                         "erreur_a_10pct": round(float(np.interp(0.10, grille_avance, erreur)), 3),
                         "erreur_a_25pct": round(float(np.interp(0.25, grille_avance, erreur)), 3),
                         "erreur_a_50pct": round(float(np.interp(0.50, grille_avance, erreur)), 3),
+                        "biais_a_10pct": round(float(np.interp(0.10, grille_avance, ecart)), 3),
+                        "biais_a_25pct": round(float(np.interp(0.25, grille_avance, ecart)), 3),
+                        "biais_a_50pct": round(float(np.interp(0.50, grille_avance, ecart)), 3),
                         "avance_levier_sous_seuil":
                             round(self.avance_levier_sous(grille_avance, levier, seuil), 4),
                         "nb_communes": ctx["nb_communes"],
@@ -577,16 +582,19 @@ class Command(BaseCommand):
     def resume(self, table, meta, toutes, grille_avance, seuil):
         self.journal("\n=== Synthèse (médianes sur les cibles) ===")
         self.journal(f"seuil de levier calibré : {seuil:.3g}")
-        entete = f"{'scénario':26} {'err max':>8} {'err@10%':>8} {'err@25%':>8} {'err@50%':>8} {'a<1pt':>7} {'a<0.5pt':>8} {'a levier':>9}"
+        entete = (f"{'scénario':26} {'err max':>8} {'err@10%':>8} {'err@50%':>8} "
+                  f"{'biais@10%':>10} {'biais@50%':>10} {'sous':>5} {'a<1pt':>7} {'a levier':>9}")
         self.journal(entete)
         for scenario in sorted({ligne["scenario"] for ligne in table}):
-            sous = [ligne for ligne in table if ligne["scenario"] == scenario]
+            sous_ens = [ligne for ligne in table if ligne["scenario"] == scenario]
             def med(cle):
-                valeurs = [ligne[cle] for ligne in sous if not np.isnan(ligne[cle])]
+                valeurs = [ligne[cle] for ligne in sous_ens if not np.isnan(ligne[cle])]
                 return np.median(valeurs) if valeurs else np.nan
+            sous = np.mean([ligne["biais_a_10pct"] < 0 for ligne in sous_ens])
             self.journal(f"{scenario:26} {med('erreur_max_pts'):8.2f} {med('erreur_a_10pct'):8.2f} "
-                         f"{med('erreur_a_25pct'):8.2f} {med('erreur_a_50pct'):8.2f} "
-                         f"{med('avance_err_1pt'):7.3f} {med('avance_err_0_5pt'):8.3f} "
+                         f"{med('erreur_a_50pct'):8.2f} {med('biais_a_10pct'):10.2f} "
+                         f"{med('biais_a_50pct'):10.2f} {sous:5.0%} "
+                         f"{med('avance_err_1pt'):7.3f} "
                          f"{med('avance_levier_sous_seuil'):9.3f}")
 
         rejoints = []
