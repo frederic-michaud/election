@@ -551,7 +551,42 @@ class Command(BaseCommand):
         for suffixe in ("png", "pdf"):
             figure.savefig(sortie / f"recapitulatif.{suffixe}", dpi=100)
         plt.close(figure)
-        self.journal(f"Figures : {sortie}/objet_*.{{png,pdf}} et recapitulatif.{{png,pdf}}")
+        self.figure_biais(sortie, meta, toutes, grille_avance, plt)
+        self.journal(f"Figures : {sortie}/objet_*.{{png,pdf}}, recapitulatif.{{png,pdf}} "
+                     f"et biais_agrege.{{png,pdf}}")
+
+    def figure_biais(self, sortie, meta, toutes, grille_avance, plt):
+        """Biais signé médian sur les 30 objets — ce qu'un panneau seul ne montre pas.
+
+        Chaque figure par objet mélange biais et dispersion ; seule l'agrégation
+        signée dit si un scénario décale systématiquement la projection.
+        """
+        figure, (haut, bas) = plt.subplots(2, 1, figsize=(8, 8), sharex=True)
+        for axe, cle, titre in (
+                (haut, "oui_projete", "Extrapolation"),
+                (bas, "oui_depouille", "Dépouillement nu (sans extrapolation)")):
+            for scenario, couleur in COULEURS.items():
+                ecarts = np.array([
+                    np.nanmean(toutes[ctx["sujet_id"]][scenario][cle], axis=0)
+                    - ctx["vrai_oui"] for ctx in meta]) * 100
+                axe.plot(grille_avance, np.nanmedian(ecarts, axis=0), color=couleur,
+                         lw=1.4, label=scenario.replace("_", " "))
+                axe.fill_between(grille_avance,
+                                 np.nanpercentile(ecarts, 25, axis=0),
+                                 np.nanpercentile(ecarts, 75, axis=0),
+                                 color=couleur, alpha=0.12, lw=0)
+            axe.axhline(0, color="black", ls=":", lw=1.1)
+            axe.set_ylim(-12, 12)
+            axe.set_xlim(0, 1)
+            axe.set_ylabel("biais signé (points de %oui)")
+            axe.set_title(f"{titre} — médiane signée sur {len(meta)} objets, "
+                          "bande = quartiles", fontsize=9)
+            axe.legend(fontsize=7)
+        bas.set_xlabel("avance (part des bulletins dépouillés)")
+        figure.tight_layout()
+        for suffixe in ("png", "pdf"):
+            figure.savefig(sortie / f"biais_agrege.{suffixe}", dpi=110)
+        plt.close(figure)
 
     def tracer(self, axe, ctx, courbes, grille_avance, marge, compact=False):
         vrai = 100 * ctx["vrai_oui"]
