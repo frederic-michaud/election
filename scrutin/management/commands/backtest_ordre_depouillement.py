@@ -265,6 +265,8 @@ class Command(BaseCommand):
                             help="Compare lstsq et scipy.optimize.minimize, puis sort")
         parser.add_argument("--chronometre", action="store_true",
                             help="Chronomètre une cible et extrapole le coût, puis sort")
+        parser.add_argument("--figure-mecanisme", action="store_true",
+                            help="Trace pourquoi le tri sur le %%oui biaise, et pas le tri sur le profil")
         parser.add_argument("--analyse-garde-fou", action="store_true",
                             help="Relit courbes.csv.gz et compare les prédicteurs de fiabilité")
 
@@ -371,6 +373,8 @@ class Command(BaseCommand):
             return self.test_equivalence(options)
         if options["analyse_garde_fou"]:
             return self.analyse_garde_fou(options)
+        if options["figure_mecanisme"]:
+            return self.figure_mecanisme(options)
 
         sujets, communes, oui, non, elec, bul, cibles = self.preparer(options)
         self.journal(f"{len(cibles)} cible(s), base {options['base']}")
@@ -745,3 +749,58 @@ class Command(BaseCommand):
             return np.nan, 0.0
         dernier = atteint[-1]
         return float(score[tri][dernier]), cumul[dernier] / fiable.sum()
+
+    # ------------------------------------------------------ mécanisme
+
+    def figure_mecanisme(self, options):
+        """Le modèle corrige le profil, pas le résidu.
+
+        En abscisse la prédiction du modèle ajusté sur *toutes* les communes :
+        les 6 dimensions de l'ACP s'y résument en une seule, et la droite de
+        référence est la première bissectrice.
+        """
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
+        sortie = Path(options["sortie"])
+        sujets, communes, oui, non, elec, bul, cibles = self.preparer(options)
+        ctx = self.contexte(cibles[18], sujets, oui, non, elec, bul, {})
+        nb = ctx["nb_communes"]
+        design = np.column_stack([ctx["composantes"], np.ones(nb)])
+        poids = ctx["bulletins"].astype(float)
+        beta = ajuster(design, ctx["pourcentage_oui"], poids)
+        prediction = design @ beta * 100          # ce que le profil ACP prédit
+        reel = ctx["pourcentage_oui"] * 100
+
+        figure, axes = plt.subplots(1, 2, figsize=(11, 5), sharey=True, sharex=True)
+        cible_bulletins = 0.10 * ctx["exprimes"].sum()
+        for axe, scenario, couleur in ((axes[0], "adversarial_bas", "tab:red"),
+                                       (axes[1], "profil_bas", "tab:purple")):
+            ordre = ordres(scenario, ctx["pourcentage_oui"], ctx["composantes"],
+                           ctx["electeurs"], np.random.default_rng(0))
+            k = int(np.searchsorted(np.cumsum(ctx["exprimes"][ordre]), cible_bulletins)) + 1
+            pris = ordre[:k]
+            axe.scatter(prediction, reel, s=3, color="lightgrey", label="toutes les communes")
+            axe.scatter(prediction[pris], reel[pris], s=6, color=couleur,
+                        label=f"dépouillées à 10 % ({k} communes)")
+            bornes = np.array([prediction.min(), prediction.max()])
+            axe.plot(bornes, bornes, color="black", lw=1.2,
+                     label="modèle ajusté sur toutes")
+            bp = ajuster(design[pris], ctx["pourcentage_oui"][pris], poids[pris])
+            axe.plot(bornes, np.polyval(np.polyfit(prediction[pris],
+                                                   design[pris] @ bp * 100, 1), bornes),
+                     color=couleur, lw=1.6, ls="--",
+                     label="modèle ajusté sur les dépouillées")
+            residu = np.average(reel[pris] - prediction[pris], weights=poids[pris])
+            axe.set_title(f"{scenario.replace('_', ' ')}\n"
+                          f"résidu moyen des dépouillées : {residu:+.2f} pt", fontsize=10)
+            axe.set_xlabel("%oui prédit par le profil ACP")
+            axe.legend(fontsize=7, loc="upper left")
+        axes[0].set_ylabel("%oui réellement observé")
+        figure.suptitle(f"{ctx['date']} — {ctx['nom'][:60]}", fontsize=10)
+        figure.tight_layout()
+        for suffixe in ("png", "pdf"):
+            figure.savefig(sortie / f"mecanisme.{suffixe}", dpi=110)
+        plt.close(figure)
+        self.journal(f"Figure : {sortie}/mecanisme.{{png,pdf}}")
