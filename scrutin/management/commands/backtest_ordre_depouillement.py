@@ -100,7 +100,7 @@ def choisir_cibles(sujets, min_anterieurs, par_annee, journal):
 # ACP antérieure, en mémoire
 # --------------------------------------------------------------------------
 
-def acp_anterieure(oui, non, indices_anterieurs):
+def acp_anterieure(oui, non, indices_anterieurs, nb_composantes=NB_COMPOSANTES):
     """Reproduit getVotationMatrixWithMetaInfo + PCA(6) sur les objets antérieurs.
 
     Le critère d'exclusion se recalcule ici : une commune est retenue si elle a
@@ -112,7 +112,7 @@ def acp_anterieure(oui, non, indices_anterieurs):
     sous_non = non[:, indices_anterieurs]
     valide = ~np.isnan(sous_oui).any(axis=1) & ~np.isnan(sous_non).any(axis=1)
     matrice = sous_oui[valide] / (sous_oui[valide] + sous_non[valide])
-    composantes = PCA(n_components=NB_COMPOSANTES).fit_transform(matrice)
+    composantes = PCA(n_components=nb_composantes).fit_transform(matrice)
     return valide, composantes
 
 
@@ -265,6 +265,9 @@ class Command(BaseCommand):
                             help="Compare lstsq et scipy.optimize.minimize, puis sort")
         parser.add_argument("--chronometre", action="store_true",
                             help="Chronomètre une cible et extrapole le coût, puis sort")
+        parser.add_argument("--composantes", type=int, default=NB_COMPOSANTES,
+                            help="Nombre de composantes ACP du modèle (défaut 6, "
+                                 "comme la production)")
         parser.add_argument("--scenarios", default=None,
                             help="Sous-ensemble de scénarios, séparés par des virgules "
                                  "(défaut : tous). Ex. profil_bas,profil_haut,realiste")
@@ -304,7 +307,7 @@ class Command(BaseCommand):
         anterieurs = [j for j, s in enumerate(sujets) if s[2] < date]
         if date not in cache:
             cache.clear()  # une seule ACP en mémoire à la fois
-            cache[date] = acp_anterieure(oui, non, anterieurs)
+            cache[date] = acp_anterieure(oui, non, anterieurs, self.nb_composantes)
         valide, composantes = cache[date]
 
         cible_ok = ~np.isnan(oui[:, indice]) & ~np.isnan(non[:, indice]) \
@@ -333,8 +336,8 @@ class Command(BaseCommand):
 
     def effectifs(self, nb, grille):
         """Grille log-espacée en nombre de communes : le fin est aux faibles avances."""
-        brut = np.unique(np.round(np.geomspace(SEUIL_COMMUNES, nb, grille)).astype(int))
-        return brut[(brut >= SEUIL_COMMUNES) & (brut <= nb)]
+        brut = np.unique(np.round(np.geomspace(self.seuil, nb, grille)).astype(int))
+        return brut[(brut >= self.seuil) & (brut <= nb)]
 
     def courbes_objet(self, ctx, options, grille_avance):
         """Une ligne par scénario x tirage, interpolée sur la grille commune."""
@@ -379,6 +382,9 @@ class Command(BaseCommand):
         if options["figure_mecanisme"]:
             return self.figure_mecanisme(options)
 
+        self.nb_composantes = options["composantes"]
+        # Il faut au moins autant de communes que de paramètres pour ajuster.
+        self.seuil = max(SEUIL_COMMUNES, self.nb_composantes + 1)
         self.scenarios = dict(COULEURS)
         if options["scenarios"]:
             voulus = [x.strip() for x in options["scenarios"].split(",")]
@@ -670,6 +676,7 @@ class Command(BaseCommand):
         from scrutin.extrapolation import Delta_fast
         sujets, communes, oui, non, elec, bul, cibles = self.preparer(options)
         rng = np.random.default_rng(options["graine"])
+        self.nb_composantes = NB_COMPOSANTES
         cible = cibles[rng.integers(len(cibles))]
         ctx = self.contexte(cible, sujets, oui, non, elec, bul, {})
         nb = ctx["nb_communes"]
@@ -684,7 +691,7 @@ class Command(BaseCommand):
                                    ("participation", ctx["participation"])):
             y = cible_y[masque]
             beta_lstsq = ajuster(design, y, poids)
-            depart = np.full(NB_COMPOSANTES + 1, 0.0)
+            depart = np.full(self.nb_composantes + 1, 0.0)
             depart[-1] = 0.5
             ajustement = scipy.optimize.minimize(
                 Delta_fast, depart,
@@ -779,6 +786,7 @@ class Command(BaseCommand):
 
         sortie = Path(options["sortie"])
         sujets, communes, oui, non, elec, bul, cibles = self.preparer(options)
+        self.nb_composantes = NB_COMPOSANTES
         ctx = self.contexte(cibles[18], sujets, oui, non, elec, bul, {})
         nb = ctx["nb_communes"]
         design = np.column_stack([ctx["composantes"], np.ones(nb)])
