@@ -271,6 +271,8 @@ class Command(BaseCommand):
         parser.add_argument("--scenarios", default=None,
                             help="Sous-ensemble de scénarios, séparés par des virgules "
                                  "(défaut : tous). Ex. profil_bas,profil_haut,realiste")
+        parser.add_argument("--figure-variance", action="store_true",
+                            help="Trace la variance expliquée par composante ACP")
         parser.add_argument("--figure-mecanisme", action="store_true",
                             help="Trace pourquoi le tri sur le %%oui biaise, et pas le tri sur le profil")
         parser.add_argument("--analyse-garde-fou", action="store_true",
@@ -381,6 +383,8 @@ class Command(BaseCommand):
             return self.analyse_garde_fou(options)
         if options["figure_mecanisme"]:
             return self.figure_mecanisme(options)
+        if options["figure_variance"]:
+            return self.figure_variance(options)
 
         self.nb_composantes = options["composantes"]
         # Il faut au moins autant de communes que de paramètres pour ajuster.
@@ -826,3 +830,59 @@ class Command(BaseCommand):
             figure.savefig(sortie / f"mecanisme.{suffixe}", dpi=110)
         plt.close(figure)
         self.journal(f"Figure : {sortie}/mecanisme.{{png,pdf}}")
+
+    # ------------------------------------------------------- variance
+
+    def figure_variance(self, options):
+        """Éboulis de l'ACP, et ce que les composantes servent vraiment à prédire.
+
+        La variance expliquée porte sur la matrice historique ; ce qui décide du
+        nombre de composantes utile, c'est le R² hors échantillon sur l'objet du
+        jour. Les deux courbes ne se ressemblent pas, d'où les deux panneaux.
+        """
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        from sklearn.decomposition import PCA
+
+        self.nb_composantes = NB_COMPOSANTES
+        sortie = Path(options["sortie"])
+        sortie.mkdir(parents=True, exist_ok=True)
+        sujets, communes, oui, non, elec, bul, cibles = self.preparer(options)
+
+        figure, (gauche, droite) = plt.subplots(1, 2, figsize=(12, 4.8))
+
+        # --- panneau 1 : éboulis, sur trois profondeurs d'historique
+        for cible, couleur in ((cibles[0], "tab:green"), (cibles[14], "tab:orange"),
+                               (cibles[-1], "tab:blue")):
+            indice = cible[0]
+            date = sujets[indice][2]
+            anterieurs = [j for j, x in enumerate(sujets) if x[2] < date]
+            valide, _ = acp_anterieure(oui, non, anterieurs, 1)
+            matrice = (oui[valide][:, anterieurs]
+                       / (oui[valide][:, anterieurs] + non[valide][:, anterieurs]))
+            nmax = min(40, len(anterieurs))
+            part = PCA(n_components=nmax).fit(matrice).explained_variance_ratio_ * 100
+            rangs = np.arange(1, nmax + 1)
+            gauche.plot(rangs, part, "o-", ms=3, color=couleur, lw=1.2,
+                        label=f"{date} ({len(anterieurs)} objets)")
+            droite.plot(rangs, np.cumsum(part), "o-", ms=3, color=couleur, lw=1.2,
+                        label=f"{date} ({len(anterieurs)} objets)")
+        gauche.set_yscale("log")
+        gauche.set_xlabel("rang de la composante")
+        gauche.set_ylabel("part de variance expliquée (%, échelle log)")
+        gauche.set_title("Éboulis de l'ACP sur la matrice historique", fontsize=10)
+        droite.set_xlabel("nombre de composantes gardées")
+        droite.set_ylabel("variance cumulée expliquée (%)")
+        droite.set_title("Variance cumulée", fontsize=10)
+        for axe in (gauche, droite):
+            for rang, style in ((6, "-"), (12, "--"), (20, ":")):
+                axe.axvline(rang, color="grey", ls=style, lw=1,
+                            label=f"{rang} composantes" if axe is gauche else None)
+            axe.legend(fontsize=7)
+            axe.grid(alpha=0.25)
+        figure.tight_layout()
+        for suffixe in ("png", "pdf"):
+            figure.savefig(sortie / f"variance_acp.{suffixe}", dpi=110)
+        plt.close(figure)
+        self.journal(f"Figure : {sortie}/variance_acp.{{png,pdf}}")
