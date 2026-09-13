@@ -257,7 +257,7 @@ JSON, produit par la voie M et consommé par la voie I.
 
 ```
 donnees.py     [M]  construire_vue_accueil() -> dict   (aucun Plotly)
-graphiques.py  [I]  histogramme(vue) -> div HTML       (aucun ORM)
+graphiques.py  [I]  accueil(vue) -> contexte du gabarit (aucun ORM)
 views.py    [commun] assemble les deux — doit rester minuscule
 ```
 

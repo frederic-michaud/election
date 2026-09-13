@@ -1,68 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
+{% load static plotly %}<!DOCTYPE html>
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    {% load static %}
-    <link rel="stylesheet" type="text/css" href="{% static 'scrutin/style.css' %}" />
-    <title>Politiques.ch</title>
-    <script src="https://cdn.plot.ly/plotly-2.11.1.min.js"></script>
-    <script>
-    /* Toggle between adding and removing the "responsive" class to topnav when the user clicks on the icon */
-    function myFunction() {
-      var x = document.getElementById("Topnav");
-      if (x.className === "navigation") {
-        x.className += " responsive";
-      } else {
-        x.className = "navigation";
-      }
-    }
-    </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Politiques.ch — Projections de votations</title>
+  <meta name="description" content="Projections de votations &amp; autres analyses de politique helvétique">
+  <link rel="stylesheet" href="{% static 'scrutin/style.css' %}">
+  <script src="{% plotly_cdn %}"></script>
+  <script src="{% static 'carte/cartes.js' %}"></script>
 </head>
 <body>
-  <div id="wrapper">
-    <div id="bandeau">
-    <header>
-      <div id="identite">
-        <img id="logo" src="{% static 'scrutin/logo.png' %}" alt="logo"></img>
+<header>
+  <a class="marque" href="{% url 'home' %}" aria-label="Politiques.ch, accueil">
+    {% include "logo.svg" %}
+    <span class="mot">Politiques<span>.ch</span></span>
+  </a>
+  {% block contexte %}{% endblock %}
+</header>
 
-        <div id="title"><h1>Projections de votations </h1><h2>& autres analyses de politique helvétique</h2>
-        </div>
-      </div>
+<main>
+{% block content %}{% endblock %}
+</main>
 
-
-      <!-- télécharger l'icône pour le menu sur smartphone -->
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
-      <div class="navigation" id="Topnav">
-        <a href="{% url 'home' %}">Accueil</a>
-        <a href="{% url 'cartes' %}">Cartes</a>
-        {# Onglets éditables : un par PageStatique, servis par le context processor. #}
-        {% for page in pages_statiques %}
-        <a href="{% url 'page' page.url %}">{{ page.titre }}</a>
-        {% endfor %}
-        <a href="javascript:void(0);" class="icon" onclick="myFunction()">
-          <i class="fa fa-bars"></i>
-        </a>
-      </div>
-    </header>
-  </div>
-
-
-
-
-    <div id="main">
-    {% block content %}
-    {% endblock %}
-    </div>
-
-    <article id="explanation">
-    {% block explanation %}
-    {% endblock %}
-    </article>
-
-    <footer id="footer">Copyleft Frédéric Michaud & Laurence Chave - 2022
-    </footer>
-  </div>
+<footer>
+  <nav aria-label="Pages du site">
+    {% url 'home' as lien %}
+    <a href="{{ lien }}"{% if request.path == lien %} aria-current="page"{% endif %}>Accueil</a>
+    {% for page in pages_statiques %}{% url 'page' page.url as lien %}
+    <a href="{{ lien }}"{% if request.path == lien %} aria-current="page"{% endif %}>{{ page.titre }}</a>
+    {% endfor %}
+  </nav>
+</footer>
 </body>
 </html>

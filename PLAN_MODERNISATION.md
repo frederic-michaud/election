@@ -337,8 +337,7 @@ future sans toucher au code** — seulement la config et les données.
 - [x] Python 3.12+, Django **5.2 LTS** — épinglé dans `requirements/web.txt`
       depuis le jalon 1 (PR #10). Points d'attention encore ouverts :
       - [x] pandas : `fillna(method='ffill')` déprécié → `.ffill()` (populate_voix) ;
-      - [ ] plotly : `px.choropleth_mapbox` déprécié dans les versions récentes →
-        `px.choropleth_map` (MapLibre) ; vérifier le rendu des cartes ;
+      - [x] plotly : `px.choropleth_mapbox` → `px.choropleth_map` (7.4) ;
       - [x] la route attrape-tout `path("<str>", …)` → `path("<slug:url>", …)`
         + `get_object_or_404` : une URL inconnue (favicon, page absente de la
         base) renvoie 404 au lieu d'un 500. *Reste côté I* : un `404.html`
@@ -737,7 +736,7 @@ l'intérêt.
       **Le site gagnerait la même chose.**
 - [x] `plotly.min.js` copié du paquet Python. *Au passage* : `base.html` charge
       la version **2.11 (2022)** depuis le CDN alors que le Python produit du
-      plotly.js 3. Le vendorage remonte en 7.4.
+      plotly.js 3. Corrigé en 7.4.
 - [x] `figure_carte_svg`, candidate au remplacement de `choropleth_mapbox`,
       déprécié. Les deux sont exportées, les maquettes les comparent :
 
@@ -749,7 +748,7 @@ l'intérêt.
 | Zoom à la souris | oui | non |
 | Impression, capture | aléatoire | fidèle |
 
-#### 7.2 Les variantes **[2]** — *en cours*
+#### 7.2 Les variantes **[2]** — *fait*
 
 Cinq propositions sur les mêmes données et les mêmes figures : ce qui les
 sépare est un choix, pas un hasard. `maquette/index.html` les liste, `charte.js`
@@ -763,37 +762,36 @@ porte leurs réglages.
 | **D** | Soirée électorale | Fond sombre, chiffres énormes, pour être projetée ou vue de loin. |
 | **E** | Écart à la majorité | « À 3,1 points » plutôt que « 46,9 % ». La correction de l'extrapolation rendue visible. |
 
-- [ ] Itérer à deux, **largeur téléphone comprise**.
-- [ ] Trancher **Mapbox ou SVG** (tableau ci-dessus).
-- [ ] Revalider la palette **sur fond sombre** si D est retenue.
-- [ ] **Critère d'arrêt** : une variante validée par les deux, sur grand écran
-      et sur téléphone, palette passée à `validate_palette.js`. Rien de 7.3 ne
-      commence avant.
+- [x] Itérer à deux, **largeur téléphone comprise**.
+- [x] Trancher **Mapbox ou SVG** : SVG dans la maquette, **WebGL
+      (`choropleth_map`) sur le site** — le zoom en SVG était trop lent.
+- [x] ~~Revalider la palette sur fond sombre~~ — sans objet, D′ est sur fond clair.
+- [x] **Critère d'arrêt** : D′ validée à deux le 2026-09-13 (`maquette/PASSAGE.md`).
+- [ ] Palette pas encore passée par `validate_palette.js` (absent du dépôt).
 
 Une variante a le droit de **demander** ce que le site ne fait pas — E propose
 une figure qui n'existe nulle part. Elle sera alors ajoutée à `graphiques.py`,
 jamais bricolée dans `figures.js` ; une donnée hors contrat passe par la voie M.
 
-#### 7.3 Extraire la charte **[I]**
+#### 7.3 Extraire la charte **[I]** — *fait*
 
-- [ ] `style.css` : les variables CSS de la variante retenue, une seule fonte.
-- [ ] `scrutin/charte.py` : transcription de `charte.js`, template Plotly
-      partagé appliqué à *tous* les graphes.
-- [ ] Réécrire la « Cible visuelle » avec ce qui a réellement été retenu.
+- [x] `style.css` réécrit depuis D′, une seule fonte.
+- [x] `scrutin/charte.py` : palette et réglages de la carte.
+- [x] « Cible visuelle » réécrite, ci-dessous.
 
-#### 7.4 Le passage en production **[2]**
+#### 7.4 Le passage en production **[2]** — *fait*
 
 **On ne fusionne pas, on transpose.** `git worktree add ../election-maquette
 maquette` met les deux arbres côte à côte, et l'agent **`passeur`**
 (`.claude/agents/passeur.md`) fait le travail : seul à lire les deux branches,
 d'où des frontières écrites noir sur blanc.
 
-- [ ] `base.html` / `home.html` reproduisent la structure de la variante, les
-      valeurs du contrat à la place des constantes.
-- [ ] Ce qu'elle réclamait de neuf est **demandé, pas contourné**.
-- [ ] Les gains techniques de 7.1 remontent ici, `plotly.min.js` vendoré compris.
-- [ ] **Contrôle** : le site et la variante côte à côte, à 1200 et 400 px. Les
-      figures sortent du même code, seule la mise en page peut diverger.
+- [x] `base.html` / `home.html` reproduisent D′ avec les valeurs du contrat.
+- [x] Ce qui manquait est demandé, pas contourné : langue, fuseau et
+      `mise_a_jour` côté M. Faute d'intervalle de confiance, **marge constante
+      de ±2,5 points** pour la release (`MARGE_PROVISOIRE`, #43).
+- [x] plotly.js depuis le CDN, à la version du paquet Python. *Reste* : le GeoJSON allégé (PR #40).
+- [x] **Contrôle** : site et D′ identiques au pixel à 320, 400, 1000 et 1200 px.
 
 #### 7.5 Après coup
 
@@ -802,35 +800,17 @@ risque est la dérive, tenu par deux garde-fous : ses figures ne sont jamais
 écrites à la main, et elle n'a aucune autorité sur `master`. Le jour où le
 design se stabilise, on peut l'abandonner sans rien perdre.
 
-### Cible visuelle (à confirmer par la maquette) **[I]**
+### Cible visuelle — retenue : D′ **[I]**
 
-Ce qui suit est l'hypothèse de départ de 7.2, **pas un cahier des charges** :
-la maquette peut l'infirmer, et 7.3 la réécrit avec ce qui a été retenu.
+Le détail et le pourquoi sont dans `maquette/PASSAGE.md` (branche `maquette`).
 
-1. **Mini-charte en variables CSS** (`--surface`, `--encre-1/2`, `--bleu-450`…,
-   valeurs de la palette validée ci-dessous) ; **une seule fonte** : la sans
-   système (`system-ui, …`) partout — Garamond peut survivre dans le seul
-   wordmark du logo. Nav/titres dans un bleu ≥ 4,5:1 (ex. `#1c5cab`).
-2. **Module `charte.py`** : constantes de couleurs + template Plotly partagé
-   (fonte, grille hairline `#e1e0d9`, `modebar` masquée, marges, fond
-   `#fcfcfb`) appliqué à *tous* les graphes — un seul endroit à modifier.
-3. **Histogramme votations** : confirmé = bleu `#2a78d6`, extrapolé = bleu
-   clair `#86b6ef` (même teinte, plus clair = estimé — la variante validée
-   `--ordinal` ; l'alternative bleu/orange `#2a78d6`/`#eb6834` est aussi
-   validée). **Ligne de référence à 50 %** (hairline, étiquetée « majorité »).
-   Labels sélectifs : le total projeté seulement, le reste en tooltip.
-4. **Carte** : échelle **divergente bleu ↔ rouge, milieu gris neutre
-   (`#f0efec`) ancré à 50 %** — « penche oui / penche non » lisible d'un coup
-   d'œil, y compris pour les daltoniens. Bornes symétriques autour de 50.
-   Garder `white-bg` ; migrer `choropleth_mapbox` → `choropleth_map`.
-5. **Chiffre héro** : par objet, le % oui projeté en grand + « accepté/refusé »
-   attendu — c'est la une du site, aujourd'hui à déchiffrer dans les barres.
-6. **Accessibilité** : tableau des valeurs sous chaque graphe (repli
-   sans-couleur + copiable), `lang="fr"`, alt/aria sur la nav.
-7. **Hygiène** : icône ☰ en SVG inline (supprimer Font Awesome), favicon,
-   liens réparés, **vendorer `plotly.min.js`** (le CDN casse le mirroir wget
-   hors-ligne et fige la version — et voir 7.1 pour le décalage de version),
-   année du footer dynamique.
+1. **Un mur** : en-tête, avancement, un panneau par objet ; pas d'histogramme.
+2. **Le panneau** : extrapolé en grand dans la couleur du verdict, fourchette,
+   dépouillé en petit gris, barre sans texte, carte.
+3. **La carte** : WebGL, zoomable, sans tuiles ; échelle rouge ↔ neutre ↔ bleu
+   ancrée à 50 %, bornée à 32–68 %.
+4. **Menu en pied de page** : Accueil, puis les pages statiques.
+5. *Encore à faire* : favicon, `404.html`, tableau des valeurs sous les figures.
 
 Palettes validées (`validate_palette.js`, surface `#fcfcfb`) :
 - `#2a78d6` + `#eb6834` : tous contrôles PASS (ΔE daltonien 24,7 ; normal 33,6).

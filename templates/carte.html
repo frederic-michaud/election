@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<article class="page page-carte">
+  <h1>{{ nom }}</h1>
+  <div class="carte"><div class="figure"></div><script type="application/json">{{ carte|safe }}</script></div>
+</article>
+{{ config_carte|json_script:"config-carte" }}
+<script>tracerCartes();</script>
+{% endblock %}
