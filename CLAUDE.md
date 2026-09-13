@@ -45,16 +45,21 @@ lignes `ResultatCommunalEnCours`** des communes non dépouillées (tout en laiss
 `comptabilise=False`). C'est ce qui permet aux cartes d'afficher toute la Suisse —
 mais les cartes **ne distinguent donc pas visuellement réel et estimé**.
 
+L'accueil, lui, affiche pour chaque objet une **fourchette de ±2,5 points, en
+dur** (`scrutin/graphiques.py`, `MARGE_FOURCHETTE`). Elle n'a **aucune valeur
+statistique** : c'est un gabarit d'affichage en attendant l'intervalle par
+bootstrap de la voie Moteur (décision du 2026-09-13, `PLAN_MODERNISATION.md` D1).
+
 ---
 
 ## Applications Django
 
 | App | Rôle |
 |---|---|
-| `scrutin` | Cœur métier : tous les modèles, la logique d'extrapolation, la vue d'accueil, le CSS et le logo. |
+| `scrutin` | Cœur métier : tous les modèles, la logique d'extrapolation, la vue d'accueil, le CSS et le logo. La présentation est à part : `charte.py` (palette et réglages Plotly partagés) et `graphiques.py` (valeurs formatées, géométrie de la barre, figures). |
 | `pca` | Modèle `PCAResult` (6 coordonnées par commune) + vue nuage de points ACP colorée par langue. |
-| `carte` | `carte/API.py` : cartes choroplèthes Plotly sur le GeoJSON communal. |
-| `page_statique` | Pages éditables en base (Méthodes, Contact), servies par la route attrape-tout `path("<slug:url>", …)` (404 si absente). **Ce sont aussi les onglets du menu** : le context processor `page_statique.context_processors.menu` les expose à tous les gabarits, et `base.html` boucle dessus. Ajouter une page en base ajoute donc un onglet, sans toucher au HTML. |
+| `carte` | `carte/figure.py` : la carte choroplèthe communale, en projection SVG (Mercator, échelle divergente rouge ↔ neutre ↔ bleu ancrée à 50 %). `carte/API.py` n'en est plus que l'entrée. |
+| `page_statique` | Pages éditables en base (Méthodes, Contact), servies par la route attrape-tout `path("<slug:url>", …)` (404 si absente). **Ce sont aussi les onglets du menu** — en pied de page depuis la refonte graphique : le context processor `page_statique.context_processors.menu` les expose à tous les gabarits, et `base.html` boucle dessus. Ajouter une page en base ajoute donc un onglet, sans toucher au HTML. |
 
 ### Modèles (`scrutin/models.py`)
 `Canton` → `District` → `Commune` ; `SujetVote` (un objet de votation) ;

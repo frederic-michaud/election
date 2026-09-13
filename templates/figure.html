@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% comment %} Une figure seule, pleine largeur : les vues `/cartes` et `/pca`, qui
+   rendaient jusqu'ici `home.html` et se seraient cassées avec lui. Leur mise
+   en page n'a pas été dessinée par la maquette (voir PASSAGE.md). {% endcomment %}
+{% block content %}
+<div class="figure-seule">{{ plot|safe }}</div>
+{% endblock %}

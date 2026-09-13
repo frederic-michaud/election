@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>{{page_content.titre}}</h2>
-{{page_content.contenu}}
+<article class="page">
+  <h1>{{ page_content.titre }}</h1>
+  {# Le contenu est du HTML saisi en base par l'administration du site : il
+     s'affichait jusqu'ici échappé, balises comprises, en plein milieu de la
+     page. #}
+  {{ page_content.contenu|safe }}
+</article>
 {% endblock %}
-

@@ -22,4 +22,4 @@ def pca_view(requete, *args, **kwargs):
                  width=800, height=800),
                             include_plotlyjs=False,
                             output_type='div')
-    return render(requete, "home.html", {'plot':a})
+    return render(requete, "figure.html", {'plot':a})

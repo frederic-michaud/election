@@ -1,23 +1,59 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="gauche">
-<h2>Pourcentage des "oui" dépouillés et extrapolés pour les objets de votation du {{date}}</h2>
-Basé sur {{avance}} du dépouillement
-</div>
-<div id="histo">
-{{histo|safe}}
-{{info}}
-</div>
-{% for map in maps  %}
-<div class="map">
-{{ map |safe}}
-</div>
-{% endfor %}
-
+{% block contexte %}
+<div class="contexte"><span>Votation fédérale</span> <span class="quand">du {{ date }}</span></div>
 {% endblock %}
 
-{% block explanation %}
-<p class="explanation">
-  </p>
+{% block content %}
+
+<div class="avancement">
+  <div>
+    <div class="l">Dépouillement</div>
+    <div class="v">{{ avance }}</div>
+  </div>
+  <div class="rail"><i style="width:{{ avance_css }}%"></i></div>
+  {% comment %} L'heure de la dernière projection manque au contrat de vue : la maquette
+     affichait celle du navigateur, ce qu'une page mise en cache ne peut pas
+     faire. Demandée à la voie Moteur (`Extrapolation.moment_creation`). {% endcomment %}
+  <div class="note"><i class="point"></i><span>Dépouillement en cours</span></div>
+</div>
+
+{% comment %} Un panneau par objet : le nom, les deux valeurs, la barre, la carte. Tout
+   ce qui s'y calcule vient de `scrutin.graphiques` — un gabarit ne calcule
+   pas. {% endcomment %}
+<section class="mur">
+  {% for panneau in panneaux %}
+  <article class="panneau">
+    <div class="nom">{{ panneau.nom }}</div>
+    <div class="valeurs">
+      <div class="chiffre {{ panneau.verdict }}">{{ panneau.extrapole }}</div>
+      <div class="libelle libelle-ext {{ panneau.verdict }}">extrapolé</div>
+      <div class="fourchette {{ panneau.verdict }}">fourchette<span class="bornes">{{ panneau.bornes }}</span></div>
+      <div class="chiffre-connu">{{ panneau.connu }}</div>
+      <div class="libelle libelle-connu">dépouillé</div>
+    </div>
+    <div class="barre" role="img" aria-label="{{ panneau.resume }}">
+      <i class="rail"></i>
+      <i class="moustache" style="left:{{ panneau.barre.moustache_gauche }}%;width:{{ panneau.barre.moustache_largeur }}%;--c:var(--{{ panneau.verdict }})"></i>
+      {% if panneau.barre.montrer_connu %}
+      <i class="trajet" style="left:{{ panneau.barre.trajet_gauche }}%;width:{{ panneau.barre.trajet_largeur }}%"></i>
+      <i class="fleche {{ panneau.barre.sens }}" style="left:{{ panneau.barre.cible }}%"></i>
+      <i class="connu" style="left:{{ panneau.barre.connu }}%"></i>
+      {% endif %}
+    </div>
+    <div class="carte" id="carte-{{ forloop.counter0 }}"></div>
+    <script type="application/json" id="figure-{{ forloop.counter0 }}">{{ panneau.carte|safe }}</script>
+  </article>
+  {% endfor %}
+</section>
+
+<script>
+  // Chaque carte est tracée dans le cadre qui lui donne ses proportions, pas
+  // dans un enrobage à part : c'est le cadre qui a l'aspect-ratio du pays.
+  for (const cadre of document.querySelectorAll(".carte")) {
+    const figure = JSON.parse(document.getElementById(cadre.id.replace("carte-", "figure-")).textContent);
+    Plotly.newPlot(cadre, figure.data, figure.layout, {{ config_plotly|safe }});
+  }
+</script>
+
 {% endblock %}

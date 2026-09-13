@@ -763,12 +763,19 @@ porte leurs réglages.
 | **D** | Soirée électorale | Fond sombre, chiffres énormes, pour être projetée ou vue de loin. |
 | **E** | Écart à la majorité | « À 3,1 points » plutôt que « 46,9 % ». La correction de l'extrapolation rendue visible. |
 
-- [ ] Itérer à deux, **largeur téléphone comprise**.
-- [ ] Trancher **Mapbox ou SVG** (tableau ci-dessus).
-- [ ] Revalider la palette **sur fond sombre** si D est retenue.
-- [ ] **Critère d'arrêt** : une variante validée par les deux, sur grand écran
-      et sur téléphone, palette passée à `validate_palette.js`. Rien de 7.3 ne
-      commence avant.
+- [x] Itérer à deux, **largeur téléphone comprise**.
+- [x] Trancher **Mapbox ou SVG** : **SVG**. Ni WebGL, ni fond de carte externe,
+      donc imprimable et capturable partout, et sans la dépréciation de
+      `choropleth_mapbox`. Le cadrage se borne à l'emprise des communes, calculé
+      en Python (voir 7.4).
+- [x] Revalider la palette **sur fond sombre** — sans objet : c'est **D′**, la
+      version claire de D, qui a été retenue.
+- [x] **Critère d'arrêt** — *atteint le 2026-09-13*, à une réserve près :
+      **D′ (`accueil-d-clair.html`) est validée par les deux**, sur grand écran
+      et sur téléphone. La réserve : la palette **n'est pas passée par
+      `validate_palette.js`**, qui n'existe pas dans le dépôt, et le rouge du
+      « non » `#c9352b` ne figure pas dans les paires que ce plan donne pour
+      validées. **À faire en 7.3, sans rouvrir la maquette.**
 
 Une variante a le droit de **demander** ce que le site ne fait pas — E propose
 une figure qui n'existe nulle part. Elle sera alors ajoutée à `graphiques.py`,
@@ -776,10 +783,13 @@ jamais bricolée dans `figures.js` ; une donnée hors contrat passe par la voie 
 
 #### 7.3 Extraire la charte **[I]**
 
-- [ ] `style.css` : les variables CSS de la variante retenue, une seule fonte.
-- [ ] `scrutin/charte.py` : transcription de `charte.js`, template Plotly
-      partagé appliqué à *tous* les graphes.
-- [ ] Réécrire la « Cible visuelle » avec ce qui a réellement été retenu.
+- [x] `style.css` : les variables CSS de D′, une seule fonte — la sans du
+      système. Plus de Garamond, plus de Courier New, plus de Font Awesome.
+- [x] `scrutin/charte.py` : transcription de `charte.js`, palette et réglages
+      Plotly appliqués à *tous* les graphes par `appliquer_charte`.
+- [x] Réécrire la « Cible visuelle » avec ce qui a réellement été retenu.
+- [ ] **Valider la palette** : le rouge `#c9352b` du « non » n'est encore passé
+      par aucun contrôle de contraste ni de vision daltonienne (voir 7.2).
 
 #### 7.4 Le passage en production **[2]**
 
@@ -788,12 +798,37 @@ maquette` met les deux arbres côte à côte, et l'agent **`passeur`**
 (`.claude/agents/passeur.md`) fait le travail : seul à lire les deux branches,
 d'où des frontières écrites noir sur blanc.
 
-- [ ] `base.html` / `home.html` reproduisent la structure de la variante, les
-      valeurs du contrat à la place des constantes.
-- [ ] Ce qu'elle réclamait de neuf est **demandé, pas contourné**.
-- [ ] Les gains techniques de 7.1 remontent ici, `plotly.min.js` vendoré compris.
-- [ ] **Contrôle** : le site et la variante côte à côte, à 1200 et 400 px. Les
-      figures sortent du même code, seule la mise en page peut diverger.
+- [x] `base.html` / `home.html` reproduisent la structure de D′, les valeurs du
+      contrat à la place des constantes. La géométrie de la barre est calculée
+      dans `scrutin/graphiques.py` et sort en pourcentages : aucun JavaScript.
+- [x] Ce qu'elle réclamait de neuf est **demandé, pas contourné** — sauf la
+      fourchette, provisoirement en dur et **hors du contrat** (D1, décision du
+      2026-09-13), et l'heure de la dernière projection, **non transposée** en
+      attendant que `Extrapolation.moment_creation` entre au contrat.
+- [x] Les gains techniques de 7.1 remontent ici : `plotly.min.js` vendoré
+      (3.7.0, la version du paquet Python, à la place du CDN 2.11 de 2022) et
+      `topojson-stub.js`, sans lequel la carte SVG va chercher sur `cdn.plot.ly`
+      un fond de carte mondial qu'elle n'affiche pas.
+- [x] **Contrôle** : le site et D′ côte à côte, à 1200, 1000, 400 et 320 px. Les
+      figures sortent du même code et rien ne diverge — y compris un
+      **débordement des cartes hors du panneau sous 400 px**, présent à
+      l'identique dans la maquette. C'est donc une propriété de la référence, à
+      regarder sur un vrai téléphone (voir « ce qui reste » ci-dessous).
+- [ ] Le **GeoJSON n'est toujours pas sorti des figures** : la page d'accueil
+      pèse 4,8 Mo, les contours y étant recopiés une fois par objet. C'est
+      l'objet de la MR #40, qui touche `carte/API.py` — à fusionner, puis à
+      rebaser dessus.
+- [ ] **Ce qui manque au contrat**, à demander à la voie Moteur :
+      `moment_creation` de la dernière `Extrapolation` (l'heure affichée sous la
+      jauge), et `ic_bas` / `ic_haut` quand le bootstrap existera. Voir aussi
+      `settings.py`, encore en `en-us` / `UTC` là où le site parle français
+      depuis Zurich — d'où un formatage des dates et des pourcentages fait à la
+      main dans `graphiques.py`.
+- [ ] **États que la maquette n'a pas dessinés**, à trancher à deux :
+      dépouillement terminé (le point qui pulse et « en cours » n'ont plus de
+      sens), avant les sept premières communes (la page afficherait « 50,0 % »
+      en bleu), hors soirée de vote, un nombre d'objets autre que trois, et des
+      noms d'objet réels assez longs pour tenir sur quatre lignes.
 
 #### 7.5 Après coup
 
@@ -802,36 +837,52 @@ risque est la dérive, tenu par deux garde-fous : ses figures ne sont jamais
 écrites à la main, et elle n'a aucune autorité sur `master`. Le jour où le
 design se stabilise, on peut l'abandonner sans rien perdre.
 
-### Cible visuelle (à confirmer par la maquette) **[I]**
+### Cible visuelle — ce qui a été retenu **[I]**
 
-Ce qui suit est l'hypothèse de départ de 7.2, **pas un cahier des charges** :
-la maquette peut l'infirmer, et 7.3 la réécrit avec ce qui a été retenu.
+*Réécrit le 2026-09-13 : ce qui suit n'est plus une hypothèse mais la
+description de la variante **D′**, validée par les deux et transposée en 7.4.
+L'hypothèse de départ de 7.2, elle, a bougé sur trois points, notés au fil.*
 
-1. **Mini-charte en variables CSS** (`--surface`, `--encre-1/2`, `--bleu-450`…,
-   valeurs de la palette validée ci-dessous) ; **une seule fonte** : la sans
-   système (`system-ui, …`) partout — Garamond peut survivre dans le seul
-   wordmark du logo. Nav/titres dans un bleu ≥ 4,5:1 (ex. `#1c5cab`).
-2. **Module `charte.py`** : constantes de couleurs + template Plotly partagé
-   (fonte, grille hairline `#e1e0d9`, `modebar` masquée, marges, fond
-   `#fcfcfb`) appliqué à *tous* les graphes — un seul endroit à modifier.
-3. **Histogramme votations** : confirmé = bleu `#2a78d6`, extrapolé = bleu
-   clair `#86b6ef` (même teinte, plus clair = estimé — la variante validée
-   `--ordinal` ; l'alternative bleu/orange `#2a78d6`/`#eb6834` est aussi
-   validée). **Ligne de référence à 50 %** (hairline, étiquetée « majorité »).
-   Labels sélectifs : le total projeté seulement, le reste en tooltip.
-4. **Carte** : échelle **divergente bleu ↔ rouge, milieu gris neutre
-   (`#f0efec`) ancré à 50 %** — « penche oui / penche non » lisible d'un coup
-   d'œil, y compris pour les daltoniens. Bornes symétriques autour de 50.
-   Garder `white-bg` ; migrer `choropleth_mapbox` → `choropleth_map`.
-5. **Chiffre héro** : par objet, le % oui projeté en grand + « accepté/refusé »
-   attendu — c'est la une du site, aujourd'hui à déchiffrer dans les barres.
-6. **Accessibilité** : tableau des valeurs sous chaque graphe (repli
-   sans-couleur + copiable), `lang="fr"`, alt/aria sur la nav.
-7. **Hygiène** : icône ☰ en SVG inline (supprimer Font Awesome), favicon,
-   liens réparés, **vendorer `plotly.min.js`** (le CDN casse le mirroir wget
-   hors-ligne et fige la version — et voir 7.1 pour le décalage de version),
-   année du footer dynamique.
+1. **Une page, un mur de panneaux.** Un panneau par objet de votation, de poids
+   égal : le nom, les deux valeurs, la barre, la carte. Au-dessus, une seule
+   ligne d'avancement du dépouillement — pourcentage, jauge, point rouge qui
+   pulse. Colonnes de 300 px au moins, jamais plus larges que l'écran.
+2. **Mini-charte en variables CSS** (`--fond`, `--panneau`, `--encre`, `--oui`,
+   `--non`…) dans `style.css`, et les mêmes valeurs en Python dans
+   `scrutin/charte.py` pour les figures. **Une seule fonte**, la sans du
+   système, partout — y compris dans les graphes.
+3. **Les valeurs.** L'extrapolé en très grand, dans la couleur du verdict, avec
+   une pastille « extrapolé » et sa fourchette à droite ; le dépouillé en petit
+   gris, pastille « dépouillé », calé sur la fin de la barre.
+   *Changement* : le verdict n'est plus écrit. **Plus de pastille « accepté /
+   refusé »** — c'est la couleur qui le porte (bleu ≥ 50 %, rouge sinon), et
+   l'`aria-label` de la barre qui le dit en toutes lettres.
+4. **La barre finale**, sans aucun texte, sous les valeurs : rail rouge pâle /
+   bleu pâle de part et d'autre de 50, moustache de l'intervalle dans la
+   couleur du verdict, et le dépouillé en trait gris avec une flèche vers
+   l'intervalle — **seulement s'il en sort**. Calculée côté serveur, en
+   pourcentages : aucun JavaScript.
+5. **Carte** : échelle **divergente rouge ↔ neutre ↔ bleu ancrée à 50 %**
+   (`#c9352b` → `#f0efec` → `#2a78d6`), bornée à 32–68 %, **sans barre de
+   couleur** — la carte répond à « où ça penche oui, où ça penche non », pas à
+   « combien exactement ». Projection **SVG en Mercator**, axes bornés à
+   l'emprise des communes, hauteur donnée par les proportions du pays.
+6. **Histogramme** : *changement* — il n'y en a **plus sur l'accueil**. Les
+   panneaux disent la même chose en plus lisible. La fonction reste dans
+   `graphiques.py`, avec sa ligne de majorité, pour la branche `maquette`.
+7. **En-tête et pied de page.** En-tête : logo SVG en ligne, « Politiques.ch »
+   et la date du scrutin en petites capitales. *Changement* : **le menu est
+   passé en pied de page**, un lien par page en base, la page courante marquée
+   par `aria-current`. Plus de menu hamburger, plus de Font Awesome, et
+   « Cartes » retiré des onglets.
+8. **Accessibilité** : `lang="fr"`, jamais de sens porté par la couleur seule
+   (l'`aria-label` de chaque barre porte les trois valeurs), contrastes tenus
+   par la palette. *Reste à faire* : le tableau des valeurs sous chaque carte.
+9. **Hygiène** : favicon SVG, `plotly.min.js` vendoré à la version du paquet
+   Python, plus aucun lien mort ni année en dur dans le pied de page.
 
 Palettes validées (`validate_palette.js`, surface `#fcfcfb`) :
 - `#2a78d6` + `#eb6834` : tous contrôles PASS (ΔE daltonien 24,7 ; normal 33,6).
 - `#86b6ef` → `#2a78d6` en ordinal : PASS (monotone, une teinte, écarts ok).
+- `#c9352b`, le rouge du « non » de D′, **n'est pas encore passé par ce
+  contrôle** : c'est la case ouverte de 7.3.
