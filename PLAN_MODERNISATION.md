@@ -84,7 +84,9 @@ Forme du contrat (celle que `scrutin/donnees.py` renvoie aujourd'hui) :
 ```
 
 `ic_bas` / `ic_haut` (intervalle de confiance) s'ajouteront avec le bootstrap
-de la phase D1 — le test du contrat sera mis à jour à ce moment-là.
+de la phase D1 — le test du contrat sera mis à jour à ce moment-là. En
+attendant, l'interface affiche une fourchette **provisoire en dur** (D1,
+décision du 2026-09-13) : elle ne passe pas par le contrat.
 
 Ce n'est **pas un fichier chargé à l'exécution** — juste la forme du dict que
 `donnees.py` renvoie et que `graphiques.py` consomme. Elle est figée par
@@ -533,6 +535,22 @@ commande, et le site survit à un pic de trafic.**
 - [ ] **Incertitude de la projection** : IC par bootstrap sur les communes
       dépouillées (rééchantillonner, réajuster, propager). Afficher une fourchette
       plutôt qu'un point — c'est LA crédibilité scientifique du site.
+- [x] **Décidé le 2026-09-13 : en attendant, une fourchette provisoire de
+      ±2,5 points, en dur.** La maquette D′ dessine une fourchette autour de la
+      projection (« 44,8 – 49,0 % ») et une moustache sur la barre ; ni l'une ni
+      l'autre ne peuvent attendre que la méthode statistique soit mûre, sous
+      peine de bloquer tout le passage du design (Partie 7.4) sur un travail
+      qu'il ne sert à rien d'entamer maintenant. L'interface prend donc une
+      demi-largeur de **2,5 points de part et d'autre**, dans une **constante
+      unique** de la zone Interface — pas dans le contrat de vue, qui ne doit
+      porter que des valeurs réellement calculées.
+      **Point à reprendre à deux** dès que la méthode de bootstrap est validée
+      côté moteur, en trois temps : la constante disparaît, `ic_bas` / `ic_haut`
+      entrent au contrat et dans `tests/test_contrat.py`, et l'on tranche ce que
+      la page dit au public (niveau de confiance affiché ou renvoyé à la page
+      Méthodes). Tant que la valeur est en dur, elle n'a **aucune valeur
+      statistique** : c'est un gabarit d'affichage, pas une mesure — d'où la
+      question, ouverte, de ce qu'on en dit d'ici là.
 - [ ] Courbe de **convergence de la soirée** : les instantanés `Extrapolation`
       horodatés sont déjà en base, il n'y a qu'à les tracer (projection vs heure,
       avec le résultat final en ligne de référence).
@@ -790,7 +808,8 @@ d'où des frontières écrites noir sur blanc.
 
 - [ ] `base.html` / `home.html` reproduisent la structure de la variante, les
       valeurs du contrat à la place des constantes.
-- [ ] Ce qu'elle réclamait de neuf est **demandé, pas contourné**.
+- [ ] Ce qu'elle réclamait de neuf est **demandé, pas contourné** — sauf la
+      fourchette, volontairement provisoire et en dur (D1, 2026-09-13).
 - [ ] Les gains techniques de 7.1 remontent ici, `plotly.min.js` vendoré compris.
 - [ ] **Contrôle** : le site et la variante côte à côte, à 1200 et 400 px. Les
       figures sortent du même code, seule la mise en page peut diverger.
