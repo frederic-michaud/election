@@ -8,6 +8,11 @@ pourquoi elle ressemble à ce qu'elle est.
 
 ## Statut
 
+**Passage fait le 2026-09-13** : branches `moteur/heure-langue` et
+`interface/passage-d-prime`. Deux écarts avec ce cahier, décidés ce jour-là :
+cartes en WebGL (`choropleth_map`) plutôt qu'en SVG, trop lent au zoom ; et
+marge constante de ±3 points faute d'intervalle de confiance.
+
 **D′ (`accueil-d-clair.html`) est validée à deux, le 2026-09-13, comme version
 finale pour cette release** — la votation fédérale du **27 septembre 2026**.
 

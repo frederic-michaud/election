@@ -97,24 +97,16 @@ window.appliquerCharte = function (fig, genre, surcharge) {
         line: { width: c.carte.contour, color: c.surface },
       });
     });
-    // Sans hauteur, c'est le conteneur qui la donne (par exemple un
-    // `aspect-ratio` en CSS) : la carte suit alors la largeur du panneau.
+    // Sans hauteur, c'est le conteneur qui la donne (aspect-ratio en CSS).
     if (c.carte.hauteur) layout.height = c.carte.hauteur;
     layout.margin = { l: 0, r: 0, t: 0, b: 0 };
     if (genre === "carte_svg") {
       layout.geo = Object.assign({}, layout.geo, {
         bgcolor: "rgba(0,0,0,0)", showframe: false, showcoastlines: false,
-        // La projection par défaut de Plotly est équirectangulaire : un degré de
-        // longitude y vaut un degré de latitude, alors qu'à 47° nord il n'en vaut
-        // que 0,68. La Suisse sortait écrasée, une fois et demie trop large.
-        // Mercator rend les proportions, et sur un pays aussi petit sa
-        // déformation ne se voit pas.
+        // L'équirectangulaire par défaut écrase la Suisse ; Mercator rend ses proportions.
         projection: { type: "mercator" },
       });
-      // `fitbounds` cale les communes dans le cadre de la projection entière,
-      // carré en Mercator : la Suisse y flottait, avec une bande vide de chaque
-      // côté. Borner les axes à l'emprise des communes donne au cadre les
-      // proportions du pays, et la carte remplit son conteneur.
+      // Axes bornés à l'emprise : `fitbounds` laisserait le pays flotter dans un cadre carré.
       const [[x0, y0], [x1, y1]] = emprise(data[0].geojson);
       const marge = 0.005 * (x1 - x0);
       layout.geo.fitbounds = false;
@@ -135,8 +127,7 @@ window.appliquerCharte = function (fig, genre, surcharge) {
   return { data, layout };
 };
 
-// Emprise d'un GeoJSON, [[lon min, lat min], [lon max, lat max]], calculée une
-// fois : toutes les cartes partagent les mêmes contours.
+// Emprise d'un GeoJSON, [[lon min, lat min], [lon max, lat max]], mémorisée.
 function emprise(gj) {
   if (emprise.memo && emprise.memo.gj === gj) return emprise.memo.boite;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;

@@ -9,137 +9,41 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
-## 2026-09-13, fin — D′ validée, version finale de la release
+## 2026-09-13, fin — D′ validée
 
-**Décision.** Les deux convaincus : **D′ est la version finale pour cette
-release**, la votation du 27 septembre 2026. La maquette s'arrête ici ; la
-suite est le passage en production par l'agent `passeur` (Partie 7.4).
+**Décision.** D′ est la version finale pour la votation du 27 septembre 2026.
+Ni « Cartes » ni copyleft dans le menu. La suite est le passage en production,
+à partir de `PASSAGE.md`.
 
-**Tranché en fin de séance.**
+**Au passage**, deux écarts avec la maquette : les cartes du site sont en
+WebGL (`choropleth_map`), le zoom en SVG coûtant 65 à 170 ms par cran ; et la
+fourchette prend une marge constante de ±3 points, faute d'intervalle de
+confiance au contrat.
 
-- *« Cartes » ne revient pas dans le menu.* Le menu est « Accueil », puis les
-  pages statiques.
-- *Pas de mention « Copyleft »* en pied de page, pour l'instant.
-- *Les cartes sont validées telles quelles*, neutre de l'échelle compris : la
-  question du neutre sur fond blanc, ouverte depuis le 2026-09-10, est close.
-- *La carte est en SVG*, pas en Mapbox, puisque c'est celle de D′ : la question
-  7.2 est réglée par la validation.
+**Ouvert.** L'intervalle de confiance réel (voie Moteur) ; la palette, pas
+encore passée par `validate_palette.js`.
 
-**Ce qu'on a fait.** `PASSAGE.md`, le cahier de passage, à lire en premier par
-le passeur : les décisions, la correspondance maquette → site, ce que la
-maquette invente et qu'il faut demander à la voie Moteur (l'intervalle de
-confiance, l'heure de la dernière projection, la langue et le fuseau), les
-états que la maquette ne montre pas, les pièges déjà rencontrés, le contrôle
-final. Le `README.md` y renvoie dès ses premières lignes.
+## 2026-09-13, suite — « Accueil » en tête du menu, mobile recentré
 
-**Ouvert, et consigné dans le cahier.**
+- *Menu* : « Accueil », puis les pages statiques ; la page courante en encre.
+- *Décalage à droite sous 344 px* : les colonnes du mur avaient un minimum de
+  300 px. Passées à `minmax(min(300px, 100%), 1fr)`, et marges resserrées sous
+  360 px pour que les valeurs tiennent dans le panneau.
 
-- *L'intervalle de confiance n'existe pas.* Sans lui, pas de fourchette ni de
-  moustache en production. S'il n'est pas prêt pour le 27 : attendre, ou
-  publier sans — une version qui n'a pas été dessinée.
-- *La palette n'est pas passée par `validate_palette.js`*, dernier critère
-  d'arrêt de 7.2, et l'outil n'est pas dans le dépôt. À faire en 7.3.
+**Vérifié** de 320 à 1240 px : marges égales, aucun débordement.
 
-## 2026-09-13, suite — « Accueil » en tête du menu, la vue mobile recentrée
+## 2026-09-13 — Les cartes redressées, le menu en pied de page
 
-**Point de départ.** Les cartes sont validées. Deux demandes : ajouter
-« Accueil » au menu du pied de page, en premier ; et corriger la vue mobile,
-dont les blocs paraissent décalés vers la droite.
+- *Cartes écrasées* : la projection par défaut de Plotly (équirectangulaire)
+  étirait la Suisse de moitié en largeur. Passage en Mercator, et axes bornés
+  à l'emprise des communes, sans quoi le pays flottait dans un cadre carré.
+  Réglé dans `charte.js`, donc pour toutes les variantes. Dans D′, la carte
+  suit la largeur du panneau (`aspect-ratio: 1.55`).
+- *Menu* : les pages statiques remplacent le texte de pied de page propre à
+  la maquette.
 
-**Le menu.** « Accueil », puis les pages statiques. La page courante porte
-`aria-current="page"` et se distingue en encre, en demi-gras, là où les autres
-restent en gris. Sur le site, c'est le lien `{% url 'home' %}` avant la boucle
-sur `pages_statiques`. Ça ne rend pas la page dépendante du visiteur : le
-cache nginx n'est pas concerné.
-
-**Le décalage.** À 375 px, tout était centré, 22 px de chaque côté. Il
-apparaissait **sous 344 px** de large, celle des petits téléphones ou d'un
-panneau de navigateur étroit. Les colonnes du mur avaient une largeur minimale
-de 300 px (`minmax(300px, 1fr)`), et 320 px moins deux marges n'en laissent que
-276 : les panneaux sortaient de l'écran à droite, 22 px de marge à gauche,
--2 px à droite.
-
-- *Le mur* : `minmax(min(300px, 100%), 1fr)`. Une colonne n'est jamais plus
-  large que l'écran.
-- *Le contenu des panneaux*, révélé par la correction : la seconde rangée des
-  valeurs, deux pastilles et la fourchette, veut 254 px, et un panneau de
-  320 px n'en offrait que 232. Le dépouillé sortait à droite, de 4 px pour le
-  chiffre et de 16 px pour la pastille. Sous 360 px, les marges se resserrent :
-  14 px pour la page et 16 px pour les panneaux, soit 260 px de contenu.
-  L'écart entre les liens du menu passe à 18 px, et le menu tient sur une
-  ligne.
-
-**Vérifié.** De 320 à 1240 px, par pas de téléphone : marges égales à gauche et
-à droite, aucun débordement de page, les valeurs dans le panneau et côte à
-côte, fourchette et pastilles sans chevauchement, cartes à 1,56, menu sur une
-ligne. À 300 px, la pastille « dépouillé » mord de 8 px dans la marge du
-panneau, sans en sortir : c'est en dessous de tout téléphone courant.
-
-## 2026-09-13 — Les cartes redressées, les pages du site en pied de page
-
-**Point de départ.** Finaliser D′ pour qu'elle puisse être validée. Deux
-reproches : les cartes semblent écrasées, et les onglets vers les pages
-statiques ont disparu avec l'ancien en-tête. Les remettre en bas d'écran
-convient très bien, à la place du texte de pied de page, propre à la maquette
-et sans place sur le site final.
-
-**Les cartes étaient bien écrasées.** La Suisse y était 2,28 fois plus large
-que haute, pour 1,56 en réalité. Deux causes, l'une cachant l'autre :
-
-1. *La projection.* `px.choropleth` laisse Plotly en équirectangulaire, où un
-   degré de longitude vaut un degré de latitude. À 47° nord, il n'en vaut que
-   0,68 : le pays sortait une fois et demie trop large. Passé en **Mercator**,
-   qui rend les proportions et ne déforme rien de visible à l'échelle du pays.
-2. *Le cadrage.* Mercator corrigé, la carte n'occupait plus que 58 % de la
-   largeur de son cadre. `fitbounds` cale les données dans le cadre de la
-   projection *entière* — 2:1 en équirectangulaire, ce qui masquait le
-   problème, mais carré en Mercator. Les axes sont désormais bornés à
-   **l'emprise des communes**, calculée une fois depuis le GeoJSON : le cadre
-   prend les proportions du pays et la carte remplit son conteneur, à 2 px
-   près.
-
-Les deux réglages vivent dans `charte.js`, pas dans `figures.js` : pas de
-reconstruction, et c'est le brouillon de `charte.py`. Ils valent donc pour
-toutes les variantes en SVG — A, B, D, E sont redressées aussi, chacune dans
-sa hauteur fixe. `hauteur: null` laisse maintenant le conteneur décider.
-
-**Dans D′, la carte suit la largeur du panneau.** Plus de hauteur fixe à
-210 px : `.carte` a un `aspect-ratio` de 1,55, et Plotly prend la hauteur du
-conteneur. 184 px sur téléphone, 168 à 1000 px, 220 à 1240 px. Le panneau
-passe de 8 à 20 px de marge basse : la carte n'a plus de vide sous elle, elle
-touchait presque le bord.
-
-**Le pied de page devient le menu.** « Méthodes » et « Contact », les deux
-pages que sème `peupler_demo`, dans leur ordre en base. Petites capitales
-grises espacées, la typographie de la date d'en-tête : la page s'ouvre et se
-ferme sur la même voix. Un filet au-dessus, bleu au survol, zones de clic de
-45 px de haut. Le texte « Maquette — données fictives, intervalles de
-confiance illustratifs » et le lien « La méthode » disparaissent ; le
-caractère inventé des marges reste écrit dans le commentaire de tête et à
-côté de `MARGES`.
-
-**Vérifié.** À 375, 1000 et 1240 px : proportions de 1,56 dans les trois
-panneaux, carte à 2 px des bords de son cadre, aucun débordement horizontal,
-aucune erreur en console. Les variantes A, B, D et E gardent leurs cartes, à
-1,56 elles aussi.
-
-**Pour le passage en production (7.4).** Côté site, la carte SVG devra
-recevoir les deux mêmes réglages, dans `charte.py` ou dans
-`figure_carte_svg` : `projection_type="mercator"` et des axes bornés à
-l'emprise des contours au lieu de `fitbounds`. Le menu, lui, est la boucle
-`{% for page in pages_statiques %}` de `base.html`, déplacée dans le pied de
-page.
-
-**Ouvert.**
-
-- *« Accueil » et « Cartes »*, les deux onglets écrits en dur à côté de la
-  boucle dans l'ancien menu, ne sont pas repris. Sans « Accueil », il faudra
-  que le logo ramène à l'accueil depuis les pages statiques (« Accueil » est
-  revenu dans la suite, voir plus haut). « Cartes » mène à une vraie vue
-  (`/cartes`) : la garder dans le menu, ou la juger redondante avec les cartes
-  de l'accueil.
-- *Les mentions du pied de page actuel* (« Copyleft … 2022 ») ne sont pas
-  reprises : à décider si elles reviennent sous le menu.
+**Vérifié** à 375, 1000 et 1240 px : proportions de 1,56, carte à 2 px de son
+cadre.
 
 ## 2026-09-11, nuit, épilogue ter — La fourchette à droite de la pastille
 

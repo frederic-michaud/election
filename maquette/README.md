@@ -10,9 +10,8 @@ figerait ce qu'on veut faire varier.
 > production. Ce qui remonte dans `master`, c'est la *transposition* du design
 > retenu dans les gabarits Django, réécrite à la main. Voir Partie 7 du plan.
 
-> **D′ est validée (2026-09-13), version finale de la release.** Pour le
-> passage en production, commencer par [`PASSAGE.md`](PASSAGE.md) : ce qui est
-> décidé, ce qu'il faut transposer, ce qui manque au contrat de vue.
+> **D′ est validée (2026-09-13).** Le passage en production part de
+> [`PASSAGE.md`](PASSAGE.md).
 
 ## Ouvrir les maquettes
 
@@ -109,10 +108,8 @@ retenue.
 **Le cadrage.** La projection SVG cadre sur les données, Mapbox garde le zoom
 figé à la construction : la variante C doit le recalculer en fonction de la
 taille du cadre. C'est un argument de plus dans la comparaison des deux
-(Partie 7.1). Côté SVG, deux pièges, réglés dans `charte.js` : la projection
-par défaut de Plotly (équirectangulaire) écrase la Suisse, d'où Mercator ; et
-`fitbounds` cale le pays dans le cadre carré de la projection entière, d'où des
-axes bornés à l'emprise des communes.
+(Partie 7.1). Côté SVG, `charte.js` passe en Mercator et borne les axes à
+l'emprise des communes, sans quoi la Suisse sort écrasée.
 
 ## Captures
 

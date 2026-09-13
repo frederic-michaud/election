@@ -21,9 +21,7 @@
    majorité, le dépouillé en gris avec sa flèche seulement quand il est hors
    de l'intervalle. L'intervalle n'existe pas encore dans le contrat de vue :
    ses marges sont inventées, voir MARGES plus bas.
-   La carte prend toute la largeur du panneau, à la hauteur que lui donnent
-   les proportions du pays. Le pied de page porte les onglets du site, les
-   pages statiques, qui n'ont plus de place dans l'en-tête.
+   Le menu du site est en pied de page.
    ════════════════════════════════════════════════════════════════════════ */
 :root {
   --fond: #fcfcfb; --panneau: #ffffff; --bord: #e1e0d9;
@@ -59,8 +57,7 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .avancement .rail i { display: block; height: 100%; background: linear-gradient(90deg, var(--oui-clair), var(--oui)); }
 .avancement .note { display: flex; align-items: center; gap: 9px; font-size: .84rem; color: var(--gris); }
 
-/* Colonnes de 300 px au moins, mais jamais plus larges que l'écran : sous 344 px,
-   le minimum seul faisait déborder les panneaux à droite. */
+/* min(300px, 100%) : sinon les panneaux débordent sous 344 px. */
 .mur { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: 18px; margin-top: 18px; }
 .panneau { background: var(--panneau); border: 1px solid var(--bord); border-radius: 14px;
@@ -113,17 +110,14 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .barre .fleche { position: absolute; top: 8.5px; width: 0; height: 0; color: var(--fleche); border-top: 4px solid transparent; border-bottom: 4px solid transparent; }
 .barre .fleche.droite { margin-left: -7px; border-left: 7px solid; }
 .barre .fleche.gauche { border-right: 7px solid; }
-/* La carte a les proportions de la Suisse en projection de Mercator, 1,55 fois
-   plus large que haute : sa hauteur suit la largeur du panneau, sans bande vide. */
+/* Proportions de la Suisse en Mercator. */
 .carte { margin-top: 12px; aspect-ratio: 1.55; }
-/* Les pages du site en pied de page, dans la typographie de la date d'en-tête :
-   la page s'ouvre et se ferme sur la même petite capitale grise. */
+/* Le menu du site, dans la typographie de la date d'en-tête. */
 footer { margin-top: 26px; border-top: 1px solid var(--bord); padding-top: 6px; }
 footer nav { display: flex; justify-content: center; flex-wrap: wrap; column-gap: 32px; }
 footer a { color: var(--gris); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase;
   text-decoration: none; padding: 13px 4px; }
 footer a:hover, footer a:focus-visible { color: var(--oui); }
-/* La page où l'on est : en encre, là où les autres sont en gris. */
 footer a[aria-current] { color: var(--encre); font-weight: 600; }
 
 /* Sur téléphone (600 px, le seuil du site) : l'emblème suffit, le nom disparaît ;
@@ -143,10 +137,7 @@ footer a[aria-current] { color: var(--encre); font-weight: 600; }
   .avancement .rail { order: 2; flex: 1 1 0; min-width: 0; height: 8px; }
   .avancement .v { order: 3; font-size: 1.1rem; }
 }
-/* Les petits téléphones (320 px) : la seconde rangée des valeurs, deux pastilles et
-   la fourchette, veut 254 px et n'en avait que 232 — le dépouillé sortait du
-   panneau à droite. Marges resserrées, 260 px de contenu ; le menu tient sur une
-   ligne. */
+/* 320 px : marges resserrées pour que les valeurs tiennent dans le panneau. */
 @media (max-width: 359px) {
   body { padding-left: 14px; padding-right: 14px; }
   .panneau { padding-left: 16px; padding-right: 16px; }
@@ -184,9 +175,7 @@ footer a[aria-current] { color: var(--encre); font-weight: 600; }
 
 <section class="mur" id="mur"></section>
 
-<!-- Sur le site : « Accueil », puis un lien par PageStatique, dans l'ordre de la
-     base — la boucle sur `pages_statiques` de base.html. Ici, les deux que sème
-     peupler_demo. La page courante porte aria-current. -->
+<!-- Sur le site : Accueil, puis la boucle sur `pages_statiques`. -->
 <footer>
   <nav aria-label="Pages du site">
     <a href="#" aria-current="page">Accueil</a>
@@ -202,9 +191,7 @@ footer a[aria-current] { color: var(--encre); font-weight: 600; }
 <script src="verifier.js"></script>
 <script>
 if (!maquettePrete()) throw new Error("maquette incomplète — voir la bannière");
-// Couleurs : celles de charte.js, la palette validée sur fond clair. Les
-// réglages de carte sont ceux de D (sans barre de couleur), sauf la hauteur :
-// sans valeur, c'est l'aspect-ratio de `.carte` qui la donne.
+// Couleurs : celles de charte.js. Carte : réglages de D, hauteur donnée par le CSS.
 const THEME = {
   surface: "#ffffff", encre1: "#1f1f1c", encre2: "#5f5e58",
   bleu: "#2a78d6", rouge: "#c9352b", neutre: "#f0efec",
