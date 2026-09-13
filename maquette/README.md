@@ -46,7 +46,7 @@ généré venait à manquer, la page le dit au lieu de s'afficher vide
 | **B** | Tableau de bord | Aucun objet privilégié, tout en un écran. Une ligne par objet, dot plot dépouillé → projeté. |
 | **C** | Cartes d'abord | La carte plein cadre, onglets, chiffre en surimpression. La seule en carte Mapbox. |
 | **D** | Soirée électorale | Fond sombre, chiffres énormes, pensée pour être projetée ou regardée de loin. |
-| **D′** | Soirée électorale, fond clair | **La variante retenue.** D sur fond clair, logo SVG, en-tête compact sur téléphone, et la barre finale des planches pour chaque objet. |
+| **D′** | Soirée électorale, fond clair | **La variante retenue.** D sur fond clair, logo SVG, en-tête compact sur téléphone, la barre finale des planches pour chaque objet, et le menu du site (Accueil, Méthodes, Contact) en pied de page. |
 | **E** | Écart à la majorité | « À 3,1 points » plutôt que « 46,9 % ». Axe centré sur 50 %, la correction de l'extrapolation rendue visible. |
 
 `index.html` les liste ; chaque fichier porte son parti pris en commentaire en
@@ -101,10 +101,13 @@ hors-ligne. Nos cartes n'en affichent pourtant rien (`geo.visible = false`).
 consulte avant de télécharger. À reprendre côté site si la carte SVG est
 retenue.
 
-**Le cadrage.** La projection SVG cadre toute seule sur les données
-(`fitbounds`). Mapbox garde le zoom figé à la construction : la variante C
-doit le recalculer en fonction de la taille du cadre. C'est un argument de
-plus dans la comparaison des deux (Partie 7.1).
+**Le cadrage.** La projection SVG cadre sur les données, Mapbox garde le zoom
+figé à la construction : la variante C doit le recalculer en fonction de la
+taille du cadre. C'est un argument de plus dans la comparaison des deux
+(Partie 7.1). Côté SVG, deux pièges, réglés dans `charte.js` : la projection
+par défaut de Plotly (équirectangulaire) écrase la Suisse, d'où Mercator ; et
+`fitbounds` cale le pays dans le cadre carré de la projection entière, d'où des
+axes bornés à l'emprise des communes.
 
 ## Captures
 

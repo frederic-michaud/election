@@ -97,12 +97,29 @@ window.appliquerCharte = function (fig, genre, surcharge) {
         line: { width: c.carte.contour, color: c.surface },
       });
     });
-    layout.height = c.carte.hauteur;
+    // Sans hauteur, c'est le conteneur qui la donne (par exemple un
+    // `aspect-ratio` en CSS) : la carte suit alors la largeur du panneau.
+    if (c.carte.hauteur) layout.height = c.carte.hauteur;
     layout.margin = { l: 0, r: 0, t: 0, b: 0 };
     if (genre === "carte_svg") {
       layout.geo = Object.assign({}, layout.geo, {
         bgcolor: "rgba(0,0,0,0)", showframe: false, showcoastlines: false,
+        // La projection par défaut de Plotly est équirectangulaire : un degré de
+        // longitude y vaut un degré de latitude, alors qu'à 47° nord il n'en vaut
+        // que 0,68. La Suisse sortait écrasée, une fois et demie trop large.
+        // Mercator rend les proportions, et sur un pays aussi petit sa
+        // déformation ne se voit pas.
+        projection: { type: "mercator" },
       });
+      // `fitbounds` cale les communes dans le cadre de la projection entière,
+      // carré en Mercator : la Suisse y flottait, avec une bande vide de chaque
+      // côté. Borner les axes à l'emprise des communes donne au cadre les
+      // proportions du pays, et la carte remplit son conteneur.
+      const [[x0, y0], [x1, y1]] = emprise(data[0].geojson);
+      const marge = 0.005 * (x1 - x0);
+      layout.geo.fitbounds = false;
+      layout.geo.lonaxis = { range: [x0 - marge, x1 + marge] };
+      layout.geo.lataxis = { range: [y0 - marge, y1 + marge] };
     } else {
       layout.mapbox = Object.assign({}, layout.mapbox, {
         // Pas de tuiles externes : un simple aplat, à la couleur de la page.
@@ -117,6 +134,21 @@ window.appliquerCharte = function (fig, genre, surcharge) {
 
   return { data, layout };
 };
+
+// Emprise d'un GeoJSON, [[lon min, lat min], [lon max, lat max]], calculée une
+// fois : toutes les cartes partagent les mêmes contours.
+function emprise(gj) {
+  if (emprise.memo && emprise.memo.gj === gj) return emprise.memo.boite;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  const parcourir = (c) => {
+    if (typeof c[0] !== "number") return c.forEach(parcourir);
+    x0 = Math.min(x0, c[0]); x1 = Math.max(x1, c[0]);
+    y0 = Math.min(y0, c[1]); y1 = Math.max(y1, c[1]);
+  };
+  gj.features.forEach((f) => parcourir(f.geometry.coordinates));
+  emprise.memo = { gj, boite: [[x0, y0], [x1, y1]] };
+  return emprise.memo.boite;
+}
 
 // Raccourci : dessine une figure de figures.js dans un conteneur.
 window.tracer = function (cible, fig, genre, surcharge) {

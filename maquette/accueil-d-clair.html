@@ -21,6 +21,9 @@
    majorité, le dépouillé en gris avec sa flèche seulement quand il est hors
    de l'intervalle. L'intervalle n'existe pas encore dans le contrat de vue :
    ses marges sont inventées, voir MARGES plus bas.
+   La carte prend toute la largeur du panneau, à la hauteur que lui donnent
+   les proportions du pays. Le pied de page porte les onglets du site, les
+   pages statiques, qui n'ont plus de place dans l'en-tête.
    ════════════════════════════════════════════════════════════════════════ */
 :root {
   --fond: #fcfcfb; --panneau: #ffffff; --bord: #e1e0d9;
@@ -56,10 +59,12 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .avancement .rail i { display: block; height: 100%; background: linear-gradient(90deg, var(--oui-clair), var(--oui)); }
 .avancement .note { display: flex; align-items: center; gap: 9px; font-size: .84rem; color: var(--gris); }
 
-.mur { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+/* Colonnes de 300 px au moins, mais jamais plus larges que l'écran : sous 344 px,
+   le minimum seul faisait déborder les panneaux à droite. */
+.mur { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: 18px; margin-top: 18px; }
 .panneau { background: var(--panneau); border: 1px solid var(--bord); border-radius: 14px;
-  padding: 22px 22px 8px; display: flex; flex-direction: column; container-type: inline-size; }
+  padding: 22px 22px 20px; display: flex; flex-direction: column; container-type: inline-size; }
 .panneau .nom { font-size: .95rem; color: var(--gris); min-height: 3em; }
 /* Les valeurs, en grille de deux rangées.
      46,9 %                          54,4 %
@@ -108,9 +113,18 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .barre .fleche { position: absolute; top: 8.5px; width: 0; height: 0; color: var(--fleche); border-top: 4px solid transparent; border-bottom: 4px solid transparent; }
 .barre .fleche.droite { margin-left: -7px; border-left: 7px solid; }
 .barre .fleche.gauche { border-right: 7px solid; }
-.carte { margin-top: 12px; }
-footer { color: var(--gris); font-size: .82rem; margin-top: 26px; text-align: center; }
-footer a { color: var(--oui); }
+/* La carte a les proportions de la Suisse en projection de Mercator, 1,55 fois
+   plus large que haute : sa hauteur suit la largeur du panneau, sans bande vide. */
+.carte { margin-top: 12px; aspect-ratio: 1.55; }
+/* Les pages du site en pied de page, dans la typographie de la date d'en-tête :
+   la page s'ouvre et se ferme sur la même petite capitale grise. */
+footer { margin-top: 26px; border-top: 1px solid var(--bord); padding-top: 6px; }
+footer nav { display: flex; justify-content: center; flex-wrap: wrap; column-gap: 32px; }
+footer a { color: var(--gris); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase;
+  text-decoration: none; padding: 13px 4px; }
+footer a:hover, footer a:focus-visible { color: var(--oui); }
+/* La page où l'on est : en encre, là où les autres sont en gris. */
+footer a[aria-current] { color: var(--encre); font-weight: 600; }
 
 /* Sur téléphone (600 px, le seuil du site) : l'emblème suffit, le nom disparaît ;
    la date reste à côté du logo, sur deux lignes, plutôt que de passer dessous. */
@@ -128,6 +142,15 @@ footer a { color: var(--oui); }
   .avancement .note { order: 1; flex-basis: 100%; font-size: .78rem; white-space: nowrap; }
   .avancement .rail { order: 2; flex: 1 1 0; min-width: 0; height: 8px; }
   .avancement .v { order: 3; font-size: 1.1rem; }
+}
+/* Les petits téléphones (320 px) : la seconde rangée des valeurs, deux pastilles et
+   la fourchette, veut 254 px et n'en avait que 232 — le dépouillé sortait du
+   panneau à droite. Marges resserrées, 260 px de contenu ; le menu tient sur une
+   ligne. */
+@media (max-width: 359px) {
+  body { padding-left: 14px; padding-right: 14px; }
+  .panneau { padding-left: 16px; padding-right: 16px; }
+  footer nav { column-gap: 18px; }
 }
 </style>
 </head>
@@ -161,7 +184,16 @@ footer a { color: var(--oui); }
 
 <section class="mur" id="mur"></section>
 
-<footer>Projections extrapolées des communes dépouillées. Maquette — données fictives, intervalles de confiance illustratifs. <a href="#">La méthode</a></footer>
+<!-- Sur le site : « Accueil », puis un lien par PageStatique, dans l'ordre de la
+     base — la boucle sur `pages_statiques` de base.html. Ici, les deux que sème
+     peupler_demo. La page courante porte aria-current. -->
+<footer>
+  <nav aria-label="Pages du site">
+    <a href="#" aria-current="page">Accueil</a>
+    <a href="#">Méthodes</a>
+    <a href="#">Contact</a>
+  </nav>
+</footer>
 
 <script src="plotly.min.js"></script>
 <script src="topojson-stub.js"></script>
@@ -170,12 +202,13 @@ footer a { color: var(--oui); }
 <script src="verifier.js"></script>
 <script>
 if (!maquettePrete()) throw new Error("maquette incomplète — voir la bannière");
-// Couleurs : celles de charte.js, la palette validée sur fond clair. Seuls
-// les réglages de carte sont repris de D (petites cartes, sans barre).
+// Couleurs : celles de charte.js, la palette validée sur fond clair. Les
+// réglages de carte sont ceux de D (sans barre de couleur), sauf la hauteur :
+// sans valeur, c'est l'aspect-ratio de `.carte` qui la donne.
 const THEME = {
   surface: "#ffffff", encre1: "#1f1f1c", encre2: "#5f5e58",
   bleu: "#2a78d6", rouge: "#c9352b", neutre: "#f0efec",
-  carte: { hauteur: 210, barreCouleur: false, demiEtendue: 18, contour: 0.15, opacite: 1 },
+  carte: { hauteur: null, barreCouleur: false, demiEtendue: 18, contour: 0.15, opacite: 1 },
 };
 const pct = (v, d = 1) => (100 * v).toLocaleString("fr-CH", { minimumFractionDigits: d, maximumFractionDigits: d }) + " %";
 
