@@ -10,6 +10,10 @@ figerait ce qu'on veut faire varier.
 > production. Ce qui remonte dans `master`, c'est la *transposition* du design
 > retenu dans les gabarits Django, réécrite à la main. Voir Partie 7 du plan.
 
+> **D′ est validée (2026-09-13), version finale de la release.** Pour le
+> passage en production, commencer par [`PASSAGE.md`](PASSAGE.md) : ce qui est
+> décidé, ce qu'il faut transposer, ce qui manque au contrat de vue.
+
 ## Ouvrir les maquettes
 
 **Rien à installer.** Ouvrez `maquette/index.html` d'un double-clic, puis
@@ -57,6 +61,7 @@ sépare est un choix, pas un hasard.
 
 | Fichier | Rôle | Versionné |
 |---|---|---|
+| `PASSAGE.md` | **le cahier de passage** de D′ vers `master`, à lire en premier par le `passeur` | oui |
 | `JOURNAL.md` | **le journal de bord** : ce qu'on a essayé, décidé, et pourquoi — une entrée par séance | oui |
 | `construire.py` | génère tout ce qui suit depuis la base fictive, avec les fonctions du site | oui |
 | `simplifier_geojson.py` | allège les contours communaux (Douglas-Peucker + arrondi) | oui |

@@ -9,6 +9,37 @@ séance laisse une entrée ici, même courte. C'est l'historique de conception �
 celui qui n'ira jamais dans `master`, mais qu'on veut pouvoir relire dans un an
 pour savoir pourquoi la page ressemble à ce qu'elle est.
 
+## 2026-09-13, fin — D′ validée, version finale de la release
+
+**Décision.** Les deux convaincus : **D′ est la version finale pour cette
+release**, la votation du 27 septembre 2026. La maquette s'arrête ici ; la
+suite est le passage en production par l'agent `passeur` (Partie 7.4).
+
+**Tranché en fin de séance.**
+
+- *« Cartes » ne revient pas dans le menu.* Le menu est « Accueil », puis les
+  pages statiques.
+- *Pas de mention « Copyleft »* en pied de page, pour l'instant.
+- *Les cartes sont validées telles quelles*, neutre de l'échelle compris : la
+  question du neutre sur fond blanc, ouverte depuis le 2026-09-10, est close.
+- *La carte est en SVG*, pas en Mapbox, puisque c'est celle de D′ : la question
+  7.2 est réglée par la validation.
+
+**Ce qu'on a fait.** `PASSAGE.md`, le cahier de passage, à lire en premier par
+le passeur : les décisions, la correspondance maquette → site, ce que la
+maquette invente et qu'il faut demander à la voie Moteur (l'intervalle de
+confiance, l'heure de la dernière projection, la langue et le fuseau), les
+états que la maquette ne montre pas, les pièges déjà rencontrés, le contrôle
+final. Le `README.md` y renvoie dès ses premières lignes.
+
+**Ouvert, et consigné dans le cahier.**
+
+- *L'intervalle de confiance n'existe pas.* Sans lui, pas de fourchette ni de
+  moustache en production. S'il n'est pas prêt pour le 27 : attendre, ou
+  publier sans — une version qui n'a pas été dessinée.
+- *La palette n'est pas passée par `validate_palette.js`*, dernier critère
+  d'arrêt de 7.2, et l'outil n'est pas dans le dépôt. À faire en 7.3.
+
 ## 2026-09-13, suite — « Accueil » en tête du menu, la vue mobile recentrée
 
 **Point de départ.** Les cartes sont validées. Deux demandes : ajouter
