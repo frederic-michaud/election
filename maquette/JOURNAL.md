@@ -15,10 +15,9 @@ pour savoir pourquoi la page ressemble à ce qu'elle est.
 Ni « Cartes » ni copyleft dans le menu. La suite est le passage en production,
 à partir de `PASSAGE.md`.
 
-**Au passage**, deux écarts avec la maquette : les cartes du site sont en
-WebGL (`choropleth_map`), le zoom en SVG coûtant 65 à 170 ms par cran ; et la
-fourchette prend une marge constante de ±3 points, faute d'intervalle de
-confiance au contrat.
+**Au passage**, deux versions sont ouvertes : #44 garde les cartes SVG, #46
+les passe en WebGL, le zoom en SVG coûtant 65 à 170 ms par cran. La fourchette
+prend une marge constante de ±2,5 points (#43).
 
 **Ouvert.** L'intervalle de confiance réel (voie Moteur) ; la palette, pas
 encore passée par `validate_palette.js`.
