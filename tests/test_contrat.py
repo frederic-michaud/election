@@ -5,6 +5,7 @@ signal qu'il faut mettre à jour ``graphiques.py`` / les templates en face.
 """
 
 import json
+from datetime import datetime
 
 import pytest
 
@@ -24,7 +25,7 @@ def test_la_vue_est_serialisable_en_json(vue):
 
 
 def test_forme_du_contrat(vue):
-    assert set(vue) == {"date", "avance", "sujets"}
+    assert set(vue) == {"date", "avance", "mise_a_jour", "sujets"}
     assert vue["date"] == Extrapolation.objects.latest("moment_creation").sujet_vote.date.isoformat()
     assert 0 <= vue["avance"] <= 1
     assert len(vue["sujets"]) >= 1
@@ -54,6 +55,15 @@ def test_les_valeurs_viennent_du_dernier_instantane(vue):
         extra = Extrapolation.objects.filter(sujet_vote_id=sujet["id"]).latest("moment_creation")
         assert sujet["oui_connu"] == extra.pourcentage_oui_connu
         assert sujet["oui_extrapole"] == extra.pourcentage_oui_extrapole
+
+
+def test_la_mise_a_jour_est_la_projection_la_plus_recente(vue):
+    instant = datetime.fromisoformat(vue["mise_a_jour"])
+    assert instant.tzinfo is not None
+    assert instant == max(
+        Extrapolation.objects.filter(sujet_vote_id=sujet["id"]).latest("moment_creation").moment_creation
+        for sujet in vue["sujets"]
+    )
 
 
 def test_la_page_d_accueil_s_assemble(base_demo, client):

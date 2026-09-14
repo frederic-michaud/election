@@ -26,10 +26,12 @@ def resultats_par_commune(sujet):
 
 def construire_vue_accueil():
     jour = SujetVote.objects.latest('date').date
-    vue = {"date": jour.isoformat(), "avance": 0.0, "sujets": []}
+    vue = {"date": jour.isoformat(), "avance": 0.0, "mise_a_jour": None, "sujets": []}
+    instants = []
     for sujet in SujetVote.objects.filter(date=jour).order_by('sujet_id'):
         extra = Extrapolation.objects.filter(sujet_vote=sujet).latest('moment_creation')
         vue["avance"] = extra.avance
+        instants.append(extra.moment_creation)
         vue["sujets"].append({
             "id": sujet.id,
             "nom": sujet.nom,
@@ -37,4 +39,6 @@ def construire_vue_accueil():
             "oui_extrapole": extra.pourcentage_oui_extrapole,
             "communes": resultats_par_commune(sujet),
         })
+    if instants:
+        vue["mise_a_jour"] = max(instants).isoformat()
     return vue
