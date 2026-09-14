@@ -25,7 +25,6 @@ def resultats_par_commune(sujet):
 
 
 def construire_vue_accueil():
-    """``mise_a_jour`` : instant ISO 8601 (UTC) de la projection la plus récente."""
     jour = SujetVote.objects.latest('date').date
     vue = {"date": jour.isoformat(), "avance": 0.0, "mise_a_jour": None, "sujets": []}
     instants = []
