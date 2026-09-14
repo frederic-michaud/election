@@ -15,7 +15,7 @@ def test_une_page_existante_est_servie(client):
     PageStatique.objects.create(titre="Méthodes", contenu="<p>ACP</p>", url="methodes")
     reponse = client.get("/methodes")
     assert reponse.status_code == 200
-    assert "ACP" in reponse.content.decode()
+    assert "<p>ACP</p>" in reponse.content.decode()
 
 
 @pytest.mark.parametrize("url", ["/inconnue", "/favicon.ico", "/a/b", "/methodes/"])
@@ -33,6 +33,7 @@ def test_le_menu_expose_les_pages_triees(client):
 def test_le_menu_affiche_un_onglet_par_page(client):
     PageStatique.objects.create(titre="Méthodes", contenu="", url="methode", ordre=1)
     html = client.get("/methode").content.decode()
-    assert '<a href="/methode">Méthodes</a>' in html
-    assert '<a href="/cartes">Cartes</a>' in html
+    assert '<a href="/">Accueil</a>' in html
+    assert '<a href="/methode" aria-current="page">Méthodes</a>' in html
+    assert 'href="/cartes"' not in html
     assert 'href="NA"' not in html

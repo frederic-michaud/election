@@ -1,23 +1,45 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="gauche">
-<h2>Pourcentage des "oui" dépouillés et extrapolés pour les objets de votation du {{date}}</h2>
-Basé sur {{avance}} du dépouillement
-</div>
-<div id="histo">
-{{histo|safe}}
-{{info}}
-</div>
-{% for map in maps  %}
-<div class="map">
-{{ map |safe}}
-</div>
-{% endfor %}
-
+{% block contexte %}
+<h1 class="contexte">Votation fédérale <span class="quand">du {{ date|date:"j F Y" }}</span></h1>
 {% endblock %}
 
-{% block explanation %}
-<p class="explanation">
-  </p>
+{% block content %}
+<section class="avancement" aria-label="Avancement du dépouillement">
+  <div>
+    <div class="l">Dépouillement</div>
+    <div class="v">{{ avance }}</div>
+  </div>
+  <div class="rail"><i style="width: {{ jauge }}%"></i></div>
+  <div class="note"><i class="point"></i><span>Dépouillement en cours{% if mise_a_jour %} · {{ mise_a_jour|time:"H:i" }}{% endif %}</span></div>
+</section>
+
+<div class="mur">
+  {% for p in panneaux %}
+  <article class="panneau">
+    <h2 class="nom">{{ p.nom }}</h2>
+    <div class="valeurs">
+      <div class="chiffre {{ p.verdict }}">{{ p.extrapole }}</div>
+      <div class="libelle libelle-ext {{ p.verdict }}">extrapolé</div>
+      <div class="fourchette {{ p.verdict }}">fourchette<span class="bornes">{{ p.bornes }}</span></div>
+      <div class="chiffre-connu">{{ p.connu }}</div>
+      <div class="libelle libelle-connu">dépouillé</div>
+    </div>
+    <div class="barre {{ p.verdict }}" role="img" aria-label="{{ p.description }}">
+      <i class="rail"></i>
+      <i class="moustache" style="left: {{ p.barre.bas }}%; width: {{ p.barre.largeur }}%"></i>
+      {% with d=p.barre.depouille %}{% if d %}
+      <i class="trajet" style="left: {{ d.trajet_debut }}%; width: {{ d.trajet_largeur }}%"></i>
+      <i class="fleche {{ d.sens }}" style="left: {{ d.fleche }}%"></i>
+      <i class="connu" style="left: {{ d.position }}%"></i>
+      {% endif %}{% endwith %}
+    </div>
+    <div class="carte"><div class="figure"></div><script type="application/json">{{ p.carte|safe }}</script></div>
+  </article>
+  {% endfor %}
+</div>
+
+{# À la fin de la page : chaque cadre a alors sa taille définitive. #}
+{{ config_carte|json_script:"config-carte" }}
+<script>tracerCartes();</script>
 {% endblock %}

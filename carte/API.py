@@ -1,53 +1,57 @@
-import statistics
+import functools
+import json
 
-import geojson
-import plotly
 import plotly.express as px
 
+from scrutin import charte
 
-def generate_carte_plot(communes):
-    """``communes`` : le dict ``sujet["communes"]`` du contrat de vue."""
-    with open("data/K4voge_20220501_gf.geojson") as f:
-        gj = geojson.load(f)
-    all_cities = []
-    all_results = []
-    for entry in gj["features"]:
-        resultat = communes.get(entry['properties']['vogeId'])
-        if resultat is not None and resultat["oui"] is not None:
-            all_cities.append(entry["properties"]['vogeName'])
-            all_results.append(resultat["oui"] * 100)
-    all_results_formated = list(map(lambda x: f'{x:.2f} %', all_results))
-    dict_properties = {'name': all_cities,
-                       'results': all_results,
-                       'results_formated': all_results_formated}
-    # Bornes de l'échelle de couleur aux 1er et 9e déciles. numpy ne servait
-    # qu'à ça : `statistics` suffit, et la voie Interface n'a plus besoin de la
-    # pile scientifique pour afficher une carte.
-    valeurs_pour_couleur = [v for v in dict_properties['results'] if v > 0]
-    if len(valeurs_pour_couleur) < 2:
-        # Aucun résultat pour ce scrutin : échelle neutre plutôt qu'un plantage.
-        lower_bound_color, upper_bound_color = 0, 100
+CONTOURS = "data/K4voge_20220501_gf.geojson"
+
+
+def _arrondir(coordonnees):
+    """5 décimales, soit environ 1 m : le fichier en a 16, qui alourdissent la page."""
+    if isinstance(coordonnees[0], (int, float)):
+        return [round(c, 5) for c in coordonnees]
+    return [_arrondir(c) for c in coordonnees]
+
+
+def _points(coordonnees):
+    if isinstance(coordonnees[0], (int, float)):
+        yield coordonnees
     else:
-        deciles = statistics.quantiles(valeurs_pour_couleur, n=10)
-        lower_bound_color, upper_bound_color = deciles[0], deciles[-1]
-    div_containing_plot = plotly.offline.plot(px.choropleth_mapbox(dict_properties,
-                                                                   geojson=gj,
-                                                                   locations='name',
-                                                                   color='results',
-                                                                   center={"lat": 46.92, "lon": 8.22},
-                                                                   zoom=6,
-                                                                   # 20 is extremly zoomed... 10 still too much. 7 slightly too much
-                                                                   color_continuous_scale="RdYlGn",
-                                                                   featureidkey="properties.vogeName",
-                                                                   range_color=(lower_bound_color, upper_bound_color),
-                                                                   mapbox_style="white-bg",
-                                                                   opacity=0.5,
-                                                                   labels={'results_formated': 'Resultat',
-                                                                           'name': 'Nom'},
-                                                                   hover_data={'name': True, 'results_formated': True,
-                                                                               'results': False}
-                                                                   ),
-                                              include_plotlyjs=False,
-                                              output_type='div')
-    return div_containing_plot
+        for c in coordonnees:
+            yield from _points(c)
 
+
+@functools.cache
+def contours():
+    """Le GeoJSON communal et son emprise ((lon min, lat min), (lon max, lat max))."""
+    with open(CONTOURS) as f:
+        gj = json.load(f)
+    for feature in gj["features"]:
+        feature["geometry"]["coordinates"] = _arrondir(feature["geometry"]["coordinates"])
+    lon, lat = zip(*(p for f in gj["features"] for p in _points(f["geometry"]["coordinates"])))
+    return gj, ((min(lon), min(lat)), (max(lon), max(lat)))
+
+
+def figure_carte(communes):
+    """Carte WebGL des résultats par commune, tracée par ``carte/static/carte/cartes.js``.
+
+    ``communes`` : le dict ``sujet["communes"]`` du contrat de vue.
+    """
+    gj, emprise = contours()
+    noms, oui, survol = [], [], []
+    for entry in gj["features"]:
+        resultat = communes.get(entry["properties"]["vogeId"])
+        if resultat is not None and resultat["oui"] is not None:
+            noms.append(entry["properties"]["vogeName"])
+            oui.append(resultat["oui"] * 100)
+            survol.append(f"{resultat['oui'] * 100:.1f} %".replace(".", ","))
+    figure = px.choropleth_map({"commune": noms, "oui": oui, "part de oui": survol},
+                               geojson=gj,
+                               locations="commune",
+                               featureidkey="properties.vogeName",
+                               color="oui",
+                               hover_name="commune",
+                               hover_data={"commune": False, "oui": False, "part de oui": True})
+    return charte.habiller_carte(figure, emprise)
