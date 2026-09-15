@@ -51,6 +51,9 @@ def barre(oui_connu, oui_extrapole, marge=MARGE_PROVISOIRE):
 
 
 def panneau(sujet, marge=MARGE_PROVISOIRE):
+    if sujet["oui_extrapole"] is None:
+        # Pas encore de projection : un panneau qui l'annonce, pas un chiffre.
+        return {"nom": sujet["nom"], "attente": True}
     bas, haut = _intervalle(sujet["oui_extrapole"], marge)
     bornes = (f"{bas:.1f} – {haut:.1f} %").replace(".", ",")
     return {
@@ -72,6 +75,7 @@ def accueil(vue):
         "date": date.fromisoformat(vue["date"]),
         "mise_a_jour": datetime.fromisoformat(mise_a_jour) if mise_a_jour else None,
         "avance": pourcentage(vue["avance"]),
+        "commence": vue["avance"] > 0,
         "jauge": _css(100 * vue["avance"]),
         "panneaux": [panneau(sujet) for sujet in vue["sujets"]],
         "config_carte": charte.CONFIG_CARTE,

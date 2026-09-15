@@ -38,6 +38,11 @@ docker run --rm hello-world
 La dernière commande doit afficher un message de bienvenue. Si elle répond
 « permission denied », la nouvelle session n'a pas été ouverte.
 
+**Cette étape n'est pas optionnelle**, même si l'on préfère taper `sudo docker` :
+le timer du jour de scrutin (§ 9) lance le script sous ce compte, sans `sudo`.
+Sur une machine où l'appartenance au groupe avait été oubliée, tout marchait à
+la main et la boucle du dimanche aurait échoué à chaque tour.
+
 ## 3. Récupérer le code
 
 ```bash
@@ -139,9 +144,11 @@ docker compose run --rm web python manage.py add_initial_scrutin_en_cours \
   "var/scrutins/votation_${DATE}_0.json"
 ```
 
-Cette dernière commande crée une ligne vide par commune et par objet. Le
-gabarit n'est publié que quelques jours avant le scrutin ; avant cela, la
-commande n'a rien à lire.
+Cette dernière commande crée une ligne vide par commune et par objet, et
+**supprime celles du scrutin précédent** : la page d'accueil passe donc du
+scrutin passé au prochain, sans projection encore, avec la mention
+« Projection dès les premiers résultats ». Le gabarit n'est publié que quelques
+jours avant le scrutin ; avant cela, la commande n'a rien à lire.
 
 **Contrôle à faire ici**, pas le dimanche soir : vérifier qu'aucune commune du
 fichier n'est dépourvue de profil, sans quoi l'extrapolation s'arrête.
@@ -227,6 +234,10 @@ sudo systemctl enable --now politiques-scrutin.timer
 
 Adapter aussi `User` et `WorkingDirectory` dans le fichier `.service` si le
 dépôt n'est pas dans `/home/ubuntu/election`.
+
+**Armer le timer après l'amorçage du § 7**, pas avant : sans instantané de
+départ sous `var/scrutins`, chaque tour s'arrête en rappelant les deux commandes
+d'amorçage, et l'unité est en échec toutes les cinq minutes.
 
 Surveiller la soirée :
 

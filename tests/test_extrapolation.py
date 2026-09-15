@@ -12,6 +12,7 @@ import datetime
 
 import numpy as np
 import pytest
+from django.core.management import call_command
 
 from pca.models import PCAResult
 from scrutin.extrapolation import (
@@ -24,7 +25,14 @@ from scrutin.extrapolation import (
     nb_component,
     profils_de_repli,
 )
-from scrutin.models import Canton, Commune, District, ResultatCommunalEnCours, SujetVote
+from scrutin.models import (
+    Canton,
+    Commune,
+    District,
+    Extrapolation,
+    ResultatCommunalEnCours,
+    SujetVote,
+)
 
 # Le modèle qui engendre les données synthétiques : le % de oui et la
 # participation sont des fonctions affines de la première composante ACP.
@@ -186,18 +194,32 @@ def test_extrapolation_retrouve_le_resultat_final_sur_un_modele_exact():
 
 
 @pytest.mark.django_db
-def test_moins_de_sept_communes_depouillees_renvoie_le_repli():
-    """Garde-fou : sous 7 communes, on refuse d'ajuster 7 paramètres."""
+def test_moins_de_sept_communes_depouillees_ne_projette_pas():
+    """Garde-fou : sous 7 communes, on refuse d'ajuster 7 paramètres.
+
+    Et on le dit par None, pas par 0,5 : la valeur de repli s'affichait en page
+    d'accueil comme une projection à « 50,0 % », ce qui est un résultat inventé.
+    """
     sujet, _, _ = peupler_base_lineaire(nb_communes=40, nb_comptees=6)
 
     connu, extrapolation, avance, sans_resultat, oui_estime, part_estimee = (
         get_extrapolation(sujet)
     )
 
-    assert (connu, extrapolation, avance) == (0.5, 0.5, 0)
+    assert (connu, extrapolation, avance) == (None, None, 0.0)
     assert sans_resultat == []
     assert oui_estime == []
     assert part_estimee == []
+
+
+@pytest.mark.django_db
+def test_sans_projection_aucun_instantane_n_est_enregistre():
+    """Une ligne Extrapolation signifie « il y a une projection ». Pas d'autre cas."""
+    peupler_base_lineaire(nb_communes=40, nb_comptees=6)
+
+    call_command("run_extrapolation")
+
+    assert Extrapolation.objects.count() == 0
 
 
 @pytest.mark.django_db

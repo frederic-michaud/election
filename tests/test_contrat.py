@@ -9,6 +9,7 @@ from datetime import datetime
 
 import pytest
 
+from carte.API import figure_carte
 from scrutin.donnees import construire_vue_accueil
 from scrutin.models import Commune, Extrapolation
 
@@ -33,8 +34,9 @@ def test_forme_du_contrat(vue):
         assert set(sujet) == {"id", "nom", "oui_connu", "oui_extrapole", "communes"}
         assert isinstance(sujet["id"], int)
         assert isinstance(sujet["nom"], str) and sujet["nom"]
-        assert 0 <= sujet["oui_connu"] <= 1
-        assert 0 <= sujet["oui_extrapole"] <= 1
+        # None tant qu'aucune projection n'existe (voir le test plus bas).
+        assert sujet["oui_connu"] is None or 0 <= sujet["oui_connu"] <= 1
+        assert sujet["oui_extrapole"] is None or 0 <= sujet["oui_extrapole"] <= 1
 
 
 def test_communes_par_numero_ofs_avec_drapeau_comptabilise(vue):
@@ -70,3 +72,37 @@ def test_la_page_d_accueil_s_assemble(base_demo, client):
     reponse = client.get("/")
     assert reponse.status_code == 200
     assert "plotly" in reponse.content.decode()
+
+
+@pytest.mark.django_db
+def test_sans_projection_la_vue_ne_donne_pas_de_chiffre(base_demo):
+    """L'état du dimanche matin : les objets du jour, aucune projection encore.
+
+    C'est celui qui suit l'amorçage du scrutin. La vue le représentait par une
+    exception, donc par une page d'erreur publique.
+    """
+    Extrapolation.objects.all().delete()
+
+    vue = construire_vue_accueil()
+
+    assert vue["avance"] == 0.0
+    assert vue["mise_a_jour"] is None
+    assert vue["sujets"]
+    for sujet in vue["sujets"]:
+        assert sujet["oui_connu"] is None
+        assert sujet["oui_extrapole"] is None
+
+
+@pytest.mark.django_db
+def test_la_page_d_accueil_tient_sans_projection(base_demo, client):
+    Extrapolation.objects.all().delete()
+
+    reponse = client.get("/")
+
+    assert reponse.status_code == 200
+    assert "Projection dès les premiers résultats" in reponse.content.decode()
+
+
+def test_la_carte_se_trace_sans_aucun_resultat():
+    """Au moment de l'amorçage, aucune commune n'a de valeur."""
+    figure_carte({})

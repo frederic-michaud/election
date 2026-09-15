@@ -29,14 +29,18 @@ def construire_vue_accueil():
     vue = {"date": jour.isoformat(), "avance": 0.0, "mise_a_jour": None, "sujets": []}
     instants = []
     for sujet in SujetVote.objects.filter(date=jour).order_by('sujet_id'):
-        extra = Extrapolation.objects.filter(sujet_vote=sujet).latest('moment_creation')
-        vue["avance"] = extra.avance
-        instants.append(extra.moment_creation)
+        # Pas encore de projection : le dimanche matin, et jusqu'à la septième
+        # commune dépouillée. ``oui_connu`` et ``oui_extrapole`` sont alors
+        # None, ce que la présentation doit savoir afficher.
+        extra = Extrapolation.objects.filter(sujet_vote=sujet).order_by('-moment_creation').first()
+        if extra is not None:
+            vue["avance"] = extra.avance
+            instants.append(extra.moment_creation)
         vue["sujets"].append({
             "id": sujet.id,
             "nom": sujet.nom,
-            "oui_connu": extra.pourcentage_oui_connu,
-            "oui_extrapole": extra.pourcentage_oui_extrapole,
+            "oui_connu": extra.pourcentage_oui_connu if extra else None,
+            "oui_extrapole": extra.pourcentage_oui_extrapole if extra else None,
             "communes": resultats_par_commune(sujet),
         })
     if instants:

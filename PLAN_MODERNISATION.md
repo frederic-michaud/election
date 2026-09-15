@@ -450,6 +450,15 @@ Reste de B5, une fois B4 fait :
       communes réintégrées, à moitié dépouillé : 45,28 % et 53,24 % pour
       45,2 % et 52,5 % réels, contre 45,4 % et 53,4 % quand elles étaient
       jetées.
+- [x] Jour J blindé, second volet : **pas de projection tant qu'il n'y en a
+      pas**. Sous sept communes dépouillées, `get_extrapolation` renvoyait
+      `0,5` et `run_extrapolation` en enregistrait un instantané : l'accueil
+      affichait « 50,0 % extrapolé », un chiffre inventé, pendant tout le début
+      de soirée. Il renvoie désormais `None` et rien n'est écrit — une ligne
+      `Extrapolation` signifie « il y a une projection », et pas autre chose.
+      Le contrat porte `None`, la page annonce l'attente. Corrige du même coup
+      la **page d'erreur publique** entre l'amorçage du scrutin et le premier
+      tour réussi : `latest()` levait `DoesNotExist`.
 - [ ] **[I]** GeoJSON communal à jour — voir Partie 6.
 
 ---
