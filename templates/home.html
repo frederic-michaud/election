@@ -11,13 +11,16 @@
     <div class="v">{{ avance }}</div>
   </div>
   <div class="rail"><i style="width: {{ jauge }}%"></i></div>
-  <div class="note"><i class="point"></i><span>Dépouillement en cours{% if mise_a_jour %} · {{ mise_a_jour|time:"H:i" }}{% endif %}</span></div>
+  <div class="note"><i class="point"></i><span>{% if commence %}Dépouillement en cours{% else %}Dépouillement pas commencé{% endif %}{% if mise_a_jour %} · {{ mise_a_jour|time:"H:i" }}{% endif %}</span></div>
 </section>
 
 <div class="mur">
   {% for p in panneaux %}
   <article class="panneau">
     <h2 class="nom">{{ p.nom }}</h2>
+    {% if p.attente %}
+    <p class="attente">Projection dès les premiers résultats</p>
+    {% else %}
     <div class="valeurs">
       <div class="chiffre {{ p.verdict }}">{{ p.extrapole }}</div>
       <div class="libelle libelle-ext {{ p.verdict }}">extrapolé</div>
@@ -34,6 +37,7 @@
       <i class="connu" style="left: {{ d.position }}%"></i>
       {% endif %}{% endwith %}
     </div>
+    {% endif %}
     <div class="carte"><div class="figure"></div><script type="application/json">{{ p.carte|safe }}</script></div>
   </article>
   {% endfor %}

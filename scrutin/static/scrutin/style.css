@@ -46,6 +46,7 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .panneau .nom { margin: 0; font-size: .95rem; font-weight: 400; line-height: 1.5; color: var(--gris); min-height: 3em; }
 
 /* Tailles en cqi (largeur du panneau) ; la première déclaration sert de repli. */
+.panneau .attente { margin: 0; padding: 18px 0; font-size: .9rem; color: var(--gris); }
 .valeurs { display: grid; grid-template-columns: auto 1fr auto; column-gap: 8px; row-gap: 8px;
   grid-template-areas: "ext ext dep" "lib-ext fourchette lib-dep"; align-items: center; margin: 10px 0 14px; }
 .panneau .chiffre { grid-area: ext; justify-self: start; align-self: end;
