@@ -63,6 +63,13 @@ plan et il peut partir seul.
 colonne du design. Sur les six pires : 1,385 → 0,784 — une seule colonne vaut
 treize axes d'ACP. Elle règle les logements abordables (2,27 → 0,76).
 
+**Seconde réserve, vue sur la figure `distribution_objets`** : la variante riche
+écrase la queue mais **dégrade une dizaine d'objets faciles** — 2021-06-13 passe
+de 0,77 à 1,32 point, 2020-09-27 de 0,12 à 0,69. Un modèle plus riche aide là où
+c'est difficile et ajoute du bruit là où c'était déjà simple. La médiane globale
+s'améliore quand même (0,43 → 0,34), mais la dispersion entre objets augmente :
+c'est un arbitrage à assumer, pas un gain net.
+
 **Réserve bloquante** : elle dégrade les faibles avances (0,599 → 0,748 à 10 %),
 parce que l'ordre de dépouillement trie par taille — à faible avance le
 coefficient est estimé sur une plage étroite puis extrapolé avec un levier
@@ -71,6 +78,33 @@ coefficient est estimé sur une plage étroite puis extrapolé avec un levier
 **C2.** **Vérifier l'hypothèse « premier dépouillement ≈ 25 % »**, qui est
 posée et non mesurée. Les `kommunale_resultate_*.json` (ZH, AG, GR) portent des
 horodatages communaux et permettraient de la trancher. C'est un préalable à C1.
+
+## C bis. Régularisation progressive  *(optionnel, à explorer)*
+
+**C3.** Plutôt que d'activer ou non la colonne taille selon un seuil d'avance,
+la faire monter **en continu** : une pénalité ridge sur son seul coefficient,
+dont la force décroît à mesure que l'échantillon dépouillé devient
+représentatif en taille.
+
+Le constat qui motive l'idée : à 5 % d'avance, ni les axes supplémentaires ni
+l'effet canton ne dégradent — 20 axes + canton, soit 47 colonnes, est même la
+meilleure variante à cette avance. **Seule la taille dégrade**, dans les quatre
+configurations testées. Ce n'est donc pas un problème de nombre de paramètres
+face au nombre d'observations, mais d'**échantillonnage de cette variable-là** :
+l'ordre de dépouillement trie par taille, donc à faible avance on n'observe que
+des petites communes et le coefficient est extrapolé hors domaine.
+
+Deux conséquences. Le bon critère n'est pas un seuil sur l'avance — arbitraire
+et fragile — mais l'étendue de `log(taille)` observée chez les communes
+dépouillées rapportée à celle du pays, ou le levier de cette colonne : deux
+quantités calculables à chaque mise à jour, qui s'adapteraient d'elles-mêmes à
+un dimanche où un gros canton dépouille tôt. Et une transition continue évite
+le **saut de courbe** qu'un interrupteur produirait en pleine soirée : basculer
+de modèle déplacerait le %oui projeté d'un demi-point sans qu'aucun bulletin
+nouveau ne le justifie, ce qui est mauvais sur un affichage en direct.
+
+Si ça marche, C2 (vérifier l'hypothèse des 25 %) devient moins critique : le
+modèle s'apercevrait tout seul qu'il n'a pas de quoi estimer le coefficient.
 
 ## D. Fourchette d'incertitude
 
