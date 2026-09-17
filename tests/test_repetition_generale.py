@@ -15,27 +15,10 @@ from scrutin.management.commands.update_scrutin_en_cours import communes_depouil
 from scrutin.models import Commune
 
 
-def ecrire_scrutin_vide(chemin):
-    """Un JSON fédéral d'avant-scrutin : toutes les communes, aucun résultat."""
-    data = {"schweiz": {"abstimmtag": "20260927", "vorlagen": [{
-        "vorlagenId": 6880,
-        "vorlagenTitel": [{"text": "de"}, {"text": "Objet de test"}],
-        "kantone": [{"gemeinden": [
-            {
-                "geoLevelnummer": str(numero),
-                "geoLevelname": nom,
-                "resultat": {
-                    "jaStimmenAbsolut": None,
-                    "neinStimmenAbsolut": None,
-                    "anzahlStimmberechtigte": None,
-                    "eingelegteStimmzettel": None,
-                },
-            }
-            for numero, nom in Commune.objects.values_list("numero_ofs", "nom")
-        ]}],
-    }]}}
-    chemin.write_text(json.dumps(data))
-    return str(chemin)
+def scrutin_vierge(ecrire_scrutin, chemin):
+    """Un JSON d'avant-scrutin : toutes les communes de la base, aucun résultat."""
+    communes = dict.fromkeys(Commune.objects.values_list("numero_ofs", flat=True), False)
+    return str(ecrire_scrutin(chemin, [communes]))
 
 
 def depouillees(chemin):
@@ -45,8 +28,8 @@ def depouillees(chemin):
 
 @pytest.mark.lent
 @pytest.mark.django_db
-def test_instantanes_emboites(base_demo, tmp_path):
-    graine = ecrire_scrutin_vide(tmp_path / "graine.json")
+def test_instantanes_emboites(base_demo, tmp_path, ecrire_scrutin):
+    graine = scrutin_vierge(ecrire_scrutin, tmp_path / "graine.json")
 
     fabriquer(graine, str(tmp_path / "tot.json"), fraction=0.05)
     fabriquer(graine, str(tmp_path / "tard.json"), fraction=0.25)
@@ -60,8 +43,8 @@ def test_instantanes_emboites(base_demo, tmp_path):
 
 @pytest.mark.lent
 @pytest.mark.django_db
-def test_la_fraction_est_a_peu_pres_respectee(base_demo, tmp_path):
-    graine = ecrire_scrutin_vide(tmp_path / "graine.json")
+def test_la_fraction_est_a_peu_pres_respectee(base_demo, tmp_path, ecrire_scrutin):
+    graine = scrutin_vierge(ecrire_scrutin, tmp_path / "graine.json")
     total = Commune.objects.count()
 
     fabriquer(graine, str(tmp_path / "moitie.json"), fraction=0.5)
