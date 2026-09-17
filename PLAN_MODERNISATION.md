@@ -525,11 +525,31 @@ commande, et le site survit à un pic de trafic.**
       fichier tronqué ne devienne pas la référence du tour suivant.
 - [x] Chemins, URL du scrutin et cadence en config, plus rien en dur.
 
-### C3. Répétition générale **[2]**
-- [ ] Procédure écrite de « dry run » avec `create_fake_json_input` : simuler une
+### C3. Répétition générale **[2]** — *fait*
+- [x] Procédure écrite de « dry run » avec `create_fake_json_input` : simuler une
       soirée complète sur le VPS **avant** chaque vraie votation.
-- [ ] Checklist jour J (mettre à jour l'URL du JSON, vérifier l'ACP, lancer le
-      timer, contrôle visuel) versionnée dans le repo.
+      `deploiement/repetition_generale.sh`, documenté au § 8 bis de
+      `DEPLOIEMENT.md`. Il travaille sur une copie de la base (`VACUUM INTO`,
+      sûr à chaud), donc le site continue de servir pendant la répétition.
+      A demandé une option `--fraction` à `create_fake_json_input`, qui ne
+      savait produire qu'un seul instantané à 5 % : la graine étant fixe et le
+      tirage comparé à la fraction, deux appels croissants donnent des
+      instantanés **emboîtés**, donc une commune dépouillée le reste.
+      Jouée sur la base réelle et le fichier du 27 septembre : l'avance monte
+      4,3 → 14,7 → 22,6 → 46,3 → 75,3 → 100 %, et la projection rejoint le
+      confirmé au dernier tour.
+- [x] Checklist jour J (mettre à jour l'URL du JSON, vérifier l'ACP, lancer le
+      timer, contrôle visuel) versionnée dans le repo :
+      [`CHECKLIST_JOUR_J.md`](CHECKLIST_JOUR_J.md), en trois temps — J-7, J-1,
+      le dimanche — plus un tableau des pannes courantes.
+      *Trois choses trouvées en l'écrivant* : le timer que la prod fait tourner
+      (`OnCalendar`, pour ne pas accumuler 6,6 Go d'instantanés) n'était jamais
+      revenu dans `deploiement/` ; la date du scrutin vit à **deux** endroits,
+      `DATE_SCRUTIN=` dans le `.service` et `OnCalendar=` dans le `.timer`, et
+      le `sed` du § 9 n'en corrigeait qu'un ; et le contrôle « communes sans
+      profil » du § 7 annonçait `0` comme réponse attendue, alors que la base
+      réelle en a deux et que depuis `jour-j-blinde` elles ne bloquent plus
+      rien.
 
 ---
 

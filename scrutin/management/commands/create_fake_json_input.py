@@ -8,7 +8,6 @@ from scrutin.models import Commune, ResultatCommunalHistorique, SujetVote
 
 logger = logging.getLogger(__name__)
 
-p_rejection = 0.95
 
 def get_result(commune, sujet):
     voixs = ResultatCommunalHistorique.objects.filter(commune = commune, sujet_vote = sujet)
@@ -18,17 +17,28 @@ def get_result(commune, sujet):
 
 
 class Command(BaseCommand):
-    help = "Fabrique un JSON de test en rejouant d'anciens résultats sur 5 % des communes."
+    help = "Fabrique un JSON de test en rejouant d'anciens résultats sur une part des communes."
 
     def add_arguments(self, parser):
         parser.add_argument("json_du_scrutin")
         parser.add_argument("json_de_sortie", nargs="?", default="json_fake.json")
+        parser.add_argument("--fraction", type=float, default=0.05,
+                            help="part des communes dépouillées (défaut : 0.05)")
 
     def handle(self, *args, **options):
-        fabriquer(options["json_du_scrutin"], options["json_de_sortie"])
+        fabriquer(options["json_du_scrutin"], options["json_de_sortie"],
+                  options["fraction"])
 
 
-def fabriquer(path_votation, path_sortie):
+def fabriquer(path_votation, path_sortie, fraction=0.05):
+    """Rejoue d'anciens résultats sur `fraction` des communes.
+
+    La graine est fixe et le tirage est comparé à `fraction` : les communes
+    retenues à 5 % le sont encore à 25 %. Deux appels à des fractions
+    croissantes donnent donc des instantanés emboîtés, comme une vraie soirée
+    où une commune dépouillée le reste — c'est ce qui permet d'enchaîner
+    `update_scrutin_en_cours` d'un fichier au suivant.
+    """
     sujets = SujetVote.objects.order_by("date")
     with open(path_votation, 'r') as f:
         data = json.load(f)
@@ -46,7 +56,7 @@ def fabriquer(path_votation, path_sortie):
                 resultat_previous = get_result(commune, sujet)
                 if resultat_previous is None:
                     continue
-                if np.random.random() > p_rejection:
+                if np.random.random() < fraction:
                     resultat_json = data_commune['resultat']
                     resultat_json["jaStimmenAbsolut"] = resultat_previous.nombre_oui
                     resultat_json["neinStimmenAbsolut"] = resultat_previous.nombre_non

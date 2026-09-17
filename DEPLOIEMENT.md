@@ -150,18 +150,26 @@ scrutin passé au prochain, sans projection encore, avec la mention
 « Projection dès les premiers résultats ». Le gabarit n'est publié que quelques
 jours avant le scrutin ; avant cela, la commande n'a rien à lire.
 
-**Contrôle à faire ici**, pas le dimanche soir : vérifier qu'aucune commune du
-fichier n'est dépourvue de profil, sans quoi l'extrapolation s'arrête.
+**Contrôle à faire ici**, pas le dimanche soir : relever les communes du
+fichier dépourvues de profil ACP.
 
 ```bash
 docker compose run --rm web python manage.py shell -c "
-from scrutin.models import Commune, ResultatCommunalEnCours
+from scrutin.models import ResultatCommunalEnCours
 from pca.models import PCAResult
 sans = ResultatCommunalEnCours.objects.exclude(commune__in=PCAResult.objects.values('commune'))
-print('communes sans profil :', sans.count(), sorted(set(sans.values_list('commune__nom', flat=True))))"
+print(sorted(set(sans.values_list('commune__nom', flat=True))))"
 ```
 
-La réponse attendue est `0`.
+Quelques noms sont normaux — en septembre 2026, `Jaberg` et `Rüti bei Lyssach`,
+deux communes qui ont commencé à publier séparément et n'ont donc pas
+d'historique. Elles ne bloquent plus rien : dépouillées, leurs bulletins
+comptent sans servir à ajuster le modèle ; manquantes, elles sont projetées
+avec le profil moyen de leur district. Ce qui doit alerter est un nombre qui
+s'envole, signe que l'appariement par numéro OFS a décroché.
+
+La requête compte des lignes, pas des communes : deux communes sur un scrutin à
+deux objets en font quatre. D'où le `set()` sur les noms.
 
 ## 7 bis. Les pages du menu
 
@@ -219,7 +227,30 @@ sudo ufw allow 'Nginx Full'
 sudo ufw enable
 ```
 
+## 8 bis. Répétition générale
+
+Avant chaque vrai dimanche, rejouer une soirée entière sur une copie de la
+base :
+
+```bash
+DATE_SCRUTIN=$DATE ./deploiement/repetition_generale.sh
+```
+
+Le script copie la base par `VACUUM INTO`, fabrique une suite d'instantanés de
+plus en plus dépouillés avec `create_fake_json_input --fraction`, et enchaîne à
+chaque tour les deux commandes du jour J. Il affiche l'avance et la projection
+tour par tour : l'avance doit monter jusqu'à 100 %, et la projection rejoindre
+le confirmé au dernier tour. Les résultats rejoués viennent d'anciennes
+votations — seule la mécanique est testée, pas le pronostic.
+
+La base réelle n'est jamais ouverte en écriture, et le site continue de servir
+pendant la répétition.
+
 ## 9. Le dimanche de scrutin
+
+Le déroulé complet, à cocher, est dans
+[`CHECKLIST_JOUR_J.md`](CHECKLIST_JOUR_J.md) : ce paragraphe n'explique que le
+timer.
 
 Un timer systemd rappelle le script toutes les cinq minutes : il télécharge le
 nouveau fichier, met à jour la base et recalcule la projection.
@@ -227,7 +258,7 @@ nouveau fichier, met à jour la base et recalcule la projection.
 ```bash
 sudo cp deploiement/politiques-scrutin.service deploiement/politiques-scrutin.timer \
         /etc/systemd/system/
-sudo sed -i "s/20260927/$DATE/" /etc/systemd/system/politiques-scrutin.service
+sudo sed -i "s/20260927/$DATE/" /etc/systemd/system/politiques-scrutin.{service,timer}
 sudo systemctl daemon-reload
 sudo systemctl enable --now politiques-scrutin.timer
 ```

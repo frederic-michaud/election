@@ -1,18 +1,23 @@
-# Rappelle le service toutes les cinq minutes. Remplace la boucle `while true`
-# lancée à la main dans un terminal ssh : le timer survit à la déconnexion, au
-# redémarrage de la machine, et journalise chaque passage.
+# Rappelle le service toutes les cinq minutes, le jour du scrutin seulement.
 #
 #   systemctl list-timers politiques-scrutin.timer   # quand le prochain tour
 #   journalctl -u politiques-scrutin.service -f      # ce qu'il a fait
+#
+# Pourquoi une date et pas `OnUnitActiveSec=5min` en permanence : chaque tour
+# conserve son instantané sous var/scrutins (2 Mo). Armé douze jours à l'avance,
+# le timer accumulerait 6,6 Go pour 2,6 Go libres sur cette machine, alors que
+# le fichier fédéral ne change pas avant le dimanche. La date est à changer à
+# chaque scrutin, comme DATE_SCRUTIN dans le service.
 
 [Unit]
 Description=Politiques.ch — relance la projection toutes les cinq minutes
 
 [Timer]
-OnBootSec=2min
-# Depuis la fin du tour précédent, jamais en parallèle : deux imports
-# simultanés écriraient dans la même base SQLite.
-OnUnitActiveSec=5min
+# Si un tour dure plus de cinq minutes — possible quand la machine essouffle —
+# systemd ne lance pas de second exemplaire de l'unité : le déclenchement est
+# simplement sauté. Deux imports n'écrivent donc jamais en parallèle dans la
+# base, ce qu'un unique écrivain SQLite ne pardonnerait pas.
+OnCalendar=2026-09-27 *:0/5
 AccuracySec=30s
 
 [Install]
