@@ -31,7 +31,11 @@ COULEURS = {"adversarial_bas": "tab:red",
             "adversarial_haut": "tab:orange",
             "profil_bas": "tab:purple",
             "profil_haut": "tab:green",
-            "realiste": "tab:blue"}
+            "realiste": "tab:blue",
+            "aleatoire": "tab:brown"}
+# « aleatoire » : permutation uniforme. Temoin — il n'a aucune structure
+# ville/campagne, alors que le realiste trie de fait par taille de commune.
+STOCHASTIQUES = ("realiste", "aleatoire")
 # Loi d'arrivée calibrée sur les kommunale_resultate_* du BFS (ZH/AG/GR/SZ/ZG),
 # 181 communes x 18 dates : retard = 80*log10(electeurs) + N(0, 46 min).
 RETARD_PENTE = 80.0
@@ -207,6 +211,30 @@ def balayer(composantes, pourcentage_oui, participation, bulletins, exprimes,
     suffixe_oui = np.where(manquante, apport_oui, 0.0).sum(axis=1)
     suffixe_tot = np.where(manquante, votants, 0.0).sum(axis=1)
 
+    # Pearson entre %oui predit et %oui reel, a chaque avance. « dedans » = sur
+    # les communes deja depouillees, celles sur lesquelles le modele est ajuste :
+    # c'est le seul des deux qui soit observable le jour J. « dehors » = sur les
+    # communes restantes, la vraie qualite predictive. Non ponderes, alors que
+    # l'ajustement l'est : c'est le coefficient de Pearson usuel.
+    reel = pourcentage_oui[ordre]
+
+    def correlation(masque, effectif):
+        predit_m = np.where(masque, projete_oui, 0.0)
+        reel_m = np.where(masque, reel[None, :], 0.0)
+        n = effectif.astype(float)
+        somme_x = predit_m.sum(axis=1)
+        somme_y = reel_m.sum(axis=1)
+        covariance = n * (predit_m * reel_m).sum(axis=1) - somme_x * somme_y
+        variance_x = n * (predit_m**2).sum(axis=1) - somme_x**2
+        variance_y = n * (reel_m**2).sum(axis=1) - somme_y**2
+        with np.errstate(invalid="ignore", divide="ignore"):
+            r = covariance / np.sqrt(variance_x * variance_y)
+        r[(n < 2) | (variance_x <= 0) | (variance_y <= 0)] = np.nan
+        return r
+
+    pearson_dedans = correlation(~manquante, effectifs)
+    pearson_dehors = correlation(manquante, nb - effectifs)
+
     oui_final = cumul_oui[pos] + suffixe_oui
     total_final = cumul_exprimes[pos] + suffixe_tot
     leviers = np.einsum("gij,ni,nj->gn", inverses, design, design)
@@ -219,6 +247,8 @@ def balayer(composantes, pourcentage_oui, participation, bulletins, exprimes,
             "oui_depouille": cumul_oui[pos] / cumul_exprimes[pos],
             "cond": np.linalg.cond(grammes),
             "levier_max": levier_max,
+            "pearson_dedans": pearson_dedans,
+            "pearson_dehors": pearson_dehors,
             "nb_depouillees": effectifs.astype(float),
             "poids_total": np.cumsum(poids)[pos]}
 
@@ -232,6 +262,8 @@ def ordres(scenario, pourcentage_oui, composantes, electeurs, rng):
         return np.argsort(composantes[:, 0], kind="stable")
     if scenario == "profil_haut":
         return np.argsort(-composantes[:, 0], kind="stable")
+    if scenario == "aleatoire":
+        return rng.permutation(len(electeurs))
     retard = RETARD_PENTE * np.log10(np.maximum(electeurs, 1.0))
     retard = retard + rng.normal(0.0, RETARD_SIGMA, size=len(electeurs))
     return np.argsort(retard, kind="stable")
@@ -271,6 +303,8 @@ class Command(BaseCommand):
         parser.add_argument("--scenarios", default=None,
                             help="Sous-ensemble de scénarios, séparés par des virgules "
                                  "(défaut : tous). Ex. profil_bas,profil_haut,realiste")
+        parser.add_argument("--sans-pearson", action="store_true",
+                            help="Figures a un seul panneau, sans les r de Pearson")
         parser.add_argument("--figure-variance", action="store_true",
                             help="Trace la variance expliquée par composante ACP")
         parser.add_argument("--figure-mecanisme", action="store_true",
@@ -347,9 +381,10 @@ class Command(BaseCommand):
         effectifs = self.effectifs(ctx["nb_communes"], options["grille"])
         resultats = {}
         for scenario in self.scenarios:
-            nb_tirages = options["tirages"] if scenario == "realiste" else 1
+            nb_tirages = options["tirages"] if scenario in STOCHASTIQUES else 1
             empile = {cle: [] for cle in ("oui_projete", "oui_depouille",
                                           "avance_affichee", "cond", "levier_max",
+                                          "pearson_dedans", "pearson_dehors",
                                           "nb_depouillees")}
             for _ in range(nb_tirages):
                 ordre = ordres(scenario, ctx["pourcentage_oui"], ctx["composantes"],
@@ -439,7 +474,8 @@ class Command(BaseCommand):
             plume = csv.writer(fichier)
             plume.writerow(["date", "sujet", "scenario", "tirage", "avance",
                             "oui_projete", "oui_depouille", "avance_affichee",
-                            "cond", "levier_max", "nb_depouillees"])
+                            "cond", "levier_max", "pearson_dedans",
+                            "pearson_dehors", "nb_depouillees"])
             for ctx in meta:
                 for scenario, donnees in toutes[ctx["sujet_id"]].items():
                     for tirage in range(len(donnees["oui_projete"])):
@@ -453,6 +489,8 @@ class Command(BaseCommand):
                                             f"{donnees['avance_affichee'][tirage, k]:.6f}",
                                             f"{donnees['cond'][tirage, k]:.6g}",
                                             f"{donnees['levier_max'][tirage, k]:.6g}",
+                                            f"{donnees['pearson_dedans'][tirage, k]:.6f}",
+                                            f"{donnees['pearson_dehors'][tirage, k]:.6f}",
                                             f"{donnees['nb_depouillees'][tirage, k]:.1f}"])
         self.journal(f"Courbes brutes : {chemin}")
 
@@ -460,9 +498,12 @@ class Command(BaseCommand):
         """Seuil = levier typique au moment où le réaliste passe sous 1 point."""
         if options["seuil_levier"] is not None:
             return options["seuil_levier"]
+        # Faute de realiste (run restreint par --scenarios), le premier venu.
+        reference = ("realiste" if "realiste" in self.scenarios
+                     else next(iter(self.scenarios)))
         valeurs = []
         for ctx in meta:
-            donnees = toutes[ctx["sujet_id"]]["realiste"]
+            donnees = toutes[ctx["sujet_id"]][reference]
             moyenne = np.nanmean(donnees["oui_projete"], axis=0)
             erreur = np.abs(moyenne - ctx["vrai_oui"]) * 100
             avance = self.avance_sous(grille_avance, erreur, 1.0)
@@ -554,10 +595,19 @@ class Command(BaseCommand):
         import matplotlib.pyplot as plt
 
         marge = options["marge_graphique"] / 100
+        avec_r = not options["sans_pearson"]
         for ctx in meta:
-            figure, axe = plt.subplots(figsize=(7, 4.5))
+            if avec_r:
+                figure, (axe, axe_r) = plt.subplots(
+                    2, 1, figsize=(7, 6.2), sharex=True,
+                    gridspec_kw={"height_ratios": (2, 1), "hspace": 0.12})
+            else:
+                figure, axe = plt.subplots(figsize=(7, 4.5))
+                axe_r = axe
             self.tracer(axe, ctx, toutes[ctx["sujet_id"]], grille_avance, marge)
-            axe.set_xlabel("avance (part des bulletins dépouillés)")
+            if avec_r:
+                self.tracer_pearson(axe_r, toutes[ctx["sujet_id"]], grille_avance, False)
+            axe_r.set_xlabel("avance (part des bulletins dépouillés)")
             axe.set_ylabel("% oui projeté")
             axe.legend(fontsize=6)
             figure.tight_layout()
@@ -567,13 +617,30 @@ class Command(BaseCommand):
 
         colonnes = 5
         rangees = int(np.ceil(len(meta) / colonnes))
-        figure, axes = plt.subplots(rangees, colonnes,
-                                    figsize=(3.2 * colonnes, 2.4 * rangees))
-        for axe, ctx in zip(np.ravel(axes), meta):
+        hauteur = 3.2 * rangees
+        figure = plt.figure(figsize=(3.2 * colonnes, hauteur))
+        bandeau = 0.6 / hauteur          # un demi-pouce reserve au titre general
+        exterieur = figure.add_gridspec(rangees, colonnes, hspace=0.45, wspace=0.3,
+                                        top=1 - bandeau, bottom=0.04,
+                                        left=0.05, right=0.98)
+        for rang, ctx in enumerate(meta):
+            cellule = exterieur[rang // colonnes, rang % colonnes]
+            if avec_r:
+                interieur = cellule.subgridspec(2, 1, height_ratios=(2, 1), hspace=0.08)
+                axe = figure.add_subplot(interieur[0])
+                axe.tick_params(labelbottom=False)
+            else:
+                axe = figure.add_subplot(cellule)
             self.tracer(axe, ctx, toutes[ctx["sujet_id"]], grille_avance, marge, compact=True)
-        for axe in np.ravel(axes)[len(meta):]:
-            axe.axis("off")
-        figure.tight_layout()
+            if avec_r:
+                self.tracer_pearson(figure.add_subplot(interieur[1], sharex=axe),
+                                    toutes[ctx["sujet_id"]], grille_avance, True)
+        figure.suptitle(
+            "%oui projeté (plein) et dépouillement nu (tirets), bandes = 95 % des tirages"
+            + (". Panneau bas : r de Pearson entre %oui prédit et réel, 1 tirage — plein "
+               "sur les communes dépouillées, pointillé sur les restantes." if avec_r
+               else "."),
+            fontsize=10, y=1 - 0.3 * bandeau)
         for suffixe in ("png", "pdf"):
             figure.savefig(sortie / f"recapitulatif.{suffixe}", dpi=100)
         plt.close(figure)
@@ -617,19 +684,20 @@ class Command(BaseCommand):
     def tracer(self, axe, ctx, courbes, grille_avance, marge, compact=False):
         vrai = 100 * ctx["vrai_oui"]
         for scenario, couleur in self.scenarios.items():
-            donnees = courbes[scenario]["oui_projete"] * 100
-            moyenne = np.nanmean(donnees, axis=0)
-            axe.plot(grille_avance, moyenne, color=couleur, lw=1.2,
-                     label=scenario.replace("_", " "))
-            nu = np.nanmean(courbes[scenario]["oui_depouille"], axis=0) * 100
-            axe.plot(grille_avance, nu, color=couleur, lw=1.0, ls="--", alpha=0.55,
-                     label=None if compact else
-                     scenario.replace("_", " ") + " — dépouillement nu")
-            if scenario == "realiste" and donnees.shape[0] > 1:
-                axe.fill_between(grille_avance,
-                                 np.nanpercentile(donnees, 2.5, axis=0),
-                                 np.nanpercentile(donnees, 97.5, axis=0),
-                                 color=couleur, alpha=0.2, lw=0)
+            for cle, style, alpha, suffixe in (
+                    ("oui_projete", "-", 1.0, ""),
+                    ("oui_depouille", "--", 0.55, " — dépouillement nu")):
+                donnees = courbes[scenario][cle] * 100
+                axe.plot(grille_avance, np.nanmean(donnees, axis=0), color=couleur,
+                         lw=1.2 if cle == "oui_projete" else 1.0, ls=style, alpha=alpha,
+                         label=None if (compact and suffixe) else
+                         scenario.replace("_", " ") + suffixe)
+                if donnees.shape[0] > 1:
+                    axe.fill_between(grille_avance,
+                                     np.nanpercentile(donnees, 2.5, axis=0),
+                                     np.nanpercentile(donnees, 97.5, axis=0),
+                                     color=couleur, alpha=0.2 if suffixe == "" else 0.12,
+                                     lw=0)
         axe.axhline(vrai, color="black", ls=":", lw=1.1,
                     label=None if compact else f"résultat final {vrai:.2f}%")
         axe.set_ylim(vrai - 100 * marge, vrai + 100 * marge)
@@ -639,6 +707,47 @@ class Command(BaseCommand):
         axe.set_title(titre, fontsize=7 if compact else 9)
         if compact:
             axe.tick_params(labelsize=6)
+
+    def tracer_pearson(self, axe, courbes, grille_avance, compact):
+        """Panneau des deux r de Pearson, pour un seul tirage.
+
+        Trait plein : r sur les communes deja depouillees, celles qui ont servi a
+        l'ajustement — le seul des deux observable le jour J. Pointille : r sur
+        les communes restantes, la vraie qualite predictive.
+
+        Moyenner r sur les tirages lisserait justement ce qu'on veut voir, la
+        dynamique d'une soiree : on trace le tirage 0, un ordre d'arrivee tire au
+        sort comme les autres, pas leur resume.
+        """
+        from matplotlib.lines import Line2D
+
+        planchers = [1.0]
+        for scenario, couleur in self.scenarios.items():
+            for cle, style in (("pearson_dedans", "-"),
+                               ("pearson_dehors", (0, (1.5, 1.5)))):
+                tirages = courbes[scenario][cle]
+                axe.plot(grille_avance, tirages[0], color=couleur, lw=1.0, ls=style)
+                if tirages.shape[0] > 1:
+                    axe.fill_between(grille_avance,
+                                     np.nanpercentile(tirages, 2.5, axis=0),
+                                     np.nanpercentile(tirages, 97.5, axis=0),
+                                     color=couleur, alpha=0.15, lw=0)
+                if np.any(np.isfinite(tirages[0])):
+                    planchers.append(np.nanmin(tirages))
+        axe.set_xlim(0, 1)
+        axe.set_ylim(max(-1.02, min(planchers) - 0.05), 1.02)
+        axe.axhline(0, color="black", ls=":", lw=0.8)
+        if compact:
+            axe.tick_params(labelsize=6)
+            axe.set_ylabel("r", fontsize=6)
+        else:
+            axe.set_ylabel("r de Pearson (%oui prédit / réel)", fontsize=8)
+            gris = [Line2D([], [], color="0.35", ls="-", lw=1.0,
+                           label="sur les communes dépouillées (in-sample)"),
+                    Line2D([], [], color="0.35", ls=(0, (1.5, 1.5)), lw=1.0,
+                           label="sur les communes restantes (hors échantillon)")]
+            # Trait : un tirage d'ordre d'arrivee. Bande : 95 % des tirages.
+            axe.legend(handles=gris, fontsize=6, loc="lower right")
 
     def resume(self, table, meta, toutes, grille_avance, seuil):
         self.journal("\n=== Synthèse (médianes sur les cibles) ===")
