@@ -258,7 +258,12 @@ nouveau fichier, met à jour la base et recalcule la projection.
 ```bash
 sudo cp deploiement/politiques-scrutin.service deploiement/politiques-scrutin.timer \
         /etc/systemd/system/
-sudo sed -i "s/20260927/$DATE/" /etc/systemd/system/politiques-scrutin.{service,timer}
+# La date ne s'écrit pas pareil dans les deux fichiers — 20260927 contre
+# 2026-09-27 — donc on ancre sur le nom du réglage, pas sur la date.
+sudo sed -i "s|^Environment=DATE_SCRUTIN=.*|Environment=DATE_SCRUTIN=$DATE|" \
+  /etc/systemd/system/politiques-scrutin.service
+sudo sed -i "s|^OnCalendar=.*|OnCalendar=$(date -d "$DATE" +%F) *:0/5|" \
+  /etc/systemd/system/politiques-scrutin.timer
 sudo systemctl daemon-reload
 sudo systemctl enable --now politiques-scrutin.timer
 ```

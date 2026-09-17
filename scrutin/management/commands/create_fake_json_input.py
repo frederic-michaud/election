@@ -1,12 +1,28 @@
+import hashlib
 import json
 import logging
 
-import numpy as np
 from django.core.management.base import BaseCommand
 
 from scrutin.models import Commune, ResultatCommunalHistorique, SujetVote
 
 logger = logging.getLogger(__name__)
+
+
+def tirage(numero_ofs):
+    """Tirage déterministe dans [0, 1), propre à la commune.
+
+    Volontairement pas un tirage séquentiel : il ne doit pas dépendre du
+    nombre de communes rencontrées avant. Une commune sans résultat historique
+    pour un objet décalait sinon toute la suite du tirage, si bien que les
+    objets d'un même scrutin ne retenaient plus les mêmes communes — et
+    `update_scrutin_en_cours`, qui n'importe une commune que lorsqu'elle est
+    rentrée pour *tous* les objets, n'en voyait presque plus aucune. Une seule
+    ligne d'historique manquante suffisait à faire tomber l'intersection de 110
+    communes à 7, soit le garde-fou de `get_extrapolation`.
+    """
+    empreinte = hashlib.md5(str(numero_ofs).encode()).digest()
+    return int.from_bytes(empreinte[:8], "big") / 2**64
 
 
 def get_result(commune, sujet):
@@ -33,17 +49,18 @@ class Command(BaseCommand):
 def fabriquer(path_votation, path_sortie, fraction=0.05):
     """Rejoue d'anciens résultats sur `fraction` des communes.
 
-    La graine est fixe et le tirage est comparé à `fraction` : les communes
+    Le tirage est propre à la commune et comparé à `fraction` : les communes
     retenues à 5 % le sont encore à 25 %. Deux appels à des fractions
     croissantes donnent donc des instantanés emboîtés, comme une vraie soirée
     où une commune dépouillée le reste — c'est ce qui permet d'enchaîner
-    `update_scrutin_en_cours` d'un fichier au suivant.
+    `update_scrutin_en_cours` d'un fichier au suivant. Et les mêmes communes
+    sont retenues pour tous les objets du scrutin, comme une commune qui
+    publie ses résultats d'un bloc.
     """
     sujets = SujetVote.objects.order_by("date")
     with open(path_votation, 'r') as f:
         data = json.load(f)
     for index_sujet, sujet_vote_json in enumerate(data['schweiz']['vorlagen']):
-        np.random.seed(0)
         sujet = sujets[index_sujet]
         for data_canton in sujet_vote_json['kantone']:
             for data_commune in data_canton['gemeinden']:
@@ -56,7 +73,7 @@ def fabriquer(path_votation, path_sortie, fraction=0.05):
                 resultat_previous = get_result(commune, sujet)
                 if resultat_previous is None:
                     continue
-                if np.random.random() < fraction:
+                if tirage(data_commune['geoLevelnummer']) < fraction:
                     resultat_json = data_commune['resultat']
                     resultat_json["jaStimmenAbsolut"] = resultat_previous.nombre_oui
                     resultat_json["neinStimmenAbsolut"] = resultat_previous.nombre_non

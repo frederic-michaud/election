@@ -40,18 +40,6 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
       rejoués viennent d'anciennes votations : le %oui n'a aucun sens
       politique, seule la mécanique est testée.
 
-- [ ] **Les communes sans profil ACP sont connues et peu nombreuses.** Elles ne
-      font plus tomber la projection — elles sont projetées avec le profil
-      moyen de leur district — mais une envolée du nombre signale un problème
-      d'appariement OFS.
-      ```bash
-      docker compose run --rm web python manage.py shell -c "
-      from scrutin.models import ResultatCommunalEnCours
-      from pca.models import PCAResult
-      sans = ResultatCommunalEnCours.objects.exclude(commune__in=PCAResult.objects.values('commune'))
-      print(sorted(set(sans.values_list('commune__nom', flat=True))))"
-      ```
-
 - [ ] **Les deux pages du menu répondent** (Méthodes, Contact) : le pipeline
       réel ne les crée pas, et un menu vide donne des onglets en 404.
 
@@ -81,14 +69,50 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
       `OnCalendar=` dans `politiques-scrutin.timer` (le jour où les tours ont
       lieu). Une seule des deux corrigée, et le timer tourne dans le vide ou ne
       part jamais.
+
+      Les deux ne s'écrivent pas pareil — `20260927` contre `2026-09-27` —
+      donc un `sed` sur la date manquerait le timer sans rien signaler. D'où
+      deux remplacements ancrés sur le nom du réglage :
       ```bash
-      sudo sed -i "s/20260927/$DATE/" /etc/systemd/system/politiques-scrutin.{service,timer}
+      sudo sed -i "s|^Environment=DATE_SCRUTIN=.*|Environment=DATE_SCRUTIN=$DATE|" \
+        /etc/systemd/system/politiques-scrutin.service
+      sudo sed -i "s|^OnCalendar=.*|OnCalendar=$(date -d "$DATE" +%F) *:0/5|" \
+        /etc/systemd/system/politiques-scrutin.timer
       sudo systemctl daemon-reload
+      grep -H "DATE_SCRUTIN\|OnCalendar" /etc/systemd/system/politiques-scrutin.*
+      ```
+
+- [ ] **Armer le timer, puis lancer un tour à blanc.** L'armement seul ne
+      déclenche rien : `OnCalendar` attend le dimanche, et une erreur de
+      `User=`, de `WorkingDirectory=` ou de droits Docker resterait invisible
+      jusqu'à midi. Un tour lancé à la main éprouve l'unité entière.
+      ```bash
       sudo systemctl enable --now politiques-scrutin.timer
       systemctl list-timers politiques-scrutin.timer    # doit annoncer le dimanche
+      sudo systemctl start politiques-scrutin.service   # le tour à blanc
+      journalctl -u politiques-scrutin.service -n 30 --no-pager
       ```
-      **Armer le timer après l'amorçage**, jamais avant : sans instantané de
-      départ, chaque tour échoue en rappelant les commandes d'amorçage.
+      Attendu : un instantané téléchargé, zéro nouvelle commune, et
+      « pas de projection » — le fichier fédéral est encore vide.
+
+      **Armer après l'amorçage**, jamais avant : sans instantané de départ,
+      chaque tour échoue en rappelant les commandes d'amorçage.
+
+- [ ] **Les communes sans profil ACP sont connues et peu nombreuses.** À faire
+      ici, une fois les lignes du scrutin semées — au J-7 la requête lit encore
+      celles du scrutin précédent et ne verrait pas une commune qui s'est mise
+      à publier séparément, le cas même qu'elle surveille. Ces communes ne font
+      plus tomber la projection — elles sont projetées avec le profil moyen de
+      leur district — mais une envolée du nombre signale un décrochage de
+      l'appariement OFS.
+      ```bash
+      docker compose run --rm web python manage.py shell -c "
+      from scrutin.models import ResultatCommunalEnCours
+      from pca.models import PCAResult
+      sans = ResultatCommunalEnCours.objects.exclude(commune__in=PCAResult.objects.values('commune'))
+      print(sorted(set(sans.values_list('commune__nom', flat=True))))"
+      ```
+      En septembre 2026 : `Jaberg` et `Rüti bei Lyssach`.
 
 - [ ] **Effacer les traces de la répétition**, pour ne pas les confondre avec
       les vrais instantanés du dimanche :
@@ -126,7 +150,7 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
 | symptôme | cause la plus probable |
 |---|---|
 | le service échoue toutes les cinq minutes | pas d'instantané de départ sous `var/scrutins` — rejouer l'amorçage du J-1 |
-| le timer n'annonce aucun prochain tour | `OnCalendar=` est resté sur la date du scrutin précédent |
+| le timer n'annonce aucun prochain tour | `OnCalendar=` est resté sur la date du scrutin précédent — un `sed` sur `20260927` ne l'atteint pas, il l'écrit `2026-09-27` |
 | 404 au téléchargement | `DATE_SCRUTIN=` dans le `.service` ne correspond pas au fichier publié |
 | la projection ne bouge pas d'un tour à l'autre | aucune commune nouvellement dépouillée **pour tous les objets** : une commune n'est reprise que lorsqu'elle est rentrée partout |
 | le site répond mais sans CSS ni logo | `collectstatic` ou whitenoise — reconstruire l'image |

@@ -27,10 +27,18 @@ COPIE="var/repetition.sqlite3"
 # Comme download_data.sh, par défaut dans le conteneur ; pour tourner sans
 # Docker, activer un venv puis MANAGE="python manage.py".
 MANAGE="${MANAGE:-docker compose run --rm -e DB_PATH=/app/${COPIE} web python manage.py}"
-export DB_PATH="${DB_PATH:-${COPIE}}"
+export DB_PATH="${COPIE}"
 
 GRAINE="${DOSSIER_DATA}/votation_${DATE_SCRUTIN}_0.json"
 DOSSIER_REPET="${DOSSIER_DATA}/repetition"
+
+if [ ! -f "${BASE}" ]; then
+  # sqlite3.connect() créerait le fichier : sans ce garde, une base absente
+  # donne une copie vide, et un BASE mal orthographié fabrique un fichier au
+  # chemin que compose.yaml sert en production.
+  echo "base absente : ${BASE}" >&2
+  exit 1
+fi
 
 if [ ! -f "${GRAINE}" ]; then
   echo "instantané de départ absent : ${GRAINE} — amorcer d'abord (§ 7 de DEPLOIEMENT.md)" >&2

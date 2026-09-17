@@ -96,18 +96,19 @@ request*.
 
 ### Répétition générale d'un soir de scrutin
 
-`create_fake_json_input` est l'outil officiel pour répéter une soirée **sans
-attendre un vrai dimanche de votation** : il rejoue d'anciens résultats sur 5 %
-des communes tirées au hasard et écrit un JSON au format fédéral. On l'enchaîne
-ensuite avec le pipeline du jour J :
+Une soirée entière se rejoue **sans attendre un vrai dimanche de votation** :
 
 ```bash
-python manage.py create_fake_json_input <json_du_scrutin> json_fake.json
-python manage.py update_scrutin_en_cours <json_precedent> json_fake.json
-python manage.py run_extrapolation
+DATE_SCRUTIN=20260927 ./deploiement/repetition_generale.sh
 ```
 
-À faire avant chaque votation réelle (voir `PLAN_MODERNISATION.md`, C3).
+Le script copie la base, fabrique une suite d'instantanés de plus en plus
+dépouillés avec `create_fake_json_input --fraction`, et enchaîne à chaque tour
+les deux commandes du jour J en affichant l'avance et la projection. La base
+réelle n'est jamais ouverte en écriture.
+
+À faire avant chaque votation réelle : c'est le premier point de la
+[checklist](CHECKLIST_JOUR_J.md).
 
 ## Déploiement en conteneur
 

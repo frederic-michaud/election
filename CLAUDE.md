@@ -129,9 +129,13 @@ sème les lignes vides (`get_or_create`), `update_scrutin_en_cours` les remplit
 commune et par objet — invariant **garanti par la base** (contrainte
 `une_ligne_par_commune_et_objet`, migration `scrutin/0002`).
 
-`create_fake_json_input <json_du_scrutin> [<sortie>]` fabrique un JSON
-de test en rejouant d'anciens résultats sur 5 % des communes tirées au hasard :
-c'est le moyen de tester sans attendre un vrai dimanche de votation.
+`create_fake_json_input <json_du_scrutin> [<sortie>] [--fraction 0.05]` fabrique
+un JSON de test en rejouant d'anciens résultats sur une part des communes. Le
+tirage est propre à la commune (empreinte du numéro OFS), donc deux fractions
+croissantes donnent des instantanés **emboîtés** et les mêmes communes sont
+retenues pour tous les objets du scrutin. `deploiement/repetition_generale.sh`
+s'en sert pour rejouer une soirée entière sur une copie de la base : c'est le
+moyen de tester sans attendre un vrai dimanche de votation.
 
 ### Source des données
 **Jour J** : JSON open data de la Confédération (`app-prod-static-voteinfo.s3…/ogd/`), format
