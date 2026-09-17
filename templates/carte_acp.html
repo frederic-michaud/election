@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<article class="page page-carte">
+  <h1>Les axes du profil de vote</h1>
+  <p>Chaque commune est résumée par six coordonnées, tirées de l'historique de ses
+  votations (analyse en composantes principales) : ce sont elles qui servent à
+  extrapoler les communes pas encore dépouillées. Le premier axe oppose en général
+  les villes aux campagnes et le deuxième les deux rives de la Sarine, mais l'ordre
+  et le signe des axes sortent du calcul — ils ne sont pas choisis.</p>
+  <p class="choix-axe"><label for="axe">Axe affiché</label>
+    <select id="axe">
+      {% for nom in axes %}<option value="{{ forloop.counter0 }}">{{ nom }}</option>{% endfor %}
+    </select></p>
+  <div class="carte"><div class="figure"></div><script type="application/json">{{ carte|safe }}</script></div>
+</article>
+{{ config_carte|json_script:"config-carte" }}
+<script src="{% static 'carte/carte_acp.js' %}"></script>
+<script>tracerCarteACP();</script>
+{% endblock %}

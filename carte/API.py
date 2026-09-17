@@ -2,6 +2,7 @@ import functools
 import json
 
 import plotly.express as px
+import plotly.graph_objects as go
 
 from scrutin import charte
 
@@ -55,3 +56,48 @@ def figure_carte(communes):
                                hover_name="commune",
                                hover_data={"commune": False, "oui": False, "part de oui": True})
     return charte.habiller_carte(figure, emprise)
+
+
+def _etendue(valeurs):
+    """Demi-étendue de l'échelle de couleur : le 95ᵉ centile des écarts à zéro,
+    pour qu'une poignée de communes extrêmes n'écrase pas les nuances du reste."""
+    ecarts = sorted(abs(v) for v in valeurs)
+    return round(ecarts[int(0.95 * (len(ecarts) - 1))], 2) or 1.0
+
+
+def _axe(numero, valeurs):
+    return {
+        "nom": f"Axe {numero}",
+        "valeurs": [round(v, 2) for v in valeurs],
+        "survol": [f"Axe {numero} : {v:+.2f}".replace(".", ",") for v in valeurs],
+        "etendue": _etendue(valeurs),
+    }
+
+
+def figure_carte_acp(profils):
+    """Carte des coordonnées ACP par commune, un axe à la fois.
+
+    ``profils`` : le dict de ``pca.donnees.profils_par_commune``. Les axes partent
+    tous dans ``layout.meta`` ; ``carte_acp.js`` échange celui qui est affiché.
+    """
+    gj, emprise = contours()
+    noms, coordonnees = [], []
+    for entry in gj["features"]:
+        profil = profils.get(entry["properties"]["vogeId"])
+        if profil is not None:
+            noms.append(entry["properties"]["vogeName"])
+            coordonnees.append(profil)
+    axes = [_axe(numero, colonne) for numero, colonne in enumerate(zip(*coordonnees), start=1)]
+    premier = axes[0]
+    figure = go.Figure(go.Choroplethmap(
+        geojson=gj,
+        locations=noms,
+        featureidkey="properties.vogeName",
+        z=premier["valeurs"],
+        hovertext=noms,
+        text=premier["survol"],
+        hovertemplate="<b>%{hovertext}</b><br>%{text}<extra></extra>",
+        coloraxis="coloraxis"))
+    charte.habiller_carte(figure, emprise, echelle=(-premier["etendue"], 0, premier["etendue"]))
+    figure.update_layout(meta={**figure.layout.meta, "axes": axes})
+    return figure

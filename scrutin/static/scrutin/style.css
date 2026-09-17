@@ -91,6 +91,10 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .page h1 { margin: 0 0 14px; font-size: 1.5rem; line-height: 1.25; letter-spacing: -.01em; }
 .page a { color: var(--oui); }
 .page-carte { max-width: 900px; }
+.choix-axe { display: flex; align-items: center; gap: 12px; margin: 18px 0 0; }
+.choix-axe label { font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--gris); }
+.choix-axe select { font: inherit; color: inherit; background: var(--panneau);
+  border: 1px solid var(--bord); border-radius: 8px; padding: 6px 10px; }
 
 /* ── Pied de page : le menu ── */
 footer { margin-top: 26px; border-top: 1px solid var(--bord); padding-top: 6px; }

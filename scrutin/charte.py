@@ -19,12 +19,14 @@ CONFIG_CARTE = {
 }
 
 
-def habiller_carte(figure, emprise):
+def habiller_carte(figure, emprise, echelle=None):
     """Couleurs, fond sans tuiles et limites de déplacement.
 
+    ``echelle`` : (min, milieu, max) de l'axe de couleur, par défaut le % de oui.
     L'emprise part dans ``layout.meta`` : ``cartes.js`` en tire centre et zoom.
     """
     (x0, y0), (x1, y1) = emprise
+    cmin, cmid, cmax = echelle or (50 - DEMI_ETENDUE, 50, 50 + DEMI_ETENDUE)
     largeur, hauteur = x1 - x0, y1 - y0
     figure.update_layout(
         font={"family": FONTE, "color": ENCRE},
@@ -33,7 +35,7 @@ def habiller_carte(figure, emprise):
         meta={"emprise": [[x0, y0], [x1, y1]]},
         coloraxis={
             "colorscale": [[0, ROUGE], [0.5, NEUTRE], [1, BLEU]],
-            "cmin": 50 - DEMI_ETENDUE, "cmid": 50, "cmax": 50 + DEMI_ETENDUE,
+            "cmin": cmin, "cmid": cmid, "cmax": cmax,
             "showscale": False,
         },
         map={

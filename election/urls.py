@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from carte.views import carte_view
+from carte.views import carte_acp_view, carte_view
 from page_statique.views import static_view
 from pca.views import pca_view
 from scrutin.views import home_view
@@ -25,6 +25,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("", home_view, name="home"),
     path("cartes", carte_view, name="cartes"),
+    path("cartes-acp", carte_acp_view, name="cartes_acp"),
     path("pca", pca_view, name="PCA"),
     path("<slug:url>", static_view, name="page"),
 ]
