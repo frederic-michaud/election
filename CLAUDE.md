@@ -151,7 +151,10 @@ charge par lots de 10 : au-delà, l'OFS répond 403.
 
 **La production fait tourner Django**, derrière un cache nginx. Le cache, le
 script du jour J et le timer systemd sont versionnés dans `deploiement/` et
-décrits pas à pas dans [`DEPLOIEMENT.md`](DEPLOIEMENT.md).
+décrits pas à pas dans [`DEPLOIEMENT.md`](DEPLOIEMENT.md). Le déroulé d'un
+dimanche, à cocher, est dans [`CHECKLIST_JOUR_J.md`](CHECKLIST_JOUR_J.md) ; il
+commence par une répétition générale (`deploiement/repetition_generale.sh`) qui
+rejoue une soirée entière sur une copie de la base.
 
 Contrainte qui demeure : le site doit rester **cachable**, donc sans contenu
 dépendant du visiteur et sans POST.
