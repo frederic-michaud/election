@@ -104,6 +104,19 @@ with PdfPages(SORTIE) as pdf:
                "jour. Elle fait moins bien que plusieurs variantes honnêtes : c'est la "
                "troncature qui limite, pas le corpus.")
 
+    page_image(pdf, SOURCE / "leviers_outliers.png",
+               "Le même chiffre sous trois critères. Le classement des leviers change : "
+               "l'ACP pondérée est deuxième sur la médiane des 30 objets et quatrième sur "
+               "le pire cas.\nLa colonne log(taille) ne se distingue que sur la queue — "
+               "c'est là qu'elle sert.")
+
+    page_image(pdf, SOURCE / "distribution_objets.png",
+               "Les 30 votations triées par difficulté. La variante riche écrase la queue "
+               "de gauche — mais dégrade une dizaine d'objets faciles à droite, "
+               "2021-06-13 en tête (0,77 → 1,32).\nUn modèle plus riche aide là où c'est "
+               "dur et ajoute du bruit là où c'était déjà simple : c'est l'arbitrage à "
+               "assumer.")
+
     page_texte(pdf, "Les pistes explorées", [
         ("h", "Retenu"),
         ("p", "Garder plus de composantes d'ACP, en nombre croissant avec le dépouillement.\n"
