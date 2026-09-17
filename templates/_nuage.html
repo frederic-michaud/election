@@ -1,0 +1,14 @@
+{% load static %}
+<p class="reglages">
+  <span><label for="axe-x">Horizontal</label>
+    <select id="axe-x">{% for nom in axes %}<option value="{{ forloop.counter0 }}"{% if forloop.counter0 == 0 %} selected{% endif %}>{{ nom }}</option>{% endfor %}</select></span>
+  <span><label for="axe-y">Vertical</label>
+    <select id="axe-y">{% for nom in axes %}<option value="{{ forloop.counter0 }}"{% if forloop.counter0 == 1 %} selected{% endif %}>{{ nom }}</option>{% endfor %}</select></span>
+  <span class="cherche"><label for="recherche">Chercher</label>
+    <input id="recherche" type="search" autocomplete="off" spellcheck="false" placeholder="{{ exemple }}" data-unite="{{ unite }}">
+    <span id="compte" aria-live="polite"></span></span>
+</p>
+<div class="nuage {{ forme }}"><div class="figure"></div><script type="application/json">{{ nuage|safe }}</script></div>
+{{ config|json_script:"config-nuage" }}
+<script src="{% static 'pca/nuage.js' %}"></script>
+<script>tracerNuage(JSON.parse(document.getElementById("config-nuage").textContent));</script>

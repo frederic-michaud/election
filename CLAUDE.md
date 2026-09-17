@@ -52,7 +52,7 @@ mais les cartes **ne distinguent donc pas visuellement réel et estimé**.
 | App | Rôle |
 |---|---|
 | `scrutin` | Cœur métier : tous les modèles, la logique d'extrapolation, la vue d'accueil, le CSS et le logo. |
-| `pca` | Modèle `PCAResult` (6 coordonnées par commune) + vue nuage de points ACP colorée par langue ; `pca/donnees.py` expose les profils à la carte des axes. |
+| `pca` | Modèle `PCAResult` (6 coordonnées par commune), `donnees.py` (contrat de vue) et `figures.py` : les trois pages de lecture de l'ACP — nuage des communes (`/nuage-acp`) et cercle des corrélations des objets (`/objets-acp`), plus les profils servis à la carte des axes. Les objets sont placés par **corrélation** avec chaque composante, calculée à la volée : rien de nouveau en base. |
 | `carte` | `carte/API.py` : cartes choroplèthes Plotly sur le GeoJSON communal — résultats du jour (`/cartes`) et axes de l'ACP (`/cartes-acp`, un axe à la fois, choisi dans un menu déroulant). |
 | `page_statique` | Pages éditables en base (Méthodes, Contact), servies par la route attrape-tout `path("<slug:url>", …)` (404 si absente). **Ce sont aussi les onglets du menu** : le context processor `page_statique.context_processors.menu` les expose à tous les gabarits, et `base.html` boucle dessus. Ajouter une page en base ajoute donc un onglet, sans toucher au HTML. |
 

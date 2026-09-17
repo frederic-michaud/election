@@ -15,10 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.views.generic import RedirectView
 
 from carte.views import carte_acp_view, carte_view
 from page_statique.views import static_view
-from pca.views import pca_view
+from pca.views import nuage_communes_view, nuage_objets_view
 from scrutin.views import home_view
 
 urlpatterns = [
@@ -26,6 +27,9 @@ urlpatterns = [
     path("", home_view, name="home"),
     path("cartes", carte_view, name="cartes"),
     path("cartes-acp", carte_acp_view, name="cartes_acp"),
-    path("pca", pca_view, name="PCA"),
+    path("nuage-acp", nuage_communes_view, name="nuage_acp"),
+    path("objets-acp", nuage_objets_view, name="objets_acp"),
+    # Ancienne adresse du nuage : le gabarit qu'elle servait n'existe plus.
+    path("pca", RedirectView.as_view(pattern_name="nuage_acp"), name="PCA"),
     path("<slug:url>", static_view, name="page"),
 ]

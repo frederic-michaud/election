@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<article class="page page-nuage">
+  {% include "nav_acp.html" %}
+  <h1>Les communes dans le plan des axes</h1>
+  <p>Chaque point est une commune, placée par ses coordonnées sur deux des six axes
+  de l'ACP. Deux communes proches votent de la même façon depuis des années, quel
+  que soit l'objet. Tapez un nom pour allumer les communes qui le portent — en
+  dessous de quinze, leur nom s'écrit sous le point.</p>
+  {% include "_nuage.html" %}
+</article>
+{% endblock %}

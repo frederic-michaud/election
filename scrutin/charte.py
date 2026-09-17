@@ -5,6 +5,9 @@ SURFACE = "#ffffff"
 BLEU = "#2a78d6"     # oui
 ROUGE = "#c9352b"    # non
 NEUTRE = "#f0efec"   # 50 %
+GRIS = "#5f5e58"     # texte secondaire (--gris)
+POINT = "#9d9c96"    # point au repos dans un nuage (--fleche)
+GRILLE = "#e1e0d9"   # filets des axes (--bord)
 FONTE = "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
 DEMI_ETENDUE = 18    # échelle de la carte : 50 ± 18 %
@@ -16,6 +19,16 @@ CONFIG_CARTE = {
     "responsive": True,
     "displaylogo": False,
     "scrollZoom": True,
+}
+
+
+CONFIG_NUAGE = {
+    "displayModeBar": "hover",
+    "modeBarButtons": [["zoom2d", "pan2d", "resetScale2d"]],
+    "responsive": True,
+    "displaylogo": False,
+    # Pas de zoom à la molette : sur un nuage, il vole le défilement de la page.
+    "scrollZoom": False,
 }
 
 
@@ -50,4 +63,29 @@ def habiller_carte(figure, emprise, echelle=None):
         },
     )
     figure.update_traces(marker_opacity=1, marker_line_width=CONTOUR, marker_line_color=SURFACE)
+    return figure
+
+
+def habiller_nuage(figure, titre_x, titre_y):
+    """Fond, grille et filets du zéro, communs aux deux nuages ACP.
+
+    Le zéro est tracé plus fort que la grille : sur une ACP, c'est le signe de
+    la coordonnée qui porte le sens, pas sa valeur.
+    """
+    axe = {
+        "showgrid": True, "gridcolor": GRILLE, "gridwidth": 1,
+        "zeroline": True, "zerolinecolor": GRIS, "zerolinewidth": 1,
+        "showline": False, "ticks": "outside", "tickcolor": GRILLE,
+        "title": {"font": {"size": 13}},
+    }
+    figure.update_layout(
+        font={"family": FONTE, "color": ENCRE, "size": 12},
+        paper_bgcolor=SURFACE,
+        plot_bgcolor=SURFACE,
+        margin={"l": 52, "r": 16, "t": 10, "b": 44},
+        showlegend=False,
+        hovermode="closest",
+        xaxis={**axe, "title": {**axe["title"], "text": titre_x}},
+        yaxis={**axe, "title": {**axe["title"], "text": titre_y}},
+    )
     return figure

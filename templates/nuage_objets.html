@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<article class="page page-nuage">
+  {% include "nav_acp.html" %}
+  <h1>Les objets de votation sur les axes</h1>
+  <p>C'est la page qui donne leur sens aux axes. Chaque point est un objet déjà
+  voté, placé par sa <strong>corrélation</strong> avec deux des six axes : un objet
+  près du bord du cercle est bien résumé par le plan, un objet près du centre n'a
+  rien à voir avec ces deux axes-là. Le côté où tombe un objet dit ce que l'axe
+  sépare — lisez ensemble les objets d'un même bord.</p>
+  <p>Les huit objets les plus excentrés sont nommés d'office. Tapez un mot-clé pour
+  en allumer d'autres.</p>
+  {% include "_nuage.html" %}
+</article>
+{% endblock %}
