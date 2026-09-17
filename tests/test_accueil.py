@@ -75,5 +75,8 @@ def test_la_page_d_accueil(base_demo, client):
     assert re.search(r"Votation fédérale <span class=\"quand\">du \d{1,2} [a-zéû]+ \d{4}</span>", html)
     assert re.search(r"Dépouillement en cours · \d\d:\d\d", html)
     assert '<a href="/" aria-current="page">Accueil</a>' in html
+    # Les trois pages de lecture de l'ACP, liées depuis l'accueil.
+    for lien in ('/cartes-acp', '/nuage-acp', '/objets-acp'):
+        assert f'href="{lien}"' in html
     assert 'href="/cartes"' not in html
     assert "Déja dépouillés" not in html

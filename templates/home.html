@@ -43,6 +43,14 @@
   {% endfor %}
 </div>
 
+<section class="analyses" aria-label="Comprendre la projection">
+  <h2>Comprendre la projection</h2>
+  <p>La projection repose sur le profil de vote de chaque commune, tiré de son
+  historique. Ces trois pages le donnent à voir : sur la carte, dans le plan des
+  axes, et objet par objet.</p>
+  {% include "nav_acp.html" %}
+</section>
+
 {# À la fin de la page : chaque cadre a alors sa taille définitive. #}
 {{ config_carte|json_script:"config-carte" }}
 <script>tracerCartes();</script>

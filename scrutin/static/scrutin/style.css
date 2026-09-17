@@ -85,6 +85,13 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .carte { margin-top: 12px; aspect-ratio: 1.55; }
 .carte .figure { height: 100%; }
 
+/* ── Les liens vers les pages d'analyse, en bas de l'accueil ── */
+.analyses { background: var(--panneau); border: 1px solid var(--bord); border-radius: 12px;
+  padding: 18px 20px; margin-top: 18px; }
+.analyses h2 { margin: 0 0 6px; font-size: 1rem; letter-spacing: -.01em; }
+.analyses p { margin: 0 0 12px; font-size: .9rem; color: var(--gris); max-width: 62ch; }
+.analyses .sous-menu { margin: 0; }
+
 /* ── Pages de texte et de carte ── */
 .page { background: var(--panneau); border: 1px solid var(--bord); border-radius: 14px;
   padding: 26px 28px; max-width: 760px; margin: 18px auto 0; line-height: 1.6; }
