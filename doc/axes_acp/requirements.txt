@@ -1,0 +1,5 @@
+# En plus de requirements/calcul.txt (numpy, pandas, scikit-learn) :
+# figures et mise en page du document (voir README.md).
+-r ../../requirements/calcul.txt
+matplotlib==3.*
+typst==0.15.*
