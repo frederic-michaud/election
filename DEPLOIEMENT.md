@@ -204,6 +204,11 @@ même la version périmée, instantanément, et va chercher la suivante en
 arrière-plan. Un seul visiteur à la fois atteint Django. Si Django redémarre ou
 tombe, la dernière version connue continue d'être servie.
 
+Les fichiers statiques ont leur propre bloc, gardé une heure : le fond de carte
+communal y pèse 5,8 Mo, servi en 1,4 Mo puisque `collectstatic` en dépose une
+version gzip que whitenoise choisit selon `Accept-Encoding`. Le visiteur ne le
+télécharge qu'une fois, pour toutes les cartes et toutes les pages.
+
 Puis le certificat HTTPS, gratuit et renouvelé tout seul :
 
 ```bash

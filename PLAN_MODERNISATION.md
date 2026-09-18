@@ -659,14 +659,14 @@ toutes. L'appariement par numéro OFS suffit.
   référentiel des communes : les deux commandes lisent ce même export.*
 - **Jour J blindé [M]** : commune sans profil ACP → profil moyen de son district
   et un log, jamais une exception qui tue l'extrapolation.
-- **GeoJSON 2026 [I]** : l'actuel (mai 2022) manque 10 communes et porte 46
-  géométries périmées. Source : jeu opendata.swiss
-  `geodaten-zu-den-eidgenoessischen-abstimmungsvorlagen`, millésime 01.01.2026,
-  mêmes propriétés donc remplacement direct — à convertir de TopoJSON/LV95 vers
-  GeoJSON/WGS84, et à retrouver par l'API CKAN, l'URL changeant à chaque
-  millésime.
-- **`carte/API.py` [I]** : apparie les géométries par `vogeName`, à basculer sur
-  `vogeId` comme partout ailleurs.
+- ~~**GeoJSON 2026 [I]**~~ *fait* : le fond de mai 2022 manquait **14 communes
+  réelles** (dont Moutier, Neckertal, Fétigny-Ménières) et n'avait que onze
+  sommets par commune. Remplacé non pas par le millésime 2026 de l'OFS — aussi
+  généralisé — mais par **swissBOUNDARIES3D 2026** de swisstopo, simplifié à
+  25 m en gardant la topologie : les 2 110 communes du référentiel, ~140
+  sommets chacune (`manage.py generer_contours`). Les lacs, absents de cette
+  source, viennent du TopoJSON de l'OFS et sont peints par-dessus.
+- ~~**`carte/API.py` [I]**~~ *fait* : appariement par `vogeId`.
 - **Approximations assumées** : échanges partiels de territoire ignorés ;
   pseudo-communes « étranger » hors carte mais **dans** l'extrapolation.
 - **Non-régression** : rejouer le scrutin du 14 juin 2026, dont le fichier
@@ -799,7 +799,10 @@ d'où des frontières écrites noir sur blanc.
 - [x] Ce qui manquait est demandé, pas contourné : langue, fuseau et
       `mise_a_jour` côté M. Faute d'intervalle de confiance, **marge constante
       de ±2,5 points** pour la release (`MARGE_PROVISOIRE`, #43).
-- [x] plotly.js depuis le CDN, à la version du paquet Python. *Reste* : le GeoJSON allégé (PR #40).
+- [x] plotly.js depuis le CDN, à la version du paquet Python.
+- [x] ~~*Reste* : le GeoJSON allégé (PR #40)~~ — repris autrement : contours
+      dans un fichier statique téléchargé une fois (page d'accueil 1,88 Mo →
+      0,16 Mo), et `collectstatic` en dépose la version gzip (5,8 → 1,4 Mo).
 - [x] **Contrôle** : site et D′ identiques au pixel à 320, 400, 1000 et 1200 px.
 
 #### 7.5 Après coup

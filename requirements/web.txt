@@ -6,12 +6,10 @@ Django==5.2.*
 gunicorn==23.*
 whitenoise==6.*
 plotly==6.*
-geojson==3.*
 python-dotenv==1.*
 
-# Exigés par plotly.express, pas par notre code : px convertit ses entrées en
-# DataFrame quoi qu'on lui passe. Réécrire les figures en plotly.graph_objects
-# permettrait de s'en passer — ce sera le moment de la refonte graphique
-# (PLAN_MODERNISATION.md, Partie 7), pas avant.
+# plotly.express a disparu avec la refonte graphique (tout est en
+# plotly.graph_objects), mais numpy sert aux coordonnées de l'ACP (`pca/donnees.py`)
+# et pandas aux commandes du pipeline qui lisent le référentiel des communes.
 numpy==2.*
 pandas==2.*

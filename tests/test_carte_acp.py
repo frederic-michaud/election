@@ -4,13 +4,12 @@ import json
 
 import pytest
 
-from carte.API import contours, figure_carte_acp
+from carte.API import figure_carte_acp
 
 
 def test_la_carte_porte_les_six_axes_et_leur_echelle():
-    # Vingt communes du GeoJSON : le premier axe vaut 0, 1, … 19, les autres sont nuls.
-    communes = [f["properties"]["vogeId"] for f in contours()[0]["features"]][:20]
-    profils = {ofs: [float(rang), 0, 0, 0, 0, 0] for rang, ofs in enumerate(communes)}
+    # Vingt communes : le premier axe vaut 0, 1, … 19, les autres sont nuls.
+    profils = {ofs: [float(ofs - 1), 0, 0, 0, 0, 0] for ofs in range(1, 21)}
     figure = figure_carte_acp(profils)
     axes = figure.layout.meta["axes"]
     assert [axe["nom"] for axe in axes] == [f"Axe {i}" for i in range(1, 7)]

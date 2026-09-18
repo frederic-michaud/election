@@ -1,38 +1,32 @@
-import functools
-import json
-
-import plotly.express as px
 import plotly.graph_objects as go
+from django.templatetags.static import static
 
 from scrutin import charte
 
-CONTOURS = "data/K4voge_20220501_gf.geojson"
+CONTOURS = "carte/communes.geojson"
+
+# Emprise du fichier de contours, imprimée par ``manage.py generer_contours``.
+# En dur pour que le serveur n'ouvre jamais les 5,8 Mo : ``tests/test_carte.py``
+# vérifie qu'elle correspond toujours au fichier.
+EMPRISE = ((5.95588, 45.81796), (10.49216, 47.80845))
 
 
-def _arrondir(coordonnees):
-    """5 décimales, soit environ 1 m : le fichier en a 16, qui alourdissent la page."""
-    if isinstance(coordonnees[0], (int, float)):
-        return [round(c, 5) for c in coordonnees]
-    return [_arrondir(c) for c in coordonnees]
+def _carte(locations, valeurs, survol, echelle=None):
+    """Une choroplèthe communale : les contours sont une URL, pas des données.
 
-
-def _points(coordonnees):
-    if isinstance(coordonnees[0], (int, float)):
-        yield coordonnees
-    else:
-        for c in coordonnees:
-            yield from _points(c)
-
-
-@functools.cache
-def contours():
-    """Le GeoJSON communal et son emprise ((lon min, lat min), (lon max, lat max))."""
-    with open(CONTOURS) as f:
-        gj = json.load(f)
-    for feature in gj["features"]:
-        feature["geometry"]["coordinates"] = _arrondir(feature["geometry"]["coordinates"])
-    lon, lat = zip(*(p for f in gj["features"] for p in _points(f["geometry"]["coordinates"])))
-    return gj, ((min(lon), min(lat)), (max(lon), max(lat)))
+    plotly.js télécharge ``communes.geojson`` une fois pour toutes les cartes de
+    la page, et le navigateur le garde d'une visite à l'autre. Le nom affiché au
+    survol vient du fichier lui-même (``%{properties.vogeName}``).
+    """
+    figure = go.Figure(go.Choroplethmap(
+        geojson=static(CONTOURS),
+        featureidkey="properties.vogeId",
+        locations=locations,
+        z=valeurs,
+        text=survol,
+        hovertemplate="<b>%{properties.vogeName}</b><br>%{text}<extra></extra>",
+        coloraxis="coloraxis"))
+    return charte.habiller_carte(figure, EMPRISE, echelle=echelle)
 
 
 def figure_carte(communes):
@@ -40,22 +34,11 @@ def figure_carte(communes):
 
     ``communes`` : le dict ``sujet["communes"]`` du contrat de vue.
     """
-    gj, emprise = contours()
-    noms, oui, survol = [], [], []
-    for entry in gj["features"]:
-        resultat = communes.get(entry["properties"]["vogeId"])
-        if resultat is not None and resultat["oui"] is not None:
-            noms.append(entry["properties"]["vogeName"])
-            oui.append(resultat["oui"] * 100)
-            survol.append(f"{resultat['oui'] * 100:.1f} %".replace(".", ","))
-    figure = px.choropleth_map({"commune": noms, "oui": oui, "part de oui": survol},
-                               geojson=gj,
-                               locations="commune",
-                               featureidkey="properties.vogeName",
-                               color="oui",
-                               hover_name="commune",
-                               hover_data={"commune": False, "oui": False, "part de oui": True})
-    return charte.habiller_carte(figure, emprise)
+    resultats = {ofs: round(r["oui"] * 100, 2) for ofs, r in communes.items()
+                 if r["oui"] is not None}
+    return _carte(list(resultats),
+                  list(resultats.values()),
+                  [f"{oui:.1f} %".replace(".", ",") for oui in resultats.values()])
 
 
 def _etendue(valeurs):
@@ -80,24 +63,11 @@ def figure_carte_acp(profils):
     ``profils`` : le dict de ``pca.donnees.profils_par_commune``. Les axes partent
     tous dans ``layout.meta`` ; ``carte_acp.js`` échange celui qui est affiché.
     """
-    gj, emprise = contours()
-    noms, coordonnees = [], []
-    for entry in gj["features"]:
-        profil = profils.get(entry["properties"]["vogeId"])
-        if profil is not None:
-            noms.append(entry["properties"]["vogeName"])
-            coordonnees.append(profil)
-    axes = [_axe(numero, colonne) for numero, colonne in enumerate(zip(*coordonnees), start=1)]
+    communes = sorted(profils)
+    axes = [_axe(numero, colonne) for numero, colonne
+            in enumerate(zip(*(profils[ofs] for ofs in communes)), start=1)]
     premier = axes[0]
-    figure = go.Figure(go.Choroplethmap(
-        geojson=gj,
-        locations=noms,
-        featureidkey="properties.vogeName",
-        z=premier["valeurs"],
-        hovertext=noms,
-        text=premier["survol"],
-        hovertemplate="<b>%{hovertext}</b><br>%{text}<extra></extra>",
-        coloraxis="coloraxis"))
-    charte.habiller_carte(figure, emprise, echelle=(-premier["etendue"], 0, premier["etendue"]))
+    figure = _carte(communes, premier["valeurs"], premier["survol"],
+                    echelle=(-premier["etendue"], 0, premier["etendue"]))
     figure.update_layout(meta={**figure.layout.meta, "axes": axes})
     return figure

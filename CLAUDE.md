@@ -53,7 +53,7 @@ mais les cartes **ne distinguent donc pas visuellement réel et estimé**.
 |---|---|
 | `scrutin` | Cœur métier : tous les modèles, la logique d'extrapolation, la vue d'accueil, le CSS et le logo. |
 | `pca` | Modèle `PCAResult` (6 coordonnées par commune), `donnees.py` (contrat de vue) et `figures.py` : les trois pages de lecture de l'ACP — nuage des communes (`/nuage-acp`) et cercle des corrélations des objets (`/objets-acp`), plus les profils servis à la carte des axes. Les objets sont placés par **corrélation** avec chaque composante, calculée à la volée : rien de nouveau en base. |
-| `carte` | `carte/API.py` : cartes choroplèthes Plotly sur le GeoJSON communal — résultats du jour (`/cartes`) et axes de l'ACP (`/cartes-acp`, un axe à la fois, choisi dans un menu déroulant). |
+| `carte` | `carte/API.py` : cartes choroplèthes Plotly sur le fond communal — résultats du jour (`/cartes`) et axes de l'ACP (`/cartes-acp`, un axe à la fois, choisi dans un menu déroulant). Le fond n'est **pas** incrusté dans les figures : c'est un fichier statique (`carte/static/carte/communes.geojson`, 5,8 Mo), que plotly.js télécharge une fois pour toutes les cartes de la page. `manage.py generer_contours` le fabrique. |
 | `page_statique` | Pages éditables en base (Méthodes, Contact), servies par la route attrape-tout `path("<slug:url>", …)` (404 si absente). **Ce sont aussi les onglets du menu** : le context processor `page_statique.context_processors.menu` les expose à tous les gabarits, et `base.html` boucle dessus. Ajouter une page en base ajoute donc un onglet, sans toucher au HTML. |
 
 ### Modèles (`scrutin/models.py`)
@@ -81,8 +81,10 @@ python manage.py runserver
 `peupler_demo` sème aussi les deux pages du menu (Méthodes, Contact) : sans
 elles, un clone frais aurait des onglets en 404.
 
-`peupler_demo` fabrique 2 141 communes réelles (nom, numéro OFS, district, canton
-lus dans `data/K4voge_*.geojson`), 55 votations historiques et une soirée de
+`peupler_demo` fabrique les 2 110 communes réelles (nom, numéro OFS, district, canton
+lus dans `data/agvch_niveaux_*.csv`, le même référentiel que `populate_commune`
+— la base fictive porte donc exactement les communes du fond de carte),
+55 votations historiques et une soirée de
 dépouillement en cours — le tout fictif, déterministe, hors-ligne, et **sans
 scipy ni scikit-learn**. Les votes suivent un profil latent par commune
 (urbain/rural, latin/alémanique), et les petites communes dépouillent en premier :
@@ -144,6 +146,23 @@ sans clé, **déjà harmonisé sur les communes actuelles** — une commune fusi
 porte les voix de ses prédécesseurs, l'appariement par numéro OFS suffit. Les
 codes d'objet du cube sont les `vorlagenId` du jour J. `importer_historique`
 charge par lots de 10 : au-delà, l'OFS répond 403.
+
+**Fond de carte** : `swissBOUNDARIES3D` de swisstopo, millésime 2026, en
+GeoPackage LV95 — du SQLite, donc lu sans dépendance. `manage.py
+generer_contours <gpkg> <topojson>` en tire `carte/static/carte/communes.geojson`
+(les 2 110 communes, ~140 sommets chacune) et `lacs.geojson`, tous deux
+committés. La commande ne resert qu'au changement de millésime ; les deux URL
+sources sont dans son docstring, avec les deux API où retrouver le millésime
+suivant.
+
+Trois points qui expliquent le reste :
+- La simplification (Douglas-Peucker, 25 m) **garde la topologie** : une
+  frontière partagée est simplifiée une seule fois, sinon un liseré blanc
+  apparaîtrait entre communes voisines.
+- Les **lacs sont un fichier à part**, peint par-dessus les communes : dans
+  swissBOUNDARIES3D, une commune riveraine s'étend jusqu'au milieu de l'eau.
+- L'appariement se fait par **numéro OFS** (`properties.vogeId`), comme partout
+  ailleurs ; le nom affiché au survol vient du fichier de contours lui-même.
 
 ---
 
@@ -276,8 +295,8 @@ de la même façon, **seule la base change**.
 | **Fictif** | `manage.py peupler_demo` | tout le monde, au quotidien |
 | **Réel** | pipeline d'import (historique + JSON du jour J) | voie M : projections réelles, dry run, prod |
 
-`peupler_demo` construit une base **à l'échelle réelle** (~2 130 communes, tirées du
-GeoJSON déjà présent dans `data/`), avec un historique de votes fictif structuré par
+`peupler_demo` construit une base **à l'échelle réelle** (2 110 communes, tirées du
+référentiel déjà présent dans `data/`), avec un historique de votes fictif structuré par
 profil latent — l'ACP y trouve donc une vraie structure. Graine fixe, aucun
 téléchargement, tourne hors-ligne.
 

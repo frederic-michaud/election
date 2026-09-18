@@ -53,7 +53,7 @@ cible (Docker Compose + proxy HTTPS).
 
 | Fichier | Contenu | Pour |
 |---|---|---|
-| `requirements/web.txt` | Django, Plotly, geojson | faire tourner le site |
+| `requirements/web.txt` | Django, Plotly | faire tourner le site |
 | `requirements/calcul.txt` | + numpy, scipy, scikit-learn, pandas | extrapolation et ACP |
 | `requirements/dev.txt` | + pytest, ruff | développer |
 
@@ -65,7 +65,7 @@ sert qu'au calcul des projections.
 Deux jeux, **un seul chemin de code** — seule la base change.
 
 **Fictives** (usage quotidien) : `python manage.py peupler_demo`. Construit une
-base à l'échelle réelle (~2 130 communes) sans aucun téléchargement, à graine
+base à l'échelle réelle (2 110 communes) sans aucun téléchargement, à graine
 fixe — tout le monde voit exactement le même site. Les deux pages du menu
 (Méthodes, Contact) sont semées elles aussi, sinon leurs onglets tomberaient
 en 404.
