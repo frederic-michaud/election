@@ -24,6 +24,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from page_statique.models import PageStatique
+from page_statique.pages import PAGES, peupler_pages
 from pca.models import PCAResult
 from scrutin.models import (
     Canton,
@@ -327,26 +328,10 @@ class Command(BaseCommand):
     def _creer_pages_statiques(self):
         """Les pages du menu, sinon les onglets tombent en 404 sur un clone frais.
 
-        Contenu volontairement squelettique : la vraie page « Méthodes » est
-        écrite en base, page par page (PLAN_MODERNISATION.md, D1).
+        Les mêmes que sur le site réel : ``peupler_pages`` les lit dans le dépôt.
         """
-        PageStatique.objects.bulk_create([
-            PageStatique(
-                titre="Méthodes",
-                url="methode",
-                ordre=1,
-                contenu="<p>Page de démonstration. La méthode réelle est décrite "
-                        "dans le README : ACP sur l'historique communal, puis "
-                        "régression pondérée sur les communes déjà dépouillées.</p>",
-            ),
-            PageStatique(
-                titre="Contact",
-                url="contact",
-                ordre=2,
-                contenu="<p>Page de démonstration.</p>",
-            ),
-        ])
-        self.stdout.write("  2 pages statiques (menu)")
+        peupler_pages()
+        self.stdout.write(f"  {len(PAGES)} page(s) du menu")
 
     def _creer_pca(self, alea, communes, profils):
         """Coordonnées ACP cohérentes avec le profil latent.

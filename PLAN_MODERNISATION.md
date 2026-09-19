@@ -590,7 +590,8 @@ commande, et le site survit à un pic de trafic.**
 - [x] **[M]** `peupler_demo` sème « Méthodes » et « Contact », contenu
       squelettique, et `_vider()` purge désormais `PageStatique` : un clone
       frais a un menu qui marche.
-- [ ] **[2]** Page « Méthodes » réécrite — le contenu lui-même, pas le support.
+- [x] ~~**[2]** Page « Méthodes » réécrite~~ — abandonnée : les pages de l'ACP
+      et leur PDF expliquent la méthode.
 - [ ] Validation rétrospective : rejouer les votations passées et publier l'erreur
       de projection en fonction de l'avance du dépouillement.
 

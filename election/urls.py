@@ -18,7 +18,7 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 from carte.views import carte_view
-from page_statique.views import static_view
+from page_statique.views import envoyer_contact, static_view
 from pca.views import nuage_communes_view, nuage_objets_view
 from scrutin.views import home_view
 
@@ -29,5 +29,6 @@ urlpatterns = [
     path("nuage-acp", nuage_communes_view, name="nuage_acp"),
     path("objets-acp", nuage_objets_view, name="objets_acp"),
     path("pca", RedirectView.as_view(pattern_name="nuage_acp")),
+    path("contact/envoyer", envoyer_contact, name="envoyer_contact"),
     path("<slug:url>", static_view, name="page"),
 ]

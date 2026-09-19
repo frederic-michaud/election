@@ -16,6 +16,7 @@ import pytest
 from django.core.management import call_command
 
 from page_statique.models import PageStatique
+from page_statique.pages import PAGES
 from pca.models import PCAResult
 from scrutin.extrapolation import get_extrapolation
 from scrutin.models import Commune, ResultatCommunalEnCours, ScrutinAPI, SujetVote
@@ -125,5 +126,5 @@ def test_l_extrapolation_corrige_le_biais_du_depouillement_partiel(base_demo):
 @pytest.mark.lent
 @pytest.mark.django_db
 def test_la_demo_seme_les_pages_du_menu(base_demo):
-    """Sans elles, les onglets Méthodes et Contact tombent en 404."""
-    assert set(PageStatique.objects.values_list("url", flat=True)) == {"methode", "contact"}
+    """Les mêmes que sur le site réel, sinon les onglets tombent en 404."""
+    assert set(PageStatique.objects.values_list("url", flat=True)) == {url for url, _, _ in PAGES}
