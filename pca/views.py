@@ -1,25 +1,35 @@
-import plotly
-import plotly.express as px
 from django.shortcuts import render
 
-from pca.models import PCAResult
+from carte.API import figure_carte_acp
+from pca.donnees import nuage_communes, nuage_objets, profils_par_commune
+from pca.figures import figure_nuage
+from scrutin import charte
+from scrutin.graphiques import en_json
 
 
-def get_hover_info(commune):
-    return f'{commune.nom} \n {commune.canton.abreviation}'
+def _pourcent(part):
+    return f"{part:.1%}".replace(".", ",").replace("%", " %")
 
-def get_color(commune):
-    return f'{commune.langue}'
 
-def pca_view(requete, *args, **kwargs):
-    results = PCAResult.objects.all()
-    x = [result.coordinate_1 for result in results]
-    y = [result.coordinate_2 for result in results]
-    name = [get_hover_info(result.commune) for result in results]
-    color = [get_color(result.commune) for result in results]
-    a = plotly.offline.plot(px.scatter(x=x, y=y, hover_name = name,
-                                       hover_data = None, color=color,
-                 width=800, height=800),
-                            include_plotlyjs=False,
-                            output_type='div')
-    return render(requete, "home.html", {'plot':a})
+def _contexte(donnees, objets):
+    """Le nuage et, à côté, les deux cartes qui suivent ses menus d'axes."""
+    return {
+        "nuage": en_json(figure_nuage(donnees, objets)),
+        "axes": [{"nom": f"Axe {numero}", "variance": _pourcent(part)}
+                 for numero, part in enumerate(donnees["variance"], start=1)],
+        "periode": donnees["periode"],
+        "unite": "objets" if objets else "communes",
+        "exemple": "AVS" if objets else "Lau",
+        "forme": "carre" if objets else "",
+        "config": charte.CONFIG_NUAGE,
+        "carte": en_json(figure_carte_acp(profils_par_commune())),
+        "config_carte": charte.CONFIG_CARTE,
+    }
+
+
+def nuage_communes_view(requete, *args, **kwargs):
+    return render(requete, "nuage_communes.html", _contexte(nuage_communes(), objets=False))
+
+
+def nuage_objets_view(requete, *args, **kwargs):
+    return render(requete, "nuage_objets.html", _contexte(nuage_objets(), objets=True))

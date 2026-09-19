@@ -26,6 +26,10 @@
   <nav aria-label="Pages du site">
     {% url 'home' as lien %}
     <a href="{{ lien }}"{% if request.path == lien %} aria-current="page"{% endif %}>Accueil</a>
+    {% url 'nuage_acp' as lien %}
+    <a href="{{ lien }}"{% if request.path == lien %} aria-current="page"{% endif %}>Communes</a>
+    {% url 'objets_acp' as lien %}
+    <a href="{{ lien }}"{% if request.path == lien %} aria-current="page"{% endif %}>Objets de votation</a>
     {% for page in pages_statiques %}{% url 'page' page.url as lien %}
     <a href="{{ lien }}"{% if request.path == lien %} aria-current="page"{% endif %}>{{ page.titre }}</a>
     {% endfor %}

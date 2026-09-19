@@ -1,0 +1,43 @@
+{% load static %}
+<p class="reglages">
+  <span><label for="axe-x">Horizontal</label>
+    <select id="axe-x">{% for axe in axes %}<option value="{{ forloop.counter0 }}" data-variance="{{ axe.variance }}"{% if forloop.counter0 == 0 %} selected{% endif %}>{{ axe.nom }}</option>{% endfor %}</select></span>
+  <span><label for="axe-y">Vertical</label>
+    <select id="axe-y">{% for axe in axes %}<option value="{{ forloop.counter0 }}" data-variance="{{ axe.variance }}"{% if forloop.counter0 == 1 %} selected{% endif %}>{{ axe.nom }}</option>{% endfor %}</select></span>
+  <span class="cherche"><label for="recherche">Chercher</label>
+    <input id="recherche" type="search" autocomplete="off" spellcheck="false" placeholder="{{ exemple }}" data-unite="{{ unite }}">
+    <span id="compte" aria-live="polite"></span></span>
+</p>
+<div class="analyse">
+  <div class="visuel">
+    <div class="nuage {{ forme }}"><div class="figure"></div><script type="application/json">{{ nuage|safe }}</script></div>
+    {# Sous le nuage : la liste grandit sans déplacer les figures. #}
+    <div class="choisis" aria-live="polite">
+      <span class="titre">{% if unite == "communes" %}Communes nommées{% else %}Objets nommés{% endif %}</span>
+      <span id="choisis"></span>
+    </div>
+  </div>
+  <div class="cartes-axes"{% if unite == "communes" %} data-communes{% endif %}>
+    <figure>
+      <figcaption><span class="sens">Horizontal</span> <b data-axe="x">{{ axes.0.nom }}</b>
+        · <span data-variance="x">{{ axes.0.variance }}</span> de la variance
+        <span class="degrade" aria-hidden="true">−<i></i>+</span></figcaption>
+      <div class="carte" id="carte-x"><div class="figure"></div></div>
+    </figure>
+    <figure>
+      <figcaption><span class="sens">Vertical</span> <b data-axe="y">{{ axes.1.nom }}</b>
+        · <span data-variance="y">{{ axes.1.variance }}</span> de la variance
+        <span class="degrade" aria-hidden="true">−<i></i>+</span></figcaption>
+      <div class="carte" id="carte-y"><div class="figure"></div></div>
+    </figure>
+  </div>
+</div>
+<script type="application/json" id="carte-acp">{{ carte|safe }}</script>
+{{ config|json_script:"config-nuage" }}
+{{ config_carte|json_script:"config-carte" }}
+<script src="{% static 'pca/nuage.js' %}"></script>
+<script src="{% static 'carte/carte_acp.js' %}"></script>
+<script>
+  tracerNuage(JSON.parse(document.getElementById("config-nuage").textContent));
+  tracerCartesACP();
+</script>

@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from carte.API import CONTOURS, EMPRISE, figure_carte
+from carte.API import CONTOURS, EMPRISE, figure_carte, figure_carte_acp
 
 FICHIER = "carte/static/carte/communes.geojson"
 LACS = "carte/static/carte/lacs.geojson"
@@ -73,3 +73,15 @@ def test_les_lacs_sont_a_part():
     with open(LACS) as fichier:
         lacs = json.load(fichier)["features"]
     assert {"Lac Léman", "Bodensee", "Lago Maggiore"} <= {lac["properties"]["nom"] for lac in lacs}
+
+
+def test_la_carte_acp_porte_les_six_axes_et_leur_echelle():
+    # Le premier axe vaut 0, 1, … 19 ; l'échelle est bornée au 95ᵉ centile.
+    profils = {ofs: [float(ofs - 1), 0, 0, 0, 0, 0] for ofs in range(1, 21)}
+    figure = figure_carte_acp(profils)
+    axes = figure.layout.meta["axes"]
+    assert [axe["nom"] for axe in axes] == [f"Axe {i}" for i in range(1, 7)]
+    assert figure.data[0].z == tuple(axes[0]["valeurs"])
+    assert axes[0]["survol"][1] == "Axe 1 : +1,00"
+    axe_couleur = figure.layout.coloraxis
+    assert (axe_couleur.cmin, axe_couleur.cmid, axe_couleur.cmax) == (-18.0, 0, 18.0)

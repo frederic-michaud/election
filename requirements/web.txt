@@ -8,9 +8,7 @@ whitenoise==6.*
 plotly==6.*
 python-dotenv==1.*
 
-# Exigés par plotly.express, pas par notre code : px convertit ses entrées en
-# DataFrame quoi qu'on lui passe. Réécrire les figures en plotly.graph_objects
-# permettrait de s'en passer — ce sera le moment de la refonte graphique
-# (PLAN_MODERNISATION.md, Partie 7), pas avant.
+# numpy : pages de l'ACP (pca/donnees.py) ; pandas : commandes du pipeline qui
+# lisent le référentiel des communes.
 numpy==2.*
 pandas==2.*

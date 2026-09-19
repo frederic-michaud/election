@@ -32,16 +32,17 @@
     };
   }
 
-  function tracer(cadre, config) {
+  // Sans `figure`, trace le JSON rangé dans le cadre.
+  function tracer(cadre, config, figure) {
     var div = cadre.querySelector(".figure");
-    var figure = JSON.parse(cadre.querySelector("script[type='application/json']").textContent);
+    figure = figure || JSON.parse(cadre.querySelector("script[type='application/json']").textContent);
     var emprise = figure.layout.meta.emprise;
     var vue = cadrage(emprise, div.clientWidth, div.clientHeight);
     figure.layout.map.center = vue["map.center"];
     figure.layout.map.zoom = vue["map.zoom"];
     var deplacee = false;
 
-    Plotly.newPlot(div, figure.data, figure.layout, config).then(function () {
+    return Plotly.newPlot(div, figure.data, figure.layout, config).then(function () {
       var map = div._fullLayout.map && div._fullLayout.map._subplot && div._fullLayout.map._subplot.map;
       if (!map) return;
       if (map._locale) Object.assign(map._locale, TEXTES);
@@ -58,6 +59,8 @@
       }).observe(div);
     });
   }
+
+  window.tracerCarte = tracer;
 
   window.tracerCartes = function () {
     var config = JSON.parse(document.getElementById("config-carte").textContent);
