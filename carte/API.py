@@ -10,18 +10,29 @@ CONTOURS = "carte/communes.geojson"
 EMPRISE = ((5.95588, 45.81796), (10.49216, 47.80845))
 
 
-def _carte(locations, valeurs, survol, echelle=None):
-    """Une choroplèthe communale. Les contours sont une URL : plotly.js les
+def _couche(locations, **traits):
+    """Une couche de communes. Les contours sont une URL : plotly.js les
     télécharge une fois pour toutes les cartes de la page."""
-    figure = go.Figure(go.Choroplethmap(
-        geojson=static(CONTOURS),
-        featureidkey="properties.vogeId",
-        locations=locations,
-        z=valeurs,
-        text=survol,
-        hovertemplate="<b>%{properties.vogeName}</b><br>%{text}<extra></extra>",
-        coloraxis="coloraxis"))
-    return charte.habiller_carte(figure, EMPRISE, echelle=echelle)
+    return go.Choroplethmap(geojson=static(CONTOURS), featureidkey="properties.vogeId",
+                            locations=locations, showlegend=False, **traits)
+
+
+def _carte(locations, valeurs, survol, echelle=None, attente=()):
+    """Une choroplèthe communale, posée sur les communes encore en attente.
+
+    ``attente`` est dessinée en dessous, d'un gris uni : sans elle, le pays
+    disparaîtrait tant que rien n'est dépouillé — il ne resterait que les lacs.
+    """
+    couches = []
+    if attente:
+        couches.append(_couche(
+            list(attente), z=[0] * len(attente), showscale=False,
+            colorscale=[[0, charte.ATTENTE], [1, charte.ATTENTE]],
+            hovertemplate="<b>%{properties.vogeName}</b><br>pas encore dépouillée<extra></extra>"))
+    couches.append(_couche(
+        locations, z=valeurs, text=survol, coloraxis="coloraxis",
+        hovertemplate="<b>%{properties.vogeName}</b><br>%{text}<extra></extra>"))
+    return charte.habiller_carte(go.Figure(couches), EMPRISE, echelle=echelle)
 
 
 def figure_carte(communes):
@@ -33,7 +44,8 @@ def figure_carte(communes):
                  if r["oui"] is not None}
     return _carte(list(resultats),
                   list(resultats.values()),
-                  [f"{oui:.1f} %".replace(".", ",") for oui in resultats.values()])
+                  [f"{oui:.1f} %".replace(".", ",") for oui in resultats.values()],
+                  attente=[ofs for ofs in communes if ofs not in resultats])
 
 
 def _axe(numero, valeurs):
