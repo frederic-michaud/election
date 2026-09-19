@@ -54,7 +54,7 @@ mais les cartes **ne distinguent donc pas visuellement réel et estimé**.
 | `scrutin` | Cœur métier : tous les modèles, la logique d'extrapolation, la vue d'accueil, le CSS et le logo. |
 | `pca` | Modèle `PCAResult` (6 coordonnées par commune). `donnees.py` (contrat de vue) et `figures.py` : pages `/nuage-acp` (communes) et `/objets-acp` (cercle des corrélations), chacune avec deux cartes des axes choisis. Corrélations et part de variance calculées à la volée. Points nommés d'office dans `figures.py` ; nuage et cartes se répondent au survol et au clic (`nuage.js`). Pages pensées pour l'ordinateur. Le PDF lié, `pca/static/pca/axes_acp.pdf`, est une copie de `doc/axes_acp.pdf` (branche `moteur/analyse-axes-acp`). |
 | `carte` | `carte/API.py` : cartes choroplèthes Plotly sur le fond communal — résultats du jour (`/cartes`) et axes de l'ACP (`figure_carte_acp` : les six axes dans une seule figure, que `carte_acp.js` trace deux fois à côté des nuages). Le fond n'est **pas** incrusté dans les figures : c'est un fichier statique (`carte/static/carte/communes.geojson`, 5,8 Mo), que plotly.js télécharge une fois pour toutes les cartes de la page. `manage.py generer_contours` le fabrique. |
-| `page_statique` | Pages éditables en base (Méthodes, Contact), servies par la route attrape-tout `path("<slug:url>", …)` (404 si absente). **Ce sont aussi les onglets du menu** : le context processor `page_statique.context_processors.menu` les expose à tous les gabarits, et `base.html` boucle dessus. Ajouter une page en base ajoute donc un onglet, sans toucher au HTML. |
+| `page_statique` | Pages du menu (aujourd'hui : Contact), écrites dans `page_statique/contenus/` et recopiées en base par `manage.py peupler_pages`, servies par la route attrape-tout `path("<slug:url>", …)` (404 si absente). **Ce sont aussi les onglets du menu** : le context processor `page_statique.context_processors.menu` les expose à tous les gabarits, et `base.html` boucle dessus. Ajouter une page en base ajoute donc un onglet, sans toucher au HTML. |
 
 ### Modèles (`scrutin/models.py`)
 `Canton` → `District` → `Commune` ; `SujetVote` (un objet de votation) ;
@@ -78,8 +78,9 @@ python manage.py peupler_demo   # base fictive à l'échelle réelle
 python manage.py runserver
 ```
 
-`peupler_demo` sème aussi les deux pages du menu (Méthodes, Contact) : sans
-elles, un clone frais aurait des onglets en 404.
+`peupler_demo` sème aussi les pages du menu, via `peupler_pages` — la même
+commande que sur une base réelle : sans elles, un clone frais aurait des
+onglets en 404.
 
 `peupler_demo` fabrique les 2 110 communes réelles (nom, numéro OFS, district, canton
 lus dans `data/agvch_niveaux_*.csv`, le même référentiel que `populate_commune`
@@ -176,7 +177,10 @@ commence par une répétition générale (`deploiement/repetition_generale.sh`) 
 rejoue une soirée entière sur une copie de la base.
 
 Contrainte qui demeure : le site doit rester **cachable**, donc sans contenu
-dépendant du visiteur et sans POST.
+dépendant du visiteur et sans POST. Seule exception : le formulaire de contact,
+qui poste vers `/contact/envoyer` (jamais en cache, limité par nginx) et envoie
+par la boîte `contact@politiques.ch` (DEPLOIEMENT.md, § 7 ter). La page Contact
+reste identique pour tous : ni jeton CSRF (`csrf_exempt`), ni cookie.
 
 ### Le conteneur (C1)
 

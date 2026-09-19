@@ -66,9 +66,9 @@ Deux jeux, **un seul chemin de code** — seule la base change.
 
 **Fictives** (usage quotidien) : `python manage.py peupler_demo`. Construit une
 base à l'échelle réelle (2 110 communes) sans aucun téléchargement, à graine
-fixe — tout le monde voit exactement le même site. Les deux pages du menu
-(Méthodes, Contact) sont semées elles aussi, sinon leurs onglets tomberaient
-en 404.
+fixe — tout le monde voit exactement le même site. Les pages du menu
+(Contact) sont semées elles aussi, par `peupler_pages`, sinon leurs onglets
+tomberaient en 404.
 
 **Réelles** : voir le pipeline d'import décrit dans [`CLAUDE.md`](CLAUDE.md).
 

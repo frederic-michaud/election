@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<article class="page">
+  {% if erreur %}
+  <h1>Message non envoyé</h1>
+  <p>{{ erreur }}</p>
+  <p><a href="{% url 'page' 'contact' %}" onclick="history.back(); return false;">Revenir au formulaire</a>
+    — votre message y est encore.</p>
+  {% else %}
+  <h1>Merci !</h1>
+  <p>Votre message est bien parti. Nous vous répondrons à l'adresse indiquée, dès
+  que possible.</p>
+  <p><a href="{% url 'home' %}">Retour à l'accueil</a></p>
+  {% endif %}
+</article>
+{% endblock %}

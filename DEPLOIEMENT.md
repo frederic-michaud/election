@@ -173,22 +173,54 @@ deux objets en font quatre. D'où le `set()` sur les noms.
 
 ## 7 bis. Les pages du menu
 
-`peupler_demo` sème les pages « Méthodes » et « Contact ». **Le pipeline réel ne
-les crée pas** : sur une base montée depuis les données officielles, le menu est
-vide et les deux adresses répondent 404. Les créer une fois, avec leur vrai
-contenu :
+**Le pipeline réel ne crée pas les pages du menu** (aujourd'hui : Contact) :
+sur une base montée depuis les données officielles, le menu serait incomplet et
+`/contact` répondrait 404. Leur contenu est versionné dans
+`page_statique/contenus/` ; une commande le recopie en base :
 
 ```bash
-docker compose run --rm web python manage.py shell -c "
-from page_statique.models import PageStatique
-PageStatique.objects.get_or_create(url='methode', defaults={
-    'titre': 'Méthodes', 'ordre': 1, 'contenu': '<p>À rédiger.</p>'})
-PageStatique.objects.get_or_create(url='contact', defaults={
-    'titre': 'Contact', 'ordre': 2, 'contenu': '<p>À rédiger.</p>'})"
+docker compose run --rm web python manage.py peupler_pages
 ```
 
-Le contenu est du HTML, modifiable ensuite sans toucher au code : ajouter une
-page en base ajoute un onglet au menu.
+À relancer après chaque modification du contenu. La commande est idempotente, et
+retire de la base toute page absente du dépôt.
+
+## 7 ter. Le formulaire de contact
+
+Le formulaire envoie un courriel ; tant que `.env` ne dit pas à qui, il répond
+qu'il n'est pas encore branché. Pas de serveur mail sur le VPS : Infomaniak y
+bloque le port 25 sortant. Le site envoie par la boîte `contact@politiques.ch`,
+en SMTP authentifié.
+
+1. **Mot de passe du site** : dans le Manager Infomaniak, Service Mail →
+   `contact@politiques.ch` → Appareils → « Ajouter un appareil ». Ce mot de passe
+   d'appareil se révoque sans toucher au reste.
+2. **`.env` du serveur** :
+
+   ```bash
+   CONTACT_DESTINATAIRE=contact@politiques.ch
+   DEFAULT_FROM_EMAIL=Politiques.ch <contact@politiques.ch>
+   EMAIL_HOST=mail.infomaniak.com
+   EMAIL_PORT=587
+   EMAIL_HOST_USER=contact@politiques.ch
+   EMAIL_HOST_PASSWORD=le-mot-de-passe-d-appareil
+   ```
+
+   L'expéditeur doit être la boîte elle-même : Infomaniak refuse d'envoyer au nom
+   d'une autre. Le visiteur est en « Répondre à ».
+3. **Appliquer et tester** :
+
+   ```bash
+   docker compose up -d
+   docker compose run --rm web python manage.py sendtestemail contact@politiques.ch
+   ```
+
+Depuis son poste, avec `DEBUG=1`, le courriel s'affiche dans la console ; pour un
+vrai envoi, préfixer la commande par
+`EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend`.
+
+Une erreur d'envoi est écrite dans les journaux (`docker compose logs web`). nginx
+limite l'envoi à cinq messages par minute et par adresse IP.
 
 ## 8. Ouvrir le site au public
 
