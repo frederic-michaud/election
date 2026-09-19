@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<article class="page page-analyse">
+  <div class="titre-analyse">
+    <h1>Les objets de votation sur les axes</h1>
+    <p class="perimetre">{{ periode.objets }} objets fédéraux, votés du {{ periode.debut|date:"j F Y" }} au {{ periode.fin|date:"j F Y" }}</p>
+  </div>
+  {% include "_nuage.html" %}
+  <div class="explication">
+    <p>Chaque point est un objet déjà voté, placé selon sa corrélation avec deux des
+    six axes : près du bord du cercle, il est bien résumé par ces deux axes ; près du
+    centre, il n'a rien à voir avec eux. Un objet à droite a fait ses meilleurs scores
+    dans les communes en bleu de la carte du haut : lisez ensemble les objets d'un même
+    bord pour comprendre ce que l'axe sépare.</p>
+    <p>Cliquez près d'un point pour nommer ou retirer un objet. Ce que mesure chaque
+    axe : <a href="{% static 'pca/axes_acp.pdf' %}">Que mesurent les axes de l'ACP ?</a>
+    (PDF, 31 pages).</p>
+  </div>
+</article>
+{% endblock %}

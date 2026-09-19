@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<article class="page page-analyse">
+  <div class="titre-analyse">
+    <h1>Les communes dans le plan des axes</h1>
+    <p class="perimetre">Axes tirés de {{ periode.objets }} objets fédéraux, votés du {{ periode.debut|date:"j F Y" }} au {{ periode.fin|date:"j F Y" }}</p>
+  </div>
+  {% include "_nuage.html" %}
+  <div class="explication">
+    <p>Chaque point est une commune, placée selon deux des six axes qui résument
+    l'historique de ses votations (analyse en composantes principales) : deux
+    communes proches votent de la même façon. Les cartes montrent ces deux axes sur
+    le terrain, du rouge (côté négatif) au bleu (côté positif) ; le pourcentage est la
+    part des différences entre communes que l'axe résume à lui seul.</p>
+    <p>Survolez un point ou une commune pour la retrouver de l'autre côté ; cliquez
+    pour en nommer ou en retirer. Ce que mesure chaque axe :
+    <a href="{% static 'pca/axes_acp.pdf' %}">Que mesurent les axes de l'ACP ?</a>
+    (PDF, 31 pages).</p>
+  </div>
+</article>
+{% endblock %}
