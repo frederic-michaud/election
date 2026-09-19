@@ -2,7 +2,7 @@
 
 Toutes les communes suisses, un historique de votations et une soirée de
 dépouillement en cours — le tout fictif, déterministe et fabriqué hors-ligne à
-partir du GeoJSON déjà présent dans ``data/``.
+partir du répertoire officiel des communes, déjà présent dans ``data/``.
 
 Volontairement écrit **sans numpy ni scipy** : la voie Interface ne dispose que
 de ``requirements/web.txt``, et doit pouvoir peupler sa base puis regarder le
@@ -15,8 +15,8 @@ l'extrapolation a quelque chose à apprendre : la démo exerce le pipeline, pas
 seulement l'affichage.
 """
 
+import csv
 import datetime
-import json
 import math
 import random
 
@@ -43,9 +43,9 @@ NB_OBJETS_JOUR_J = 3
 # Part des communes déjà dépouillées au moment de l'instantané.
 PART_DEPOUILLEE = 0.55
 
-GEOJSON = "data/K4voge_20220501_gf.geojson"
+REFERENTIEL = "data/agvch_niveaux_2026-01-01.csv"
 
-# Numérotation OFS officielle des cantons. Le GeoJSON porte les noms
+# Numérotation OFS officielle des cantons. Le référentiel porte les noms
 # alémaniques ; on garde les noms français, déjà utilisés dans le dépôt.
 CANTONS = {
     1: ("ZH", "Zürich"), 2: ("BE", "Berne"), 3: ("LU", "Lucerne"),
@@ -134,14 +134,20 @@ class Command(BaseCommand):
             modele.objects.all().delete()
 
     def _creer_communes(self, alea):
-        """Communes réelles (nom, numéro OFS, district, canton) + profil latent."""
-        with open(GEOJSON) as f:
-            geojson = json.load(f)
+        """Communes réelles (nom, numéro OFS, district, canton) + profil latent.
+
+        Le référentiel de l'OFS, celui-là même que lit ``populate_commune`` : la
+        base fictive porte donc exactement les communes du fond de carte.
+        """
+        with open(REFERENTIEL) as f:
+            lignes = [{"vogeId": int(ligne["BfsCode"]), "vogeName": ligne["Name"],
+                       "bezkId": int(ligne["DistrictId"]), "bezkName": ligne["District"],
+                       "kantId": int(ligne["CantonId"])} for ligne in csv.DictReader(f)]
+        lignes.sort(key=lambda ligne: ligne["vogeId"])  # tirages reproductibles
 
         cantons = {}
         districts = {}
-        for entite in geojson["features"]:
-            p = entite["properties"]
+        for p in lignes:
             if p["kantId"] not in cantons:
                 abrev, nom = CANTONS[p["kantId"]]
                 cantons[p["kantId"]] = Canton(abreviation=abrev, nom=nom)
@@ -165,8 +171,7 @@ class Command(BaseCommand):
         urbanite_district = {id_: alea.gauss(0, 0.7) for id_ in districts}
 
         communes, profils = [], {}
-        for entite in geojson["features"]:
-            p = entite["properties"]
+        for p in lignes:
             id_canton = p["kantId"]
 
             if id_canton in CANTONS_LATINS:
