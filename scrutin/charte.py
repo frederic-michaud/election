@@ -49,6 +49,7 @@ def habiller_carte(figure, emprise, echelle=None):
         font={"family": FONTE, "color": ENCRE},
         paper_bgcolor=SURFACE,
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
+        modebar={"color": GRIS, "activecolor": ENCRE, "bgcolor": "rgba(255, 255, 255, 0.85)"},
         meta={"emprise": [[x0, y0], [x1, y1]]},
         coloraxis={
             "colorscale": [[0, ROUGE], [0.5, NEUTRE], [1, BLEU]],

@@ -210,6 +210,13 @@ footer a { color: var(--gris); font-size: .78rem; letter-spacing: .12em; text-tr
 footer a:hover, footer a:focus-visible { color: var(--oui); }
 footer a[aria-current] { color: var(--encre); font-weight: 600; }
 
+/* Écran tactile : boutons de carte à la taille d'un doigt. Sélecteur plus précis
+   que celui de Plotly, dont la feuille est chargée après. */
+@media (pointer: coarse) {
+  .carte .js-plotly-plot .plotly .modebar-btn { font-size: 24px; height: auto; padding: 8px; }
+  .carte .js-plotly-plot .plotly .modebar-group { padding-left: 2px; border-radius: 8px; }
+}
+
 /* ── Téléphone (en fin de feuille, sinon les règles de base l'écrasent) ── */
 @media (max-width: 600px) {
   .marque .mot { display: none; }

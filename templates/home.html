@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
 {% block contexte %}
-<h1 class="contexte">Votation fédérale <span class="quand">du {{ date|date:"j F Y" }}</span></h1>
+<h1 class="contexte">Votations fédérales <span class="quand">du {{ date|date:"j F Y" }}</span></h1>
 {% endblock %}
 
 {% block content %}
 <section class="avancement" aria-label="Avancement du dépouillement">
   <div>
-    <div class="l">Dépouillement</div>
+    <div class="l">Avance du dépouillement</div>
     <div class="v">{{ avance }}</div>
   </div>
   <div class="rail"><i style="width: {{ jauge }}%"></i></div>

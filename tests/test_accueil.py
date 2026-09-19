@@ -72,7 +72,7 @@ def test_la_page_d_accueil(base_demo, client):
     assert '"type":"choroplethmap"' in html
     assert "tracerCartes();" in html
     assert f"https://cdn.plot.ly/plotly-{get_plotlyjs_version()}.min.js" in html
-    assert re.search(r"Votation fédérale <span class=\"quand\">du \d{1,2} [a-zéû]+ \d{4}</span>", html)
+    assert re.search(r"Votations fédérales <span class=\"quand\">du \d{1,2} [a-zéû]+ \d{4}</span>", html)
     assert re.search(r"Dépouillement en cours · \d\d:\d\d", html)
     assert '<a href="/" aria-current="page">Accueil</a>' in html
     # Les deux pages de lecture de l'ACP, dans le menu du pied de page.
