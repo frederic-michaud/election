@@ -195,6 +195,12 @@ en SMTP authentifié.
 1. **Mot de passe du site** : dans le Manager Infomaniak, Service Mail →
    `contact@politiques.ch` → Appareils → « Ajouter un appareil ». Ce mot de passe
    d'appareil se révoque sans toucher au reste.
+
+   **Aller jusqu'au bout du formulaire** : Infomaniak demande un type d'appareil
+   et un nom, puis seulement crée le mot de passe. Le type et le nom ne sont que
+   des étiquettes, qui servent à révoquer cet accès-là plus tard. Copier la
+   chaîne proposée sans valider donne un mot de passe qui n'existe pas, donc un
+   `535 Invalid login or password` avec des réglages pourtant justes.
 2. **`.env` du serveur** :
 
    ```bash
@@ -208,6 +214,17 @@ en SMTP authentifié.
 
    L'expéditeur doit être la boîte elle-même : Infomaniak refuse d'envoyer au nom
    d'une autre. Le visiteur est en « Répondre à ».
+
+   **Doubler les `$` du mot de passe** (`a$b` → `a$$b`). Ce fichier sert à la
+   fois d'`env_file` et de source d'interpolation pour Compose, qui lit donc un
+   `$` isolé comme le début d'une variable : le conteneur reçoit un mot de passe
+   tronqué, et Infomaniak répond `535`. Pour lever le doute sans afficher le
+   secret, comparer sa longueur des deux côtés :
+
+   ```bash
+   docker compose run --rm --entrypoint python web \
+     -c 'import os; print(len(os.environ["EMAIL_HOST_PASSWORD"]))'
+   ```
 3. **Appliquer et tester** :
 
    ```bash
