@@ -1,11 +1,15 @@
 """Palette et réglages Plotly, repris de la maquette D′ (couleurs aussi dans style.css)."""
 
+from django.templatetags.static import static
+
 ENCRE = "#1f1f1c"
 SURFACE = "#ffffff"
 BLEU = "#2a78d6"     # oui
 ROUGE = "#c9352b"    # non
 NEUTRE = "#f0efec"   # 50 %
 FONTE = "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+
+LACS = "carte/lacs.geojson"
 
 DEMI_ETENDUE = 18    # échelle de la carte : 50 ± 18 %
 CONTOUR = 0.15       # filet entre communes, en px
@@ -40,6 +44,10 @@ def habiller_carte(figure, emprise):
             "style": {"version": 8, "sources": {}, "layers": [
                 {"id": "fond", "type": "background", "paint": {"background-color": SURFACE}},
             ]},
+            # Les lacs par-dessus les communes : dans swissBOUNDARIES3D, une
+            # commune riveraine s'étend jusqu'au milieu de l'eau.
+            "layers": [{"sourcetype": "geojson", "source": static(LACS),
+                        "type": "fill", "color": SURFACE}],
             "center": {"lon": (x0 + x1) / 2, "lat": (y0 + y1) / 2},
             "zoom": 6,
             # On ne s'éloigne pas du pays de plus de sa demi-largeur.

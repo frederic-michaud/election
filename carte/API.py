@@ -1,37 +1,27 @@
-import functools
-import json
-
-import plotly.express as px
+import plotly.graph_objects as go
+from django.templatetags.static import static
 
 from scrutin import charte
 
-CONTOURS = "data/K4voge_20220501_gf.geojson"
+CONTOURS = "carte/communes.geojson"
+
+# Imprimée par ``manage.py generer_contours`` ; ``tests/test_carte.py`` la vérifie.
+# En dur, pour que le serveur n'ouvre jamais les 5,8 Mo de contours.
+EMPRISE = ((5.95588, 45.81796), (10.49216, 47.80845))
 
 
-def _arrondir(coordonnees):
-    """5 décimales, soit environ 1 m : le fichier en a 16, qui alourdissent la page."""
-    if isinstance(coordonnees[0], (int, float)):
-        return [round(c, 5) for c in coordonnees]
-    return [_arrondir(c) for c in coordonnees]
-
-
-def _points(coordonnees):
-    if isinstance(coordonnees[0], (int, float)):
-        yield coordonnees
-    else:
-        for c in coordonnees:
-            yield from _points(c)
-
-
-@functools.cache
-def contours():
-    """Le GeoJSON communal et son emprise ((lon min, lat min), (lon max, lat max))."""
-    with open(CONTOURS) as f:
-        gj = json.load(f)
-    for feature in gj["features"]:
-        feature["geometry"]["coordinates"] = _arrondir(feature["geometry"]["coordinates"])
-    lon, lat = zip(*(p for f in gj["features"] for p in _points(f["geometry"]["coordinates"])))
-    return gj, ((min(lon), min(lat)), (max(lon), max(lat)))
+def _carte(locations, valeurs, survol):
+    """Une choroplèthe communale. Les contours sont une URL : plotly.js les
+    télécharge une fois pour toutes les cartes de la page."""
+    figure = go.Figure(go.Choroplethmap(
+        geojson=static(CONTOURS),
+        featureidkey="properties.vogeId",
+        locations=locations,
+        z=valeurs,
+        text=survol,
+        hovertemplate="<b>%{properties.vogeName}</b><br>%{text}<extra></extra>",
+        coloraxis="coloraxis"))
+    return charte.habiller_carte(figure, EMPRISE)
 
 
 def figure_carte(communes):
@@ -39,19 +29,8 @@ def figure_carte(communes):
 
     ``communes`` : le dict ``sujet["communes"]`` du contrat de vue.
     """
-    gj, emprise = contours()
-    noms, oui, survol = [], [], []
-    for entry in gj["features"]:
-        resultat = communes.get(entry["properties"]["vogeId"])
-        if resultat is not None and resultat["oui"] is not None:
-            noms.append(entry["properties"]["vogeName"])
-            oui.append(resultat["oui"] * 100)
-            survol.append(f"{resultat['oui'] * 100:.1f} %".replace(".", ","))
-    figure = px.choropleth_map({"commune": noms, "oui": oui, "part de oui": survol},
-                               geojson=gj,
-                               locations="commune",
-                               featureidkey="properties.vogeName",
-                               color="oui",
-                               hover_name="commune",
-                               hover_data={"commune": False, "oui": False, "part de oui": True})
-    return charte.habiller_carte(figure, emprise)
+    resultats = {ofs: round(r["oui"] * 100, 2) for ofs, r in communes.items()
+                 if r["oui"] is not None}
+    return _carte(list(resultats),
+                  list(resultats.values()),
+                  [f"{oui:.1f} %".replace(".", ",") for oui in resultats.values()])

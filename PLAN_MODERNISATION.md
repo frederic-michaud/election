@@ -679,14 +679,9 @@ toutes. L'appariement par numéro OFS suffit.
   référentiel des communes : les deux commandes lisent ce même export.*
 - **Jour J blindé [M]** : commune sans profil ACP → profil moyen de son district
   et un log, jamais une exception qui tue l'extrapolation.
-- **GeoJSON 2026 [I]** : l'actuel (mai 2022) manque 10 communes et porte 46
-  géométries périmées. Source : jeu opendata.swiss
-  `geodaten-zu-den-eidgenoessischen-abstimmungsvorlagen`, millésime 01.01.2026,
-  mêmes propriétés donc remplacement direct — à convertir de TopoJSON/LV95 vers
-  GeoJSON/WGS84, et à retrouver par l'API CKAN, l'URL changeant à chaque
-  millésime.
-- **`carte/API.py` [I]** : apparie les géométries par `vogeName`, à basculer sur
-  `vogeId` comme partout ailleurs.
+- ~~**GeoJSON 2026 [I]**~~ *fait* : swissBOUNDARIES3D 2026, simplifié à 25 m en
+  gardant la topologie (`manage.py generer_contours`) ; lacs du TopoJSON de l'OFS.
+- ~~**`carte/API.py` [I]**~~ *fait* : appariement par `vogeId`.
 - **Approximations assumées** : échanges partiels de territoire ignorés ;
   pseudo-communes « étranger » hors carte mais **dans** l'extrapolation.
 - **Non-régression** : rejouer le scrutin du 14 juin 2026, dont le fichier
@@ -819,7 +814,8 @@ d'où des frontières écrites noir sur blanc.
 - [x] Ce qui manquait est demandé, pas contourné : langue, fuseau et
       `mise_a_jour` côté M. Faute d'intervalle de confiance, **marge constante
       de ±2,5 points** pour la release (`MARGE_PROVISOIRE`, #43).
-- [x] plotly.js depuis le CDN, à la version du paquet Python. *Reste* : le GeoJSON allégé (PR #40).
+- [x] plotly.js depuis le CDN, à la version du paquet Python.
+- [x] Contours dans un fichier statique, téléchargé une fois (accueil 1,88 → 0,16 Mo).
 - [x] **Contrôle** : site et D′ identiques au pixel à 320, 400, 1000 et 1200 px.
 
 #### 7.5 Après coup

@@ -159,6 +159,13 @@ DEFAULT_AUTO_FIELD='django.db.models.AutoField'
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
+# Les contours communaux font 5,8 Mo : `collectstatic` en dépose une version
+# gzip à côté, que whitenoise sert aux navigateurs (1,4 Mo sur le fil).
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
+}
+
 # Journalisation : les scripts du pipeline parlent via ``logging`` ; sans
 # handler sur la racine, Python n'affiche que WARNING et plus, et les messages
 # d'avancement du jour J (INFO) seraient perdus.
