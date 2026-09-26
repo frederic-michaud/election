@@ -37,3 +37,13 @@ def test_aucune_nouvelle_commune(tmp_path, ecrire_scrutin):
     apres = ecrire_scrutin(tmp_path / "apres.json", [{1: True}, {1: True}])
 
     assert get_new_commune(str(avant), str(apres)) == set()
+
+
+def test_objets_rentres_a_des_tours_differents(tmp_path, ecrire_scrutin):
+    """Une commune complète en deux tours était perdue pour toute la soirée."""
+    tour_0 = ecrire_scrutin(tmp_path / "0.json", [{1: False}, {1: False}])
+    tour_1 = ecrire_scrutin(tmp_path / "1.json", [{1: True}, {1: False}])
+    tour_2 = ecrire_scrutin(tmp_path / "2.json", [{1: True}, {1: True}])
+
+    assert get_new_commune(str(tour_0), str(tour_1)) == set()
+    assert get_new_commune(str(tour_1), str(tour_2)) == {1}

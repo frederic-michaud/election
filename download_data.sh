@@ -31,12 +31,13 @@ MSG
   exit 1
 fi
 
-# Téléchargement sous un nom temporaire : un fichier tronqué ou une page
-# d'erreur ne doit pas devenir la référence du tour suivant.
+# Nom temporaire jusqu'à l'import réussi : un fichier tronqué, ou un import
+# qui échoue, ne doit pas devenir la référence du tour suivant — les communes
+# de ce tour ne seraient plus jamais « nouvelles ».
 COURANT="${DOSSIER_DATA}/votation_${DATE_SCRUTIN}_$(date +%H%M%S).json"
 curl -fsS -o "${COURANT}.partiel" "${URL_SCRUTIN}"
-mv "${COURANT}.partiel" "${COURANT}"
 
 echo "instantané ${COURANT}, précédent ${PRECEDENT}"
-${MANAGE} update_scrutin_en_cours "${PRECEDENT}" "${COURANT}"
+${MANAGE} update_scrutin_en_cours "${PRECEDENT}" "${COURANT}.partiel"
+mv "${COURANT}.partiel" "${COURANT}"
 ${MANAGE} run_extrapolation
