@@ -7,6 +7,7 @@ SURFACE = "#ffffff"
 BLEU = "#2a78d6"     # oui
 ROUGE = "#c9352b"    # non
 NEUTRE = "#f0efec"   # 50 %
+ATTENTE = "#e6e4de"  # commune pas encore dépouillée, sur la carte
 GRIS = "#5f5e58"     # texte secondaire (--gris)
 POINT = "#9d9c96"    # point au repos dans un nuage (--fleche)
 GRILLE = "#e1e0d9"   # filets des axes (--bord)

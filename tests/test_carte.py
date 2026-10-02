@@ -6,6 +6,7 @@ import json
 import pytest
 
 from carte.API import CONTOURS, EMPRISE, figure_carte, figure_carte_acp
+from scrutin import charte
 
 FICHIER = "carte/static/carte/communes.geojson"
 LACS = "carte/static/carte/lacs.geojson"
@@ -22,11 +23,27 @@ def test_la_figure_porte_l_url_des_contours_et_pas_les_contours():
     figure = figure_carte({1: {"oui": 0.55, "comptabilise": True},
                            2: {"oui": None, "comptabilise": False}})
     json_figure = figure.to_json()
-    assert CONTOURS in figure.data[0].geojson
+    assert all(CONTOURS in couche.geojson for couche in figure.data)
     assert "coordinates" not in json_figure
-    # Une commune sans résultat n'est pas dessinée, mais ne fait pas tomber la carte.
-    assert figure.data[0].locations == (1,)
+    # La commune sans résultat est dessinée en gris, sous celle qui en a un.
+    attente, resultats = figure.data
+    assert attente.locations == (2,)
+    assert resultats.locations == (1,)
     assert len(json_figure) < 100_000
+
+
+def test_sans_aucun_resultat_les_communes_restent_dessinees():
+    """Sinon l'accueil ne montrerait que les lacs avant le premier dépouillement."""
+    figure = figure_carte({ofs: {"oui": None, "comptabilise": False} for ofs in (1, 2, 3)})
+    attente = figure.data[0]
+    assert attente.locations == (1, 2, 3)
+    assert {couleur for _, couleur in attente.colorscale} == {charte.ATTENTE}
+
+
+def test_tout_depouille_ne_coute_pas_de_couche_en_plus():
+    """Le cas de la fin de soirée : une seule couche, comme avant."""
+    figure = figure_carte({1: {"oui": 0.55, "comptabilise": True}})
+    assert len(figure.data) == 1
 
 
 @pytest.mark.lent
