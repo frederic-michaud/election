@@ -36,8 +36,7 @@ def fabriquer(path_votation, path_sortie, fraction=0.05):
     La graine est fixe et le tirage est comparé à `fraction` : les communes
     retenues à 5 % le sont encore à 25 %. Deux appels à des fractions
     croissantes donnent donc des instantanés emboîtés, comme une vraie soirée
-    où une commune dépouillée le reste — c'est ce qui permet d'enchaîner
-    `update_scrutin_en_cours` d'un fichier au suivant.
+    où une commune dépouillée le reste.
     """
     sujets = SujetVote.objects.order_by("date")
     with open(path_votation, 'r') as f:
@@ -58,6 +57,7 @@ def fabriquer(path_votation, path_sortie, fraction=0.05):
                     continue
                 if np.random.random() < fraction:
                     resultat_json = data_commune['resultat']
+                    resultat_json["gebietAusgezaehlt"] = True
                     resultat_json["jaStimmenAbsolut"] = resultat_previous.nombre_oui
                     resultat_json["neinStimmenAbsolut"] = resultat_previous.nombre_non
                     resultat_json["anzahlStimmberechtigte"] = resultat_previous.electeurs_inscrits

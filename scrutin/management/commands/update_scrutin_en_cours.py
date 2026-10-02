@@ -2,6 +2,7 @@ import json
 import logging
 
 from django.core.management.base import BaseCommand
+from django.db import transaction
 
 from scrutin.models import Commune, ResultatCommunalEnCours, SujetVote
 
@@ -12,35 +13,31 @@ def clean_date(date_str):
     return f'{date_str[0:4]}-{date_str[4:6]}-{date_str[6:8]}'
 
 def communes_depouillees(sujet_json):
+    """Communes au dépouillement terminé pour cet objet.
+
+    Une grande ville publie des résultats partiels en cours de soirée :
+    `jaStimmenAbsolut` est rempli avant la fin du dépouillement. Seul
+    `gebietAusgezaehlt` dit qu'il est fini.
+    """
     return {
         data_commune['geoLevelnummer']
         for data_canton in sujet_json['kantone']
         for data_commune in data_canton['gemeinden']
-        if data_commune['resultat']["jaStimmenAbsolut"] is not None
+        if data_commune['resultat']["gebietAusgezaehlt"]
     }
 
-def communes_completes(data):
-    """Communes dépouillées pour *tous* les objets du scrutin."""
-    return set.intersection(*(communes_depouillees(sujet)
-                              for sujet in data['schweiz']['vorlagen']))
+@transaction.atomic
+def import_votation(path_votation):
+    """Réimporte toutes les communes dépouillées, objet par objet.
 
-def get_new_commune(path_previous, path_current):
-    """Communes complètes dans l'instantané courant, pas dans le précédent.
-
-    Une commune rentrée pour un objet à un tour et pour l'autre au tour
-    suivant n'est nouvelle pour aucun objet pris un à un : il faut comparer
-    les communes complètes, sinon elle n'est jamais importée.
+    Tout le scrutin passe en 2,5 s : réimporter à chaque tour reprend aussi
+    une correction publiée après coup, qu'un import des seules communes
+    nouvelles laissait figée.
     """
-    with open(path_previous, 'r') as f:
-        data_old = json.load(f)
-    with open(path_current, 'r') as f:
-        data_new = json.load(f)
-    return communes_completes(data_new) - communes_completes(data_old)
-
-def import_votation(path_votation, commune_to_import):
     with open(path_votation, 'r') as f:
         data = json.load(f)
     for sujet_vote in data['schweiz']['vorlagen']:
+        depouillees = communes_depouillees(sujet_vote)
         sujets = SujetVote.objects.filter(sujet_id = sujet_vote['vorlagenId'])
         if len(sujets) == 1:
             sujet = sujets[0]
@@ -51,9 +48,10 @@ def import_votation(path_votation, commune_to_import):
         else:
             raise Exception(f'There is more than one subject with id {sujet_vote["vorlagenId"]}')
         sujet.save()
+        logger.info('%s : %d communes dépouillées', sujet, len(depouillees))
         for data_canton in sujet_vote['kantone']:
             for data_commune in data_canton['gemeinden']:
-                if data_commune['geoLevelnummer'] not in commune_to_import:
+                if data_commune['geoLevelnummer'] not in depouillees:
                     continue
                 try:
                     commune = Commune.get_unique_commune_by_ofs(data_commune['geoLevelnummer'])
@@ -76,15 +74,10 @@ def import_votation(path_votation, commune_to_import):
                 )
 
 class Command(BaseCommand):
-    help = "Importe les communes nouvellement dépouillées entre deux instantanés JSON."
+    help = "Réimporte toutes les communes dépouillées d'un instantané JSON."
 
     def add_arguments(self, parser):
-        parser.add_argument("json_precedent")
         parser.add_argument("json_courant")
 
     def handle(self, *args, **options):
-        commune_to_import = get_new_commune(options["json_precedent"], options["json_courant"])
-        logger.info('%d nouvelles communes dépouillées : %s',
-                    len(commune_to_import), sorted(commune_to_import))
-        import_votation(options["json_courant"], commune_to_import)
-
+        import_votation(options["json_courant"])

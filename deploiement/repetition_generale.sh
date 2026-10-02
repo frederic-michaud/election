@@ -18,7 +18,8 @@ set -eu
 DATE_SCRUTIN="${DATE_SCRUTIN:?à définir, ex. DATE_SCRUTIN=20260927}"
 DOSSIER_DATA="${DOSSIER_DATA:-var/scrutins}"
 # Un tour par valeur. Les instantanés sont emboîtés (voir la docstring de
-# create_fake_json_input), donc une commune dépouillée le reste.
+# create_fake_json_input), donc une commune dépouillée le reste, comme un
+# vrai soir.
 FRACTIONS="${FRACTIONS:-0.05 0.15 0.25 0.50 0.80 1.00}"
 
 BASE="${BASE:-var/votation.sqlite3}"
@@ -56,12 +57,11 @@ rm -f "${DOSSIER_REPET}"/*.json
 echo "== amorçage : lignes vides du scrutin"
 ${MANAGE} add_initial_scrutin_en_cours "${GRAINE}"
 
-PRECEDENT="${GRAINE}"
 for fraction in ${FRACTIONS}; do
   COURANT="${DOSSIER_REPET}/depouille_${fraction}.json"
   echo "== tour à ${fraction} de dépouillement"
   ${MANAGE} create_fake_json_input "${GRAINE}" "${COURANT}" --fraction "${fraction}"
-  ${MANAGE} update_scrutin_en_cours "${PRECEDENT}" "${COURANT}"
+  ${MANAGE} update_scrutin_en_cours "${COURANT}"
   ${MANAGE} run_extrapolation
   ${MANAGE} shell -c "
 from scrutin.models import Extrapolation, SujetVote
@@ -72,7 +72,6 @@ for sujet in SujetVote.objects.filter(date=SujetVote.objects.latest('date').date
     else:
         print(f'  {sujet.nom[:45]:45} avance {e.avance:6.1%}  confirmé {e.pourcentage_oui_connu:6.1%}  projeté {e.pourcentage_oui_extrapole:6.1%}')
 "
-  PRECEDENT="${COURANT}"
 done
 
 cat <<MSG

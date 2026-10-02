@@ -103,7 +103,7 @@ ensuite avec le pipeline du jour J :
 
 ```bash
 python manage.py create_fake_json_input <json_du_scrutin> json_fake.json
-python manage.py update_scrutin_en_cours <json_precedent> json_fake.json
+python manage.py update_scrutin_en_cours json_fake.json
 python manage.py run_extrapolation
 ```
 

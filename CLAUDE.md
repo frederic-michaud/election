@@ -117,14 +117,16 @@ Les deux commandes gardent le chemin en argument optionnel ; l'URL de
 rafraîchissement est dans leurs docstrings.
 
 Puis, en boucle le jour du scrutin :
-`update_scrutin_en_cours <json_precedent> <json_courant>` →
+`update_scrutin_en_cours <json_courant>` →
 `run_extrapolation`. C'est ce que fait `download_data.sh`, qui dérive URL et noms
 de fichiers de `DATE_SCRUTIN`.
 
-`update_scrutin_en_cours` ne réimporte que les communes **nouvellement** dépouillées
-(différence entre deux instantanés JSON) — l'import complet était trop lent. Une
-commune n'est reprise que lorsqu'elle est rentrée pour **tous** les objets du
-scrutin.
+`update_scrutin_en_cours` réimporte à chaque tour **toutes** les communes
+dépouillées, objet par objet (2,5 s pour tout un scrutin) : une correction
+publiée après coup est donc reprise au tour suivant. Une commune n'est
+dépouillée que si `gebietAusgezaehlt` le dit — les grandes villes publient des
+voix partielles avant la fin, Zurich s'est ainsi figée à +10 points le
+27.09.2026.
 
 Les deux imports du jour J sont **idempotents** : `add_initial_scrutin_en_cours`
 sème les lignes vides (`get_or_create`), `update_scrutin_en_cours` les remplit

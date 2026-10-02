@@ -332,8 +332,9 @@ journalctl -u politiques-scrutin.service -f        # ce qu'il fait
 ```
 
 Chaque instantané téléchargé est conservé sous `var/scrutins`, ce qui garde la
-trace de la soirée et permet de tout rejouer. La mise à jour ne réimporte que
-les communes dépouillées depuis l'instantané précédent.
+trace de la soirée et permet de tout rejouer. Chaque tour réimporte toutes les
+communes dépouillées : une correction publiée après coup est reprise au tour
+suivant.
 
 Pour lancer un tour à la main, sans attendre le timer :
 

@@ -35,7 +35,7 @@ def communes(db):
     ]
 
 
-def ecrire_scrutin(chemin, depouillees=()):
+def ecrire_scrutin(chemin, depouillees=(), oui=600):
     data = {
         "abstimmtag": "20260927",
         "schweiz": {"vorlagen": [{
@@ -46,7 +46,8 @@ def ecrire_scrutin(chemin, depouillees=()):
                     "geoLevelnummer": ofs,
                     "geoLevelname": f"Commune {ofs}",
                     "resultat": {
-                        "jaStimmenAbsolut": 600 if ofs in depouillees else None,
+                        "gebietAusgezaehlt": ofs in depouillees,
+                        "jaStimmenAbsolut": oui if ofs in depouillees else None,
                         "neinStimmenAbsolut": 400 if ofs in depouillees else None,
                         "anzahlStimmberechtigte": 2000 if ofs in depouillees else None,
                         "eingelegteStimmzettel": 1000 if ofs in depouillees else None,
@@ -64,8 +65,7 @@ def test_la_mise_a_jour_remplit_la_ligne_existante(communes, tmp_path):
     import_initial(ecrire_scrutin(tmp_path / "initial.json"))
     assert ResultatCommunalEnCours.objects.count() == len(OFS)
 
-    import_mise_a_jour(ecrire_scrutin(tmp_path / "t1.json", depouillees=[1001]),
-                       commune_to_import={1001})
+    import_mise_a_jour(ecrire_scrutin(tmp_path / "t1.json", depouillees=[1001]))
 
     assert ResultatCommunalEnCours.objects.count() == len(OFS), (
         "la commune dépouillée existe en double : une ligne comptabilisée et "
@@ -80,11 +80,21 @@ def test_rejouer_le_meme_json_ne_cree_pas_de_doublon(communes, tmp_path):
     import_initial(ecrire_scrutin(tmp_path / "initial.json"))
     courant = ecrire_scrutin(tmp_path / "t1.json", depouillees=[1001, 1002])
 
-    import_mise_a_jour(courant, commune_to_import={1001, 1002})
-    import_mise_a_jour(courant, commune_to_import={1001, 1002})
+    import_mise_a_jour(courant)
+    import_mise_a_jour(courant)
 
     assert ResultatCommunalEnCours.objects.count() == len(OFS)
     assert ResultatCommunalEnCours.objects.filter(comptabilise=True).count() == 2
+
+
+def test_une_correction_apres_coup_est_reprise(communes, tmp_path):
+    """Ollon, le 27.09.2026 : corrigée après avoir été déclarée dépouillée,
+    la commune restait figée sur ses premiers chiffres."""
+    import_initial(ecrire_scrutin(tmp_path / "initial.json"))
+    import_mise_a_jour(ecrire_scrutin(tmp_path / "t1.json", depouillees=[1001]))
+    import_mise_a_jour(ecrire_scrutin(tmp_path / "t2.json", depouillees=[1001], oui=690))
+
+    assert ResultatCommunalEnCours.objects.get(commune__numero_ofs=1001).nombre_oui == 690
 
 
 def test_l_import_initial_est_relancable(communes, tmp_path):
