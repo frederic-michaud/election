@@ -296,9 +296,8 @@ sauvegarde = copie du fichier). Pas de Postgres, pas de `psycopg`.
 
 ### Plan et copies de travail
 
-- Les tâches sont étiquetées **[M]**, **[I]** ou **[2]** dans
-  [`PLAN.md`](PLAN.md) ; **[2]** signale ce qui se décide à deux. Une tâche
-  finie est retirée du plan dans la PR qui la termine.
+- Une tâche finie est retirée de [`PLAN.md`](PLAN.md) dans la PR qui la
+  termine.
 - **Une session, un clone (ou un worktree).** Deux sessions dans le même
   répertoire de travail se marcheraient dessus sur l'index git.
 

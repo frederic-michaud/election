@@ -1,22 +1,21 @@
 # Plan
 
-Ce qui reste à faire. **[M]** voie Moteur, **[I]** voie Interface, **[2]** à
-décider à deux. Une tâche finie est retirée de la liste dans la PR qui la
+Ce qui reste à faire. Une tâche finie est retirée de la liste dans la PR qui la
 termine ; l'histoire reste dans git.
 
 ## Avant le prochain scrutin
 
-- [ ] **[M]** Sauvegarde quotidienne de la base : copie datée par
+- [ ] Sauvegarde quotidienne de la base : copie datée par
       `VACUUM INTO` (sûr à chaud), déclenchée par un timer. L'historique
       `ResultatCommunalHistorique` est le bien précieux du projet.
-- [ ] **[M]** Détecteur d'erreurs de saisie dans le pipeline du jour J : la
+- [ ] Détecteur d'erreurs de saisie dans le pipeline du jour J : la
       méthode a fait ses preuves (4 sur 4, voir
       [`doc/anomalies.md`](doc/anomalies.md)) mais vit encore hors du dépôt.
-- [ ] **[M]** Mesurer chaque étape d'un tour de la boucle (téléchargement,
+- [ ] Mesurer chaque étape d'un tour de la boucle (téléchargement,
       démarrage des conteneurs, import, extrapolation, rendu), puis rapprocher
       et optimiser ce qui domine.
 
-## Modèle [M]
+## Modèle
 
 Les chiffres et les impasses sont dans [`doc/backtest.md`](doc/backtest.md).
 Chaque étape change les valeurs projetées : une à la fois, et jamais dans la
@@ -46,23 +45,23 @@ semaine d'un scrutin.
 
 ## Produit
 
-- [ ] **[I]** Cartes qui distinguent réel et estimé (`comptabilise` est déjà
+- [ ] Cartes qui distinguent réel et estimé (`comptabilise` est déjà
       dans le contrat).
-- [ ] **[2]** Courbe de convergence de la soirée : les instantanés
+- [ ] Courbe de convergence de la soirée : les instantanés
       `Extrapolation` sont en base, il reste à les servir et à les tracer.
-- [ ] **[2]** Krigeage des résidus pour les valeurs communales des cartes
+- [ ] Krigeage des résidus pour les valeurs communales des cartes
       (r = 0,42 par commune ; inutile pour la projection nationale).
-- [ ] **[M]** Validation rétrospective publiée : l'erreur de projection en
+- [ ] Validation rétrospective publiée : l'erreur de projection en
       fonction de l'avance, sur les votations passées.
-- [ ] **[I]** `404.html`, favicon, tableau des valeurs sous les figures.
-- [ ] **[2]** Élections : généraliser du oui/non au multi-candidats (modèles
+- [ ] `404.html`, favicon, tableau des valeurs sous les figures.
+- [ ] Élections : généraliser du oui/non au multi-candidats (modèles
       `Scrutin`/`Candidat`, méthode des reports de voix du dépôt
       `extrapolation_politique`, sources cantonales, VD d'abord).
 
 ## Ménage
 
-- [ ] **[2]** `ruff format` sur tout le dépôt, dans une PR à part.
-- [ ] **[M]** `ScrutinAPI.get_nb_inscrit` n'a plus d'appelant : la supprimer
+- [ ] `ruff format` sur tout le dépôt, dans une PR à part.
+- [ ] `ScrutinAPI.get_nb_inscrit` n'a plus d'appelant : la supprimer
       avec son test.
-- [ ] **[2]** Trier les branches distantes : la plupart sont fusionnées ou
+- [ ] Trier les branches distantes : la plupart sont fusionnées ou
       abandonnées.
