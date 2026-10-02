@@ -32,7 +32,10 @@ def ecrire_scrutin():
                     {
                         "geoLevelnummer": ofs,
                         "geoLevelname": f"Commune {ofs}",
-                        "resultat": {"jaStimmenAbsolut": 100 if depouillee else None},
+                        "resultat": {
+                            "gebietAusgezaehlt": depouillee,
+                            "jaStimmenAbsolut": 100 if depouillee else None,
+                        },
                     }
                     for ofs, depouillee in communes.items()
                 ]}],

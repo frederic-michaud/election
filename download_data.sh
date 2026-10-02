@@ -17,11 +17,10 @@ URL_SCRUTIN="https://app-prod-static-voteinfo.s3.eu-central-1.amazonaws.com/v1/o
 
 mkdir -p "${DOSSIER_DATA}"
 
-# L'instantané le plus récent sert de référence : `update_scrutin_en_cours` ne
-# réimporte que les communes dépouillées depuis lui. Le script ne garde donc
-# aucun état entre deux appels, ce qui permet à un timer de l'appeler.
-PRECEDENT=$(ls -1t "${DOSSIER_DATA}"/votation_"${DATE_SCRUTIN}"_*.json 2>/dev/null | head -1 || true)
-if [ -z "${PRECEDENT}" ]; then
+# Chaque tour réimporte toutes les communes dépouillées : le script ne garde
+# aucun état entre deux appels, ce qui permet à un timer de l'appeler. Seul
+# l'amorçage doit avoir eu lieu.
+if [ ! -f "${DOSSIER_DATA}/votation_${DATE_SCRUTIN}_0.json" ]; then
   cat >&2 <<MSG
 Aucun instantané de départ dans ${DOSSIER_DATA}. Amorcer d'abord :
 
@@ -31,9 +30,6 @@ MSG
   exit 1
 fi
 
-# Nom temporaire jusqu'à l'import réussi : un fichier tronqué, ou un import
-# qui échoue, ne doit pas devenir la référence du tour suivant — les communes
-# de ce tour ne seraient plus jamais « nouvelles ».
 COURANT="${DOSSIER_DATA}/votation_${DATE_SCRUTIN}_$(date +%H%M%S).json"
 # Le fichier peut arriver compressé le jour J : --compressed décode un
 # `Content-Encoding: gzip`, gunzip rattrape un gzip servi sans cet en-tête.
@@ -42,7 +38,8 @@ if gzip -t "${COURANT}.partiel" 2>/dev/null; then
   gunzip -c "${COURANT}.partiel" > "${COURANT}.json_" && mv "${COURANT}.json_" "${COURANT}.partiel"
 fi
 
-echo "instantané ${COURANT}, précédent ${PRECEDENT}"
-${MANAGE} update_scrutin_en_cours "${PRECEDENT}" "${COURANT}.partiel"
 mv "${COURANT}.partiel" "${COURANT}"
+
+echo "instantané ${COURANT}"
+${MANAGE} update_scrutin_en_cours "${COURANT}"
 ${MANAGE} run_extrapolation

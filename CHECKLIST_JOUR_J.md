@@ -104,7 +104,7 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
       ```bash
       journalctl -u politiques-scrutin.service --since "1 hour ago"
       ```
-      Attendu : un instantané téléchargé, un nombre de nouvelles communes, puis
+      Attendu : un instantané téléchargé, le nombre de communes dépouillées par objet, puis
       la projection. Tant qu'il y a moins de sept communes dépouillées,
       `run_extrapolation` note « pas de projection » et n'écrit rien — c'est
       normal en début de soirée.
@@ -128,7 +128,7 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
 | le service échoue toutes les cinq minutes | pas d'instantané de départ sous `var/scrutins` — rejouer l'amorçage du J-1 |
 | le timer n'annonce aucun prochain tour | `OnCalendar=` est resté sur la date du scrutin précédent |
 | 404 au téléchargement | `DATE_SCRUTIN=` dans le `.service` ne correspond pas au fichier publié |
-| la projection ne bouge pas d'un tour à l'autre | aucune commune nouvellement dépouillée **pour tous les objets** : une commune n'est reprise que lorsqu'elle est rentrée partout |
+| la projection ne bouge pas d'un tour à l'autre | aucune commune nouvellement dépouillée : une ville qui publie des voix partielles (`gebietAusgezaehlt` faux) n'est reprise qu'une fois son dépouillement terminé |
 | le site répond mais sans CSS ni logo | `collectstatic` ou whitenoise — reconstruire l'image |
 | page lente au premier appel | `--preload` absent de la commande gunicorn |
 

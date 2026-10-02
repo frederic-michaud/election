@@ -1,9 +1,8 @@
 """Les instantanés simulés d'une soirée doivent être emboîtés.
 
-C'est l'invariant sur lequel repose `deploiement/repetition_generale.sh` :
-`update_scrutin_en_cours` n'importe que les communes *nouvellement* rentrées,
-donc rejouer une soirée exige qu'une commune dépouillée à 5 % le soit encore à
-25 %. Sans quoi la répétition sauterait des communes au lieu d'en ajouter.
+`deploiement/repetition_generale.sh` rejoue une soirée : une commune
+dépouillée à 5 % doit l'être encore à 25 %, comme un vrai soir. Sans quoi
+l'avance de la répétition pourrait reculer d'un tour à l'autre.
 """
 
 import json
