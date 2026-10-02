@@ -28,12 +28,7 @@ def communes_depouillees(sujet_json):
 
 @transaction.atomic
 def import_votation(path_votation):
-    """Réimporte toutes les communes dépouillées, objet par objet.
-
-    Tout le scrutin passe en 2,5 s : réimporter à chaque tour reprend aussi
-    une correction publiée après coup, qu'un import des seules communes
-    nouvelles laissait figée.
-    """
+    """Réimporte toutes les communes dépouillées, objet par objet."""
     with open(path_votation, 'r') as f:
         data = json.load(f)
     for sujet_vote in data['schweiz']['vorlagen']:
