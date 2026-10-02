@@ -197,8 +197,8 @@ def test_extrapolation_retrouve_le_resultat_final_sur_un_modele_exact():
 def test_moins_de_sept_communes_depouillees_ne_projette_pas():
     """Garde-fou : sous 7 communes, on refuse d'ajuster 7 paramètres.
 
-    Et on le dit par None, pas par 0,5 : la valeur de repli s'affichait en page
-    d'accueil comme une projection à « 50,0 % », ce qui est un résultat inventé.
+    Et on le dit par None : une valeur de repli s'afficherait en page d'accueil
+    comme une projection, donc comme un résultat inventé.
     """
     sujet, _, _ = peupler_base_lineaire(nb_communes=40, nb_comptees=6)
 
@@ -224,13 +224,11 @@ def test_sans_projection_aucun_instantane_n_est_enregistre():
 
 @pytest.mark.django_db
 def test_une_commune_sans_profil_ne_fait_pas_tomber_la_projection(caplog):
-    """Le scénario qui gelait la soirée.
+    """Une commune sans ``PCAResult`` ne fait pas tomber la projection.
 
-    Une commune sans ``PCAResult`` levait une exception, donc plus aucune
-    projection jusqu'à ce que quelqu'un s'en aperçoive. C'est arrivé pour de
-    vrai : une commune qui se met à publier ses résultats séparément n'a pas
-    d'historique, donc pas de profil. Elle est désormais projetée avec le
-    profil moyen de son district, et l'avertissement la nomme.
+    Une commune qui se met à publier ses résultats séparément n'a pas
+    d'historique, donc pas de profil. Elle est projetée avec le profil moyen
+    de son district, et l'avertissement la nomme.
     """
     sujet, oui_reel, non_reel = peupler_base_lineaire(nb_communes=40, nb_comptees=13)
     # Une commune pas encore dépouillée : c'est elle qu'il faut projeter.
@@ -249,8 +247,7 @@ def test_les_bulletins_d_une_commune_comptee_sans_profil_sont_comptes(caplog):
     """Ses voix sont réelles : elles entrent dans le dépouillement connu.
 
     Elle ne peut pas servir de point d'appui au modèle — un profil inventé
-    fausserait l'ajustement — mais l'ignorer perdrait de vrais bulletins, ce
-    que faisaient les exclusions nominatives des scripts du jour J.
+    fausserait l'ajustement — mais l'ignorer perdrait de vrais bulletins.
     """
     sujet, _, _ = peupler_base_lineaire(nb_communes=40, nb_comptees=13)
     comptee = ResultatCommunalEnCours.objects.filter(

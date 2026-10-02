@@ -7,7 +7,7 @@ import plotly.io as pio
 from scrutin import charte
 
 # Demi-largeur de la fourchette, en points : provisoire et identique pour tous
-# les objets, faute d'intervalle de confiance dans le contrat (#43).
+# les objets, faute d'intervalle de confiance dans le contrat.
 MARGE_PROVISOIRE = 2.5
 
 

@@ -1,8 +1,5 @@
-"""La route attrape-tout des pages éditables renvoie un 404 propre.
-
-Elle levait une ``Exception`` brute (donc un 500) pour toute URL inconnue,
-y compris un simple favicon demandé par le navigateur.
-"""
+"""La route attrape-tout des pages éditables renvoie un 404 propre, pas un 500,
+y compris pour un simple favicon demandé par le navigateur."""
 
 import pytest
 

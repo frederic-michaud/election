@@ -1,4 +1,4 @@
-"""Palette et réglages Plotly, repris de la maquette D′ (couleurs aussi dans style.css)."""
+"""Palette et réglages Plotly (couleurs aussi dans style.css)."""
 
 from django.templatetags.static import static
 

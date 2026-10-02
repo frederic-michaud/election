@@ -57,13 +57,7 @@ def test_peupler_demo_produit_une_base_coherente(base_demo):
 @pytest.mark.lent
 @pytest.mark.django_db
 def test_aucune_commune_n_est_ecartee_de_la_matrice_acp(base_demo):
-    """Garde-fou sur le « 55 » codé en dur dans ``ScrutinAPI`` (piège connu).
-
-    Une commune qui n'a pas *exactement* 55 ``ResultatCommunalHistorique`` est silencieusement
-    écartée de l'ACP. Le jour où l'on ajoutera une votation historique sans
-    toucher à cette constante, toutes les communes disparaîtront — et ce test
-    est le seul endroit qui s'en apercevra.
-    """
+    """Toute commune à l'historique complet entre dans l'ACP."""
     (sujets, communes), matrice = ScrutinAPI.getVotationMatrixWithMetaInfo()
 
     assert len(communes) == Commune.objects.count()
@@ -76,9 +70,8 @@ def test_aucune_commune_n_est_ecartee_de_la_matrice_acp(base_demo):
 @pytest.mark.django_db
 def test_l_historique_se_lit_en_un_nombre_constant_de_requetes(
         base_demo, django_assert_max_num_queries):
-    """La lecture faisait deux requêtes par commune, plus une par ``sujet_vote``.
+    """Pas de requête par commune ni par ``sujet_vote``.
 
-    Soit 4 339 requêtes pour la matrice ACP et 20 s pour ``get_nb_inscrit``.
     Le seuil est large : ce qu'on veut attraper, c'est le retour d'une boucle
     de requêtes, pas quelques requêtes de plus.
     """

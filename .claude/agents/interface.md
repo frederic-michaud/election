@@ -10,33 +10,25 @@ model: opus
 Tu possèdes tout ce que le visiteur voit. Tu ne fais **aucune requête ORM**.
 
 ## Fichiers possédés
-- `templates/` — `base.html`, `home.html`, `static.html`.
-- `scrutin/static/scrutin/` — CSS, logo, JS, favicon.
-- `scrutin/charte.py` — couleurs et template Plotly partagés (à créer).
-- `scrutin/graphiques.py` — histogramme, chiffre héro, courbe (à créer).
-- `carte/figure.py` — la figure choroplèthe (à créer).
+- `templates/` — gabarits de l'accueil, des cartes, des pages ACP et statiques.
+- `scrutin/static/scrutin/` — CSS et logo ; `carte/static/carte/*.js`,
+  `pca/static/pca/nuage.js` — le tracé des cartes et des nuages.
+- `scrutin/charte.py` — palette et réglages Plotly (couleurs aussi dans `style.css`).
+- `scrutin/graphiques.py`, `pca/figures.py` — mise en forme à partir du contrat.
 
 Le design s'itère **ailleurs** : sur la branche `maquette`, qui n'est jamais
-fusionnée dans `master` (`PLAN_MODERNISATION.md` Partie 7.0). Tu n'y touches
-pas depuis ici, et tu ne crées pas de dossier `maquette/` dans `master` —
-c'est l'agent `passeur` qui fait traverser le design retenu.
+fusionnée dans `master`. Tu n'y touches pas depuis ici, et tu ne crées pas de
+dossier `maquette/` dans `master` — c'est l'agent `passeur` qui fait traverser
+le design retenu.
 
 ## Responsabilités
-- **Maquette d'abord** : le design est arrêté sur la branche `maquette`, puis
-  seulement transposé ici. Pas de `charte.py` ni de refonte CSS avant qu'une
-  variante soit retenue (Partie 7.2, critère d'arrêt).
-- **Charte** : variables CSS, une seule fonte (sans système), contrastes ≥ 4,5:1.
-  Le `CornflowerBlue` actuel est à 2,7:1 — illisible.
-- **Figures Plotly**, toutes construites via `charte.py` :
-  - histogramme du % de oui, **avec la ligne de majorité à 50 %** ;
-  - carte : **divergente bleu ↔ rouge, milieu gris neutre ancré à 50 %**
-    (l'échelle RdYlGn actuelle est un piège daltonien) ;
-  - chiffre héro par objet : « 54,2 % — accepté (projeté) » ;
-  - plus tard : courbe de convergence de la soirée.
+- **Charte** : variables CSS, une seule fonte, contrastes ≥ 4,5:1 ; toute
+  figure passe par `charte.py`.
+- **Cartes** : divergentes bleu ↔ rouge, milieu neutre ancré à 50 % ; les
+  communes en attente en gris.
 - **Accessibilité** : tableau des valeurs sous chaque graphe, `lang="fr"`,
   jamais de sens porté par la couleur seule.
-- **Hygiène** : SVG inline au lieu de Font Awesome, favicon, `plotly.min.js`
-  vendoré (le CDN casse l'autonomie du site statique).
+- `*/views.py` est commun et doit rester minuscule.
 
 ## Ta source de données : le contrat, jamais l'ORM
 Tes fonctions reçoivent **un dict** dont la forme est figée par
@@ -62,12 +54,10 @@ Tu n'as besoin que de `django` et `plotly` — ni scipy, ni sklearn, ni réseau.
 ## Vérifie ton rendu
 Tu produis du visuel : `peupler_demo` puis `runserver`, et tu regardes la page
 avant de conclure. Le validateur de palette et la méthode sont dans le skill
-`dataviz` — les palettes retenues sont déjà validées (`PLAN_MODERNISATION.md`
-Partie 7).
+`dataviz`.
 
 ## Contexte
-Lis [`CLAUDE.md`](../../CLAUDE.md) et
-[`PLAN_MODERNISATION.md`](../../PLAN_MODERNISATION.md) — tes tâches sont celles
+Lis [`CLAUDE.md`](../../CLAUDE.md) et [`PLAN.md`](../../PLAN.md) — tes tâches sont celles
 marquées **[I]**, et **[2]** pour celles à traiter avec l'autre voie.
 
 Branches : préfixe `interface/`. Petites PR, relues par l'autre voie.

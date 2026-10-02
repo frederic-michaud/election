@@ -71,5 +71,6 @@ différence que tu ne sais pas expliquer est un bug, pas un détail.
 
 ## Contexte
 
-`PLAN_MODERNISATION.md` Partie 7 — en particulier 7.0 (pourquoi deux branches)
-et 7.4 (ce passage). La maquette porte son propre `README.md`.
+La section « Refonte graphique » de [`CLAUDE.md`](../../CLAUDE.md), et
+`maquette/PASSAGE.md` sur la branche `maquette`, qui porte aussi son propre
+`README.md`.

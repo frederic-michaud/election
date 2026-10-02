@@ -136,12 +136,7 @@ def get_percentage(voix):
 
 
 def nb_sujets_historiques():
-    """Nombre d'objets de votation présents dans l'historique.
-
-    Remplace le « 55 » qui était codé en dur : il fallait le mettre à jour à
-    chaque votation ajoutée, faute de quoi toutes les communes étaient écartées
-    de l'ACP sans que rien ne le signale.
-    """
+    """Nombre d'objets de votation présents dans l'historique."""
     return ResultatCommunalHistorique.objects.values('sujet_vote').distinct().count()
 
 

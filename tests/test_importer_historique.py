@@ -1,4 +1,4 @@
-"""Reconstruction de l'historique communal depuis le cube STAT-TAB (B4).
+"""Reconstruction de l'historique communal depuis le cube STAT-TAB.
 
 Le réseau est remplacé par deux fonctions monkeypatchées : les métadonnées du
 cube et le tableau (géo, objet, résultat, valeur) que renvoie l'API PX-Web.

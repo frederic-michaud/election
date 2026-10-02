@@ -21,11 +21,9 @@ Tu possèdes le calcul et les données. Tu ne touches jamais à l'apparence du s
 - **Méthode statistique** : ACP 6 composantes sur les votations historiques,
   régression du % de oui et de la participation pondérée par les bulletins,
   projection des communes non dépouillées. Plus tard : IC par bootstrap.
-- **Pipeline** : import des JSON fédéraux (incrémental), archivage de l'historique,
-  idempotence des imports.
-- **Référentiel des communes historisé** (eCH-0071) — fusions, scissions,
-  changements de canton. Voir `PLAN_MODERNISATION.md` Partie 6.
-- **Infra** : Docker Compose sur le VPS, cache/export statique, timer du jour J.
+- **Pipeline** : import des JSON fédéraux (réimport complet à chaque tour),
+  historique depuis STAT-TAB, idempotence des imports.
+- **Infra** : Docker Compose sur le VPS, cache nginx, timer du jour J.
 - **Tests** : `extrapolation.py` sur données synthétiques, conformité au contrat.
 - **Base fictive** : `peupler_demo` doit rester à l'échelle réelle (~2 130
   communes depuis le GeoJSON de `data/`), à graine fixe et hors-ligne.
@@ -49,8 +47,8 @@ Ne change jamais la forme du contrat en silence.
   et à la fixture — ne la laisse pas aller la chercher elle-même dans l'ORM.
 
 ## Contexte
-Lis [`CLAUDE.md`](../../CLAUDE.md) (carte du dépôt et pièges connus) et
-[`PLAN_MODERNISATION.md`](../../PLAN_MODERNISATION.md) — tes tâches sont celles
+Lis [`CLAUDE.md`](../../CLAUDE.md) (carte du dépôt), [`doc/`](../../doc/)
+(ce qu'on a appris) et [`PLAN.md`](../../PLAN.md) — tes tâches sont celles
 marquées **[M]**, et **[2]** pour celles à traiter avec l'autre voie.
 
 Branches : préfixe `moteur/`. Petites PR, relues par l'autre voie.

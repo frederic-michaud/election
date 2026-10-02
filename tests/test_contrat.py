@@ -78,8 +78,7 @@ def test_la_page_d_accueil_s_assemble(base_demo, client):
 def test_sans_projection_la_vue_ne_donne_pas_de_chiffre(base_demo):
     """L'état du dimanche matin : les objets du jour, aucune projection encore.
 
-    C'est celui qui suit l'amorçage du scrutin. La vue le représentait par une
-    exception, donc par une page d'erreur publique.
+    C'est celui qui suit l'amorçage du scrutin : la page doit s'afficher.
     """
     Extrapolation.objects.all().delete()
 
