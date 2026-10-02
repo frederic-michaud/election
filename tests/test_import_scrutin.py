@@ -4,6 +4,8 @@ La boucle ne portait que sur les deux premiers objets du scrutin : un scrutin
 à un seul objet plantait, un scrutin à trois objets en ignorait un.
 """
 
+import json
+
 from scrutin.management.commands.update_scrutin_en_cours import get_new_commune
 
 
@@ -47,3 +49,16 @@ def test_objets_rentres_a_des_tours_differents(tmp_path, ecrire_scrutin):
 
     assert get_new_commune(str(tour_0), str(tour_1)) == set()
     assert get_new_commune(str(tour_1), str(tour_2)) == {1}
+
+
+def test_resultat_partiel_pas_encore_depouille(tmp_path, ecrire_scrutin):
+    """Zurich, le 27.09.2026 : des voix publiées avant la fin du dépouillement
+    étaient importées comme définitives, puis jamais remises à jour."""
+    avant = ecrire_scrutin(tmp_path / "avant.json", [{1: False}])
+    apres = ecrire_scrutin(tmp_path / "apres.json", [{1: False}])
+    data = json.loads(apres.read_text())
+    data["schweiz"]["vorlagen"][0]["kantone"][0]["gemeinden"][0]["resultat"][
+        "jaStimmenAbsolut"] = 4200
+    apres.write_text(json.dumps(data))
+
+    assert get_new_commune(str(avant), str(apres)) == set()

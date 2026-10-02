@@ -58,6 +58,7 @@ def fabriquer(path_votation, path_sortie, fraction=0.05):
                     continue
                 if np.random.random() < fraction:
                     resultat_json = data_commune['resultat']
+                    resultat_json["gebietAusgezaehlt"] = True
                     resultat_json["jaStimmenAbsolut"] = resultat_previous.nombre_oui
                     resultat_json["neinStimmenAbsolut"] = resultat_previous.nombre_non
                     resultat_json["anzahlStimmberechtigte"] = resultat_previous.electeurs_inscrits

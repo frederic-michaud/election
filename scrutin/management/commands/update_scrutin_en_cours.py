@@ -12,11 +12,17 @@ def clean_date(date_str):
     return f'{date_str[0:4]}-{date_str[4:6]}-{date_str[6:8]}'
 
 def communes_depouillees(sujet_json):
+    """Communes au dépouillement terminé pour cet objet.
+
+    Une grande ville publie des résultats partiels en cours de soirée :
+    `jaStimmenAbsolut` est alors rempli alors que le dépouillement n'est pas
+    fini. Seul `gebietAusgezaehlt` dit qu'il l'est.
+    """
     return {
         data_commune['geoLevelnummer']
         for data_canton in sujet_json['kantone']
         for data_commune in data_canton['gemeinden']
-        if data_commune['resultat']["jaStimmenAbsolut"] is not None
+        if data_commune['resultat']["gebietAusgezaehlt"]
     }
 
 def communes_completes(data):

@@ -46,6 +46,7 @@ def ecrire_scrutin(chemin, depouillees=()):
                     "geoLevelnummer": ofs,
                     "geoLevelname": f"Commune {ofs}",
                     "resultat": {
+                        "gebietAusgezaehlt": ofs in depouillees,
                         "jaStimmenAbsolut": 600 if ofs in depouillees else None,
                         "neinStimmenAbsolut": 400 if ofs in depouillees else None,
                         "anzahlStimmberechtigte": 2000 if ofs in depouillees else None,
