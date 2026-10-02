@@ -294,24 +294,13 @@ téléchargement, tourne hors-ligne.
 **La base est SQLite partout, dev comme prod** (un seul écrivain, ~120 000 lignes,
 sauvegarde = copie du fichier). Pas de Postgres, pas de `psycopg`.
 
-### Deux agents en parallèle
+### Plan et copies de travail
 
-Les deux voies existent aussi comme **agents Claude**, définis dans
-`.claude/agents/` : `moteur` et `interface` — plus `passeur`, qui fait
-traverser le design de la branche `maquette` (voir plus bas). Chacun a la liste de ses fichiers,
-ses frontières explicites, et l'interdiction de toucher la zone de l'autre.
-
-- **Un agent par voie, un clone (ou un worktree) par agent.** Deux agents dans le
-  même répertoire de travail se marcheraient dessus sur l'index git.
-- L'agent `interface` travaille sur la base fictive : `peupler_demo` puis
-  `runserver`. Ni pile scientifique, ni données réelles, ni réseau.
-- **Le contrat est le seul point de rendez-vous.** Un agent qui a besoin d'un
-  champ absent ne va pas le chercher lui-même : il le demande, et le contrat
-  (plus son test) est mis à jour des deux côtés.
 - Les tâches sont étiquetées **[M]**, **[I]** ou **[2]** dans
-  [`PLAN.md`](PLAN.md) — un agent ne prend que les siennes, et **[2]** signale
-  ce qui se décide à deux. Une tâche finie est retirée du plan dans la PR qui
-  la termine.
+  [`PLAN.md`](PLAN.md) ; **[2]** signale ce qui se décide à deux. Une tâche
+  finie est retirée du plan dans la PR qui la termine.
+- **Une session, un clone (ou un worktree).** Deux sessions dans le même
+  répertoire de travail se marcheraient dessus sur l'index git.
 
 ### Refonte graphique : la maquette d'abord, sur sa propre branche
 
@@ -325,8 +314,7 @@ Tout ce chantier vit sur la branche **`maquette`**, qui n'est **jamais
 fusionnée dans `master`** : c'est un travail de conception, utile une fois,
 qui encombrerait la branche principale pour des années. La synchronisation va
 dans un seul sens, `master` → `maquette`. Le passage en production est une
-**réécriture**, confiée à un troisième agent, `passeur`, seul à lire les deux
-branches. Détail : `maquette/PASSAGE.md` sur la branche `maquette`.
+**réécriture** depuis la variante retenue, pas une fusion. Détail : `maquette/PASSAGE.md` sur la branche `maquette`.
 
 ## Conventions
 
