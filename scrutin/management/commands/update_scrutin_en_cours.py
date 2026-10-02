@@ -19,27 +19,24 @@ def communes_depouillees(sujet_json):
         if data_commune['resultat']["jaStimmenAbsolut"] is not None
     }
 
-def get_new_commune(path_previous, path_current):
-    """Communes nouvellement dépouillées pour *tous* les objets du scrutin.
+def communes_completes(data):
+    """Communes dépouillées pour *tous* les objets du scrutin."""
+    return set.intersection(*(communes_depouillees(sujet)
+                              for sujet in data['schweiz']['vorlagen']))
 
-    On n'importe une commune que lorsqu'elle est rentrée pour chaque objet :
-    la boucle ne portait que sur les deux premiers, et un scrutin peut en
-    compter 1, 3 ou 4.
+def get_new_commune(path_previous, path_current):
+    """Communes complètes dans l'instantané courant, pas dans le précédent.
+
+    Une commune rentrée pour un objet à un tour et pour l'autre au tour
+    suivant n'est nouvelle pour aucun objet pris un à un : il faut comparer
+    les communes complètes, sinon elle n'est jamais importée.
     """
     with open(path_previous, 'r') as f:
         data_old = json.load(f)
     with open(path_current, 'r') as f:
         data_new = json.load(f)
-    nouvelles = None
-    for sujet_ancien, sujet_nouveau in zip(data_old['schweiz']['vorlagen'],
-                                           data_new['schweiz']['vorlagen']):
-        nouvelles_du_sujet = (communes_depouillees(sujet_nouveau)
-                              - communes_depouillees(sujet_ancien))
-        if nouvelles is None:
-            nouvelles = nouvelles_du_sujet
-        else:
-            nouvelles &= nouvelles_du_sujet
-    return nouvelles if nouvelles is not None else set()
+    return communes_completes(data_new) - communes_completes(data_old)
+
 def import_votation(path_votation, commune_to_import):
     with open(path_votation, 'r') as f:
         data = json.load(f)
