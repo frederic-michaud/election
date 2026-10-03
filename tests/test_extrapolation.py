@@ -16,6 +16,7 @@ from django.core.management import call_command
 
 from pca.models import PCAResult
 from scrutin.extrapolation import (
+    SEUIL_COMMUNES,
     Delta,
     Delta_fast,
     get_extrapolated_value,
@@ -42,7 +43,12 @@ PART_ORDONNEE, PART_PENTE = 0.42, 0.05
 
 def composante(c1):
     """Une coordonnée ACP dont seul le premier axe porte de l'information."""
-    return [c1, 0.0, 0.0, 0.0, 0.0, 0.0]
+    return [c1] + [0.0] * (nb_component - 1)
+
+
+def parametres(pentes, ordonnee):
+    """Les nb_component + 1 paramètres du modèle ; les pentes manquantes sont nulles."""
+    return np.array(pentes + [0.0] * (nb_component - len(pentes)) + [ordonnee])
 
 
 # --------------------------------------------------------------------------- #
@@ -61,7 +67,7 @@ def test_delta_fast_est_equivalent_a_delta():
     ``Delta`` en est la version lisible : les deux doivent coïncider, sinon on
     optimise autre chose que ce que le code documente.
     """
-    params = np.array([0.3, -0.2, 0.1, 0.0, 0.0, 0.0, 0.5])
+    params = parametres([0.3, -0.2, 0.1], 0.5)
     components = [composante(c) for c in (-1.0, -0.4, 0.2, 0.9)]
     observed = [0.31, 0.44, 0.57, 0.62]
     nb_votants = [100, 2500, 700, 40]
@@ -82,7 +88,7 @@ def test_get_linear_parameter_retrouve_un_modele_exact():
 
     assert params[0] == pytest.approx(OUI_PENTE, abs=1e-4)
     assert params[-1] == pytest.approx(OUI_ORDONNEE, abs=1e-4)
-    # Les axes 2 à 6 ne portent aucun signal : leurs coefficients restent nuls.
+    # Les axes suivants ne portent aucun signal : leurs coefficients restent nuls.
     assert params[1:-1] == pytest.approx(np.zeros(nb_component - 1), abs=1e-4)
 
 
@@ -107,7 +113,7 @@ def test_get_linear_parameter_pondere_par_le_nombre_de_bulletins():
 
 
 def test_get_extrapolated_value_applique_le_modele_a_chaque_commune():
-    params = np.array([OUI_PENTE, 0.0, 0.0, 0.0, 0.0, 0.0, OUI_ORDONNEE])
+    params = parametres([OUI_PENTE], OUI_ORDONNEE)
     composantes = [composante(c1) for c1 in (-1.0, 0.0, 1.0)]
 
     valeurs = get_extrapolated_value(composantes, params)
@@ -154,8 +160,7 @@ def peupler_base_lineaire(nb_communes, nb_comptees):
         )
         PCAResult.objects.create(
             commune=commune,
-            **{f"coordinate_{axe + 1}": valeur
-               for axe, valeur in enumerate(composante(c1))},
+            coordonnees=composante(c1),
         )
         ResultatCommunalEnCours.objects.create(
             commune=commune, sujet_vote=sujet,
@@ -176,31 +181,31 @@ def test_extrapolation_retrouve_le_resultat_final_sur_un_modele_exact():
     a engendré les données est exactement celui que la méthode ajuste, la
     projection doit reconstituer le total réel à l'arrondi près.
     """
-    sujet, total_oui, total_non = peupler_base_lineaire(nb_communes=40, nb_comptees=13)
+    sujet, total_oui, total_non = peupler_base_lineaire(nb_communes=150, nb_comptees=60)
 
     connu, extrapolation, avance, sans_resultat, oui_estime, part_estimee = (
         get_extrapolation(sujet)
     )
 
     assert extrapolation == pytest.approx(total_oui / (total_oui + total_non), abs=1e-3)
-    assert len(sans_resultat) == 40 - 13
-    assert len(oui_estime) == len(part_estimee) == 40 - 13
-    # Le dépouillement porte sur les 13 plus petites communes : l'avance est
-    # donc bien inférieure à la part des communes rentrées (13/40).
-    assert 0 < avance < 13 / 40
+    assert len(sans_resultat) == 150 - 60
+    assert len(oui_estime) == len(part_estimee) == 150 - 60
+    # Le dépouillement porte sur les 60 plus petites communes : l'avance est
+    # donc bien inférieure à la part des communes rentrées (60/150).
+    assert 0 < avance < 60 / 150
     # Et le résultat connu est biaisé — c'est précisément ce que la projection
     # corrige, sinon la méthode ne servirait à rien.
     assert connu != pytest.approx(extrapolation, abs=1e-3)
 
 
 @pytest.mark.django_db
-def test_moins_de_sept_communes_depouillees_ne_projette_pas():
-    """Garde-fou : sous 7 communes, on refuse d'ajuster 7 paramètres.
+def test_trop_peu_de_communes_depouillees_ne_projette_pas():
+    """Garde-fou : sous SEUIL_COMMUNES, la projection ferait pire que le brut.
 
     Et on le dit par None : une valeur de repli s'afficherait en page d'accueil
     comme une projection, donc comme un résultat inventé.
     """
-    sujet, _, _ = peupler_base_lineaire(nb_communes=40, nb_comptees=6)
+    sujet, _, _ = peupler_base_lineaire(nb_communes=150, nb_comptees=SEUIL_COMMUNES - 1)
 
     connu, extrapolation, avance, sans_resultat, oui_estime, part_estimee = (
         get_extrapolation(sujet)
@@ -215,7 +220,7 @@ def test_moins_de_sept_communes_depouillees_ne_projette_pas():
 @pytest.mark.django_db
 def test_sans_projection_aucun_instantane_n_est_enregistre():
     """Une ligne Extrapolation signifie « il y a une projection ». Pas d'autre cas."""
-    peupler_base_lineaire(nb_communes=40, nb_comptees=6)
+    peupler_base_lineaire(nb_communes=150, nb_comptees=SEUIL_COMMUNES - 1)
 
     call_command("run_extrapolation")
 
@@ -230,15 +235,15 @@ def test_une_commune_sans_profil_ne_fait_pas_tomber_la_projection(caplog):
     d'historique, donc pas de profil. Elle est projetée avec le profil moyen
     de son district, et l'avertissement la nomme.
     """
-    sujet, oui_reel, non_reel = peupler_base_lineaire(nb_communes=40, nb_comptees=13)
+    sujet, oui_reel, non_reel = peupler_base_lineaire(nb_communes=150, nb_comptees=60)
     # Une commune pas encore dépouillée : c'est elle qu'il faut projeter.
-    PCAResult.objects.filter(commune__nom="Commune 20").delete()
+    PCAResult.objects.filter(commune__nom="Commune 100").delete()
 
     _, extrapolation, _, sans_resultat, _, _ = get_extrapolation(sujet)
 
-    assert "Commune 20" in caplog.text
+    assert "Commune 100" in caplog.text
     # Elle est projetée comme les autres, pas laissée de côté.
-    assert "Commune 20" in [voix.commune.nom for voix in sans_resultat]
+    assert "Commune 100" in [voix.commune.nom for voix in sans_resultat]
     assert extrapolation == pytest.approx(oui_reel / (oui_reel + non_reel), abs=0.01)
 
 
@@ -249,7 +254,7 @@ def test_les_bulletins_d_une_commune_comptee_sans_profil_sont_comptes(caplog):
     Elle ne peut pas servir de point d'appui au modèle — un profil inventé
     fausserait l'ajustement — mais l'ignorer perdrait de vrais bulletins.
     """
-    sujet, _, _ = peupler_base_lineaire(nb_communes=40, nb_comptees=13)
+    sujet, _, _ = peupler_base_lineaire(nb_communes=150, nb_comptees=60)
     comptee = ResultatCommunalEnCours.objects.filter(
         sujet_vote=sujet, comptabilise=True).order_by("commune").first()
     PCAResult.objects.filter(commune=comptee.commune).delete()
@@ -272,9 +277,7 @@ def test_le_profil_de_repli_est_la_moyenne_du_district():
                                     canton=district.canton)
     lointaine = Commune.objects.create(nom="Lointaine", numero_ofs=9999,
                                        canton=district.canton, district=autre)
-    PCAResult.objects.create(commune=lointaine, coordinate_1=10.0, coordinate_2=0.0,
-                             coordinate_3=0.0, coordinate_4=0.0, coordinate_5=0.0,
-                             coordinate_6=0.0)
+    PCAResult.objects.create(commune=lointaine, coordonnees=composante(10.0))
 
     par_district, national = profils_de_repli()
 

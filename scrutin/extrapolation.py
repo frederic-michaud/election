@@ -3,15 +3,15 @@ import logging
 import numpy as np
 import scipy.optimize
 
-from pca.models import PCAResult
+from pca.models import NB_AXES, PCAResult
 from scrutin.models import ResultatCommunalEnCours
 
 logger = logging.getLogger(__name__)
 
-nb_component = 6
+nb_component = NB_AXES
 
-COORDONNEES = ('coordinate_1', 'coordinate_2', 'coordinate_3',
-               'coordinate_4', 'coordinate_5', 'coordinate_6')
+# En dessous, la projection fait pire que le dépouillement brut (doc/backtest.md).
+SEUIL_COMMUNES = 50
 
 
 def profils_de_repli():
@@ -28,9 +28,9 @@ def profils_de_repli():
     """
     par_district = {}
     tous = []
-    for district_id, *coordonnees in PCAResult.objects.values_list(
-            'commune__district_id', *COORDONNEES):
-        profil = list(coordonnees[:nb_component])
+    for pca_result in PCAResult.objects.select_related('commune'):
+        district_id = pca_result.commune.district_id
+        profil = pca_result.get_component(nb_component)
         par_district.setdefault(district_id, []).append(profil)
         tous.append(profil)
     if not tous:
@@ -101,7 +101,7 @@ def get_extrapolation(sujet):
             data_to_interpolate.append(profil)
             nbre_votant_approximated.append(voix.electeur_election_precedente)
             commune_without_result.append(voix)
-    if len(data_for_interpolating_participation) < 7:
+    if len(data_for_interpolating_participation) < SEUIL_COMMUNES:
         return None, None, 0.0, [], [], []
     nbre_votant_approximated = np.array(nbre_votant_approximated)
     params_pourcentage_oui = get_linear_parameter(data_for_interpolating_pourcentage_oui)

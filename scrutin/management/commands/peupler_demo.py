@@ -25,7 +25,7 @@ from django.db import transaction
 
 from page_statique.models import PageStatique
 from page_statique.pages import PAGES, peupler_pages
-from pca.models import PCAResult
+from pca.models import NB_AXES, PCAResult
 from scrutin.models import (
     Canton,
     Commune,
@@ -343,12 +343,12 @@ class Command(BaseCommand):
         PCAResult.objects.bulk_create([
             PCAResult(
                 commune=commune,
-                coordinate_1=profils[commune.numero_ofs][0],
-                coordinate_2=profils[commune.numero_ofs][1] - 0.35,
-                coordinate_3=alea.gauss(0, 0.3),
-                coordinate_4=alea.gauss(0, 0.2),
-                coordinate_5=alea.gauss(0, 0.15),
-                coordinate_6=alea.gauss(0, 0.1),
+                coordonnees=[profils[commune.numero_ofs][0],
+                             profils[commune.numero_ofs][1] - 0.35,
+                             alea.gauss(0, 0.3),
+                             alea.gauss(0, 0.2),
+                             alea.gauss(0, 0.15),
+                             *(alea.gauss(0, 0.1) for _ in range(NB_AXES - 5))],
             )
             for commune in communes
         ], batch_size=1000)

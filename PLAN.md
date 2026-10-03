@@ -38,9 +38,6 @@ Les chiffres et les impasses sont dans [`doc/backtest.md`](doc/backtest.md).
 Chaque étape change les valeurs projetées : une à la fois, et jamais dans la
 semaine d'un scrutin.
 
-- [ ] **Nombre de composantes** : ~20 au lieu de 6, croissant avec le
-      dépouillement. Le garde-fou de `get_extrapolation` (7 communes) doit
-      suivre le nombre de paramètres.
 - [ ] **Fourchette calibrée** sur le backtest, en fonction de l'avance, pour
       remplacer le ±2,5 points en dur.
 - [ ] **Réfléchir à comment gérer les résultats partiels** des grandes

@@ -27,22 +27,23 @@ le sont déjà.
 1. **Profil de commune par ACP** (`manage.py populate_pca`). On construit la matrice
    commune × objet des % de oui sur les **votations passées** (`ResultatCommunalHistorique` :
    55 dans la base fictive, tout ce que `importer_historique --depuis` a chargé
-   en réel), et on la réduit à **6 composantes principales**, stockées dans
-   `PCAResult`. L'ACP est **pondérée par le nombre d'électeurs**
+   en réel), et on la réduit à **16 composantes principales** (`pca.models.NB_AXES`),
+   stockées en liste JSON dans `PCAResult.coordonnees`. Le signe de chaque axe
+   est repris du calcul précédent, pour que les cartes gardent leurs couleurs. L'ACP est **pondérée par le nombre d'électeurs**
    (`Commune.nb_voix`) : on veut résumer le vote des électeurs, pas celui des
    communes. Une commune à qui il manque un seul objet
    historique est écartée de l'ACP.
 2. **Régression le jour J** (`scrutin/extrapolation.py`). Sur les communes déjà
    comptabilisées, on ajuste par moindres carrés — **pondérés par le nombre de
    bulletins rentrés** — un modèle linéaire `% oui ≈ Σ aᵢ·composanteᵢ + b`
-   (7 paramètres). On ajuste **le même modèle séparément pour la participation**.
+   (17 paramètres). On ajuste **le même modèle séparément pour la participation**.
 3. **Projection.** Pour chaque commune manquante, on applique les deux modèles, et on
    estime son nombre de votants via `electeur_election_precedente`. On somme, on
    ajoute au dépouillement confirmé, et on obtient le % de oui final projeté plus
    l'`avance` (part du dépouillement déjà couverte).
 
-Garde-fou : sous **7 communes dépouillées**, `get_extrapolation` renvoie `0.5, 0.5, 0`
-plutôt qu'un ajustement sur trop peu de points.
+Garde-fou : sous **50 communes dépouillées** (`SEUIL_COMMUNES`), `get_extrapolation`
+ne projette pas : en dessous, la projection fait pire que le dépouillement brut.
 
 Une commune sans profil ACP ne fait jamais tomber la projection : déjà
 dépouillée, ses bulletins comptent mais elle ne sert pas à ajuster le modèle ;
@@ -62,7 +63,7 @@ mais les cartes **ne distinguent donc pas visuellement réel et estimé**.
 | App | Rôle |
 |---|---|
 | `scrutin` | Cœur métier : tous les modèles, la logique d'extrapolation, la vue d'accueil, le CSS et le logo. |
-| `pca` | Modèle `PCAResult` (6 coordonnées par commune). `donnees.py` (contrat de vue) et `figures.py` : pages `/nuage-acp` (communes) et `/objets-acp` (cercle des corrélations), chacune avec deux cartes des axes choisis. Corrélations et part de variance calculées à la volée. Points nommés d'office dans `figures.py` ; nuage et cartes se répondent au survol et au clic (`nuage.js`). Pages pensées pour l'ordinateur. Le PDF lié, `pca/static/pca/axes_acp.pdf`, est une copie de `doc/axes_acp.pdf` (branche `moteur/analyse-axes-acp`). |
+| `pca` | Modèle `PCAResult` (16 coordonnées par commune ; les pages n'en montrent que 6). `donnees.py` (contrat de vue) et `figures.py` : pages `/nuage-acp` (communes) et `/objets-acp` (cercle des corrélations), chacune avec deux cartes des axes choisis. Corrélations et part de variance calculées à la volée. Points nommés d'office dans `figures.py` ; nuage et cartes se répondent au survol et au clic (`nuage.js`). Pages pensées pour l'ordinateur. Le PDF lié, `pca/static/pca/axes_acp.pdf`, est une copie de `doc/axes_acp.pdf` (branche `moteur/analyse-axes-acp`). |
 | `carte` | `carte/API.py` : cartes choroplèthes Plotly sur le fond communal — résultats du jour (`/cartes`) et axes de l'ACP (`figure_carte_acp` : les six axes dans une seule figure, que `carte_acp.js` trace deux fois à côté des nuages). Le fond n'est **pas** incrusté dans les figures : c'est un fichier statique (`carte/static/carte/communes.geojson`, 5,8 Mo), que plotly.js télécharge une fois pour toutes les cartes de la page. `manage.py generer_contours` le fabrique. Les communes sans résultat sont peintes en gris sous la choroplèthe (`charte.ATTENTE`) : sans cette couche, l'accueil ne montrerait que les lacs avant le premier dépouillement. |
 | `page_statique` | Pages du menu (aujourd'hui : Contact), écrites dans `page_statique/contenus/` et recopiées en base par `manage.py peupler_pages`, servies par la route attrape-tout `path("<slug:url>", …)` (404 si absente). **Ce sont aussi les onglets du menu** : le context processor `page_statique.context_processors.menu` les expose à tous les gabarits, et `base.html` boucle dessus. Ajouter une page en base ajoute donc un onglet, sans toucher au HTML. |
 
@@ -115,7 +116,7 @@ populate_commune          # cantons, districts, communes (⚠ supprime tous les 
 import_metadata_commune   # langue, degré d'urbanisation
 importer_historique       # votations passées depuis STAT-TAB (réseau, ⚠ crée les pseudo-communes 9xxx)
 set_nb_voix_commune       # Commune.nb_voix = électeurs de la dernière votation
-populate_pca              # ACP → PCAResult          (⚠ supprime tous les PCAResult)
+populate_pca              # ACP → PCAResult          (⚠ remplace tous les PCAResult)
 add_initial_scrutin_en_cours <json_du_scrutin>   # lignes vides du jour J
 ```
 
