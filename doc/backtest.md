@@ -2,7 +2,7 @@
 
 Campagne de septembre 2026 : rejouer des votations passées sous différents
 ordres d'arrivée des communes. Détail, chiffres et scripts :
-`RESULTATS_BACKTEST.md` sur la branche `moteur/backtest-ordre-depouillement` ;
+`RESULTATS_BACKTEST.md` au tag `backtest-2026-09` ;
 synthèse : [`synthese_backtest.pdf`](synthese_backtest.pdf).
 
 - **Le modèle actuel** (6 axes d'ACP, régression pondérée) : erreur médiane
