@@ -4,7 +4,7 @@
 #   sudo systemctl daemon-reload
 #   sudo systemctl enable --now politiques-scrutin.timer
 #
-# Adapter DATE_SCRUTIN, User et WorkingDirectory à la machine.
+# Adapter DATE_SCRUTIN, DOMAINE, User et WorkingDirectory à la machine.
 
 [Unit]
 Description=Politiques.ch — mise à jour du dépouillement et de la projection
@@ -16,4 +16,5 @@ Type=oneshot
 User=ubuntu
 WorkingDirectory=/home/ubuntu/election
 Environment=DATE_SCRUTIN=20260927
+Environment=DOMAINE=politiques.ch
 ExecStart=/home/ubuntu/election/download_data.sh

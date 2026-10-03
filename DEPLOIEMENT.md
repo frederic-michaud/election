@@ -261,6 +261,12 @@ même la version périmée, instantanément, et va chercher la suivante en
 arrière-plan. Un seul visiteur à la fois atteint Django. Si Django redémarre ou
 tombe, la dernière version connue continue d'être servie.
 
+Le jour J, ce mécanisme servirait la projection précédente au premier visiteur
+après chaque tour. `download_data.sh` redemande donc lui-même `/` et `/cartes`
+en fin de tour, avec l'en-tête `X-Rafraichir: 1` : venant de la machine, cette
+requête contourne le cache et y dépose la version fraîche. Il le fait quand
+`DOMAINE` est défini, ce que fait `politiques-scrutin.service`.
+
 Les fichiers statiques ont leur propre bloc, gardé une heure : le fond de carte
 communal y pèse 5,8 Mo, servi en 1,4 Mo puisque `collectstatic` en dépose une
 version gzip que whitenoise choisit selon `Accept-Encoding`. Le visiteur ne le
