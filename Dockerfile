@@ -8,7 +8,7 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 
 # Les dépendances d'abord : cette couche est réutilisée tant que les
-# requirements ne bougent pas, et scipy/scikit-learn sont longs à installer.
+# requirements ne bougent pas, et scipy est long à installer.
 COPY requirements/ requirements/
 RUN pip install --no-cache-dir -r requirements/calcul.txt
 

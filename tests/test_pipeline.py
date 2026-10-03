@@ -1,6 +1,6 @@
 """Test d'intégration du pipeline sur la base fictive.
 
-Enchaîne ``peupler_demo`` → ACP (la vraie, scikit-learn) → extrapolation, et
+Enchaîne ``peupler_demo`` → ACP (la vraie, pondérée) → extrapolation, et
 vérifie que la projection est cohérente. Contrairement aux tests unitaires de
 ``test_extrapolation.py``, on ne connaît pas ici le résultat analytiquement :
 ce qu'on vérifie, c'est que la méthode **corrige effectivement le biais** du

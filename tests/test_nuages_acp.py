@@ -71,17 +71,19 @@ def test_les_deux_nuages_sur_la_base_fictive(base_demo):
 
 
 def test_la_part_de_variance_est_celle_de_l_acp():
-    """Sur une vraie ACP, on retrouve les valeurs propres rapportées à la variance
-    totale — et quelle que soit l'échelle à laquelle les coordonnées sont stockées."""
+    """Sur une vraie ACP, pondérée ou non, on retrouve les valeurs propres
+    rapportées à la variance totale — quelle que soit l'échelle des coordonnées."""
     alea = np.random.default_rng(0)
     oui = alea.normal(size=(300, 3)) @ alea.normal(size=(3, 12)) + 0.1 * alea.normal(size=(300, 12))
-    centre = oui - oui.mean(axis=0)
-    _, valeurs_singulieres, directions = np.linalg.svd(centre, full_matrices=False)
-    attendu = valeurs_singulieres ** 2 / (valeurs_singulieres ** 2).sum()
-    for echelle in (1, 100):
-        scores = echelle * centre @ directions[:6].T
-        parts = _variance_expliquee(oui, _correlations(oui, scores))
-        assert parts == pytest.approx(attendu[:6], abs=1e-4)
+    for poids in (np.ones(300), alea.uniform(1, 1000, 300)):
+        centre = oui - np.average(oui, axis=0, weights=poids)
+        _, valeurs_singulieres, directions = np.linalg.svd(
+            np.sqrt(poids)[:, None] * centre, full_matrices=False)
+        attendu = valeurs_singulieres ** 2 / (valeurs_singulieres ** 2).sum()
+        for echelle in (1, 100):
+            scores = echelle * centre @ directions[:6].T
+            parts = _variance_expliquee(oui, _correlations(oui, scores, poids), poids)
+            assert parts == pytest.approx(attendu[:6], abs=1e-4)
 
 
 @pytest.mark.lent

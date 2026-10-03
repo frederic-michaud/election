@@ -38,8 +38,6 @@ Les chiffres et les impasses sont dans [`doc/backtest.md`](doc/backtest.md).
 Chaque étape change les valeurs projetées : une à la fois, et jamais dans la
 semaine d'un scrutin.
 
-- [ ] **Pondérer l'ACP par la taille des communes**, dans `populate_pca`
-      seulement. Erreur médiane 0,445 → 0,366 point : à faire en premier.
 - [ ] **Nombre de composantes** : ~20 au lieu de 6, croissant avec le
       dépouillement. Le garde-fou de `get_extrapolation` (7 communes) doit
       suivre le nombre de paramètres.

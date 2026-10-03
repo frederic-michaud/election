@@ -1,14 +1,22 @@
+import numpy as np
 from django.core.management.base import BaseCommand
-from sklearn.decomposition import PCA
 
 from pca.models import PCAResult
 from scrutin.models import ScrutinAPI
 
 
+def acp_ponderee(X, poids, nb_composantes=6):
+    """ACP où chaque commune pèse son nombre d'électeurs : on veut résumer le
+    vote des électeurs, pas celui des communes (doc/backtest.md)."""
+    centre = X - np.average(X, axis=0, weights=poids)
+    _, _, axes = np.linalg.svd(np.sqrt(poids)[:, None] * centre, full_matrices=False)
+    return centre @ axes[:nb_composantes].T
+
+
 def compute_pca():
     (sujets, communes), X = ScrutinAPI.getVotationMatrixWithMetaInfo()
-    X_reduced = PCA(n_components=6).fit_transform(X)
-    return communes, X_reduced
+    poids = np.array([commune.nb_voix for commune in communes], dtype=float)
+    return communes, acp_ponderee(np.array(X), poids)
 
 class Command(BaseCommand):
     help = "ACP sur l'historique → PCAResult. Supprime d'abord tous les PCAResult."

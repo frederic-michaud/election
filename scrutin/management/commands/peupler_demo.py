@@ -337,7 +337,7 @@ class Command(BaseCommand):
         """Coordonnées ACP cohérentes avec le profil latent.
 
         On les fabrique directement plutôt que de les calculer : peupler_demo
-        doit tourner sans scikit-learn. Les deux premiers axes portent la vraie
+        doit tourner sans la pile scientifique. Les deux premiers axes portent la vraie
         structure — c'est ce qu'une ACP sur la matrice historique retrouverait.
         """
         PCAResult.objects.bulk_create([

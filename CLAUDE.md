@@ -27,8 +27,10 @@ le sont déjà.
 1. **Profil de commune par ACP** (`manage.py populate_pca`). On construit la matrice
    commune × objet des % de oui sur les **votations passées** (`ResultatCommunalHistorique` :
    55 dans la base fictive, tout ce que `importer_historique --depuis` a chargé
-   en réel), et on la réduit à **6 composantes principales** (`sklearn`),
-   stockées dans `PCAResult`. Une commune à qui il manque un seul objet
+   en réel), et on la réduit à **6 composantes principales**, stockées dans
+   `PCAResult`. L'ACP est **pondérée par le nombre d'électeurs**
+   (`Commune.nb_voix`) : on veut résumer le vote des électeurs, pas celui des
+   communes. Une commune à qui il manque un seul objet
    historique est écartée de l'ACP.
 2. **Régression le jour J** (`scrutin/extrapolation.py`). Sur les communes déjà
    comptabilisées, on ajuste par moindres carrés — **pondérés par le nombre de
@@ -95,7 +97,7 @@ lus dans `data/agvch_niveaux_*.csv`, le même référentiel que `populate_commun
 — la base fictive porte donc exactement les communes du fond de carte),
 55 votations historiques et une soirée de
 dépouillement en cours — le tout fictif, déterministe, hors-ligne, et **sans
-scipy ni scikit-learn**. Les votes suivent un profil latent par commune
+scipy**. Les votes suivent un profil latent par commune
 (urbain/rural, latin/alémanique), et les petites communes dépouillent en premier :
 l'ACP y trouve une vraie structure et l'extrapolation a un vrai biais à corriger.
 
