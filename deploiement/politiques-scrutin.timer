@@ -4,9 +4,9 @@
 #   journalctl -u politiques-scrutin.service -f      # ce qu'il a fait
 #
 # Pourquoi une date et pas `OnUnitActiveSec=5min` en permanence : chaque tour
-# conserve son instantané sous var/scrutins (2 Mo). Armé douze jours à l'avance,
-# le timer accumulerait 6,6 Go pour 2,6 Go libres sur cette machine, alors que
-# le fichier fédéral ne change pas avant le dimanche. La date est à changer à
+# conserve son instantané sous var/scrutins (2 Mo) : armé en permanence, le
+# timer remplirait le disque, alors que le fichier fédéral ne change pas avant
+# le dimanche. La date est à changer à
 # chaque scrutin, comme DATE_SCRUTIN dans le service.
 
 [Unit]

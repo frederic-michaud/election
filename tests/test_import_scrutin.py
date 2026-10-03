@@ -16,8 +16,7 @@ def test_seul_gebiet_ausgezaehlt_compte(tmp_path, ecrire_scrutin):
 
 
 def test_resultat_partiel_pas_encore_depouille(tmp_path, ecrire_scrutin):
-    """Zurich, le 27.09.2026 : des voix publiées avant la fin du dépouillement
-    étaient importées comme définitives, puis jamais remises à jour."""
+    """Une grande ville publie des voix avant la fin de son dépouillement."""
     chemin = ecrire_scrutin(tmp_path / "t.json", [{1: False}])
     data = json.loads(chemin.read_text())
     data["schweiz"]["vorlagen"][0]["kantone"][0]["gemeinden"][0]["resultat"][

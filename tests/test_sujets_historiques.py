@@ -1,9 +1,7 @@
 """Le nombre d'objets historiques doit se déduire des données, pas être en dur.
 
-Avec le « 55 » codé en dur, ajouter une votation à l'historique écartait
-*toutes* les communes de l'ACP — silencieusement, puisque l'avertissement
-n'était pas émis. C'est le piège le plus coûteux du dépôt : il ne se serait
-manifesté qu'un dimanche de scrutin.
+Sinon, ajouter une votation à l'historique écarterait *toutes* les communes
+de l'ACP, et on ne s'en apercevrait qu'un dimanche de scrutin.
 """
 
 import datetime

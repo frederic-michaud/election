@@ -88,8 +88,7 @@ def test_rejouer_le_meme_json_ne_cree_pas_de_doublon(communes, tmp_path):
 
 
 def test_une_correction_apres_coup_est_reprise(communes, tmp_path):
-    """Ollon, le 27.09.2026 : corrigée après avoir été déclarée dépouillée,
-    la commune restait figée sur ses premiers chiffres."""
+    """Une commune corrigée après avoir été déclarée dépouillée."""
     import_initial(ecrire_scrutin(tmp_path / "initial.json"))
     import_mise_a_jour(ecrire_scrutin(tmp_path / "t1.json", depouillees=[1001]))
     import_mise_a_jour(ecrire_scrutin(tmp_path / "t2.json", depouillees=[1001], oui=690))

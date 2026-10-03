@@ -41,7 +41,7 @@ def test_sans_aucun_resultat_les_communes_restent_dessinees():
 
 
 def test_tout_depouille_ne_coute_pas_de_couche_en_plus():
-    """Le cas de la fin de soirée : une seule couche, comme avant."""
+    """Le cas de la fin de soirée : une seule couche."""
     figure = figure_carte({1: {"oui": 0.55, "comptabilise": True}})
     assert len(figure.data) == 1
 

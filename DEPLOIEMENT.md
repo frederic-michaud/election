@@ -344,15 +344,16 @@ DATE_SCRUTIN=20260927 ./download_data.sh
 
 ## 10. Sauvegarder
 
-Tout l'état tient dans un dossier. La base est le bien précieux : reconstruire
-l'historique prend deux minutes, mais une soirée de dépouillement ne se rejoue
-pas.
+Entre deux scrutins, la base ne bouge pas, et l'historique se reconstruit
+depuis l'OFS (`importer_historique`). Ce qui ne se rejoue pas, c'est une
+journée de scrutin : la base telle qu'elle était avant et après, et les
+instantanés du fichier fédéral, que la Confédération écrase en place.
 
-```bash
-tar czf "sauvegarde-$(date +%F).tar.gz" var/
-```
-
-À faire avant le scrutin, et une fois pendant la soirée.
+D'où trois sauvegardes datées par scrutin, copiées dans le kDrive : la base
+avant l'amorçage, la base après le dernier tour, et les instantanés. Les
+commandes sont dans [`CHECKLIST_JOUR_J.md`](CHECKLIST_JOUR_J.md). La base est
+copiée par `VACUUM INTO`, sûr même pendant une écriture, et non par `cp` ou
+`tar`, qui peuvent saisir un fichier SQLite à moitié écrit.
 
 ## 11. Redémarrage et pannes courantes
 

@@ -8,6 +8,14 @@ objet.
 Titre public du site : « Projections de votations & autres analyses de politique
 helvétique » (`templates/base.html`).
 
+Ce qui reste à faire : [`PLAN.md`](PLAN.md). Ce qu'on a appris et qui ne se lit
+pas dans le code : [`doc/`](doc/) — comment les communes publient le jour J
+(`depouillement.md`), repérer les erreurs de saisie communales (`anomalies.md`),
+ce que le backtest a appris du modèle (`backtest.md`). Y consigner les
+découvertes durables plutôt que dans une mémoire locale : elles servent à
+toutes les copies du dépôt. Le dépôt est **public** : ni IP, ni noms de
+personnes, ni secrets.
+
 ---
 
 ## La méthode d'extrapolation (le cœur du projet)
@@ -184,7 +192,7 @@ qui poste vers `/contact/envoyer` (jamais en cache, limité par nginx) et envoie
 par la boîte `contact@politiques.ch` (DEPLOIEMENT.md, § 7 ter). La page Contact
 reste identique pour tous : ni jeton CSRF (`csrf_exempt`), ni cookie.
 
-### Le conteneur (C1)
+### Le conteneur
 
 `Dockerfile` + `compose.yaml`, **un seul service** : `web`, gunicorn qui sert
 Django. Ni base de données ni proxy — SQLite est un fichier et c'est le serveur
@@ -215,30 +223,6 @@ conteneur ne publie son port que sur `127.0.0.1`.
 
 ---
 
-## Pièges connus
-
-**Valeurs codées en dur** — **corrigées** (jalon 3, tâche B2)
-1. Le `55` de `ScrutinAPI` était en dur à deux endroits → `nb_sujets_historiques()`,
-   déduit des `ResultatCommunalHistorique`. Une commune à l'historique incomplet est toujours écartée de
-   l'ACP, mais avec un avertissement (le seuil de couverture est l'affaire de la
-   Partie 6).
-2. `update_scrutin_en_cours.get_new_commune` bouclait sur `range(2)` : il ignorait
-   les objets au-delà du deuxième et plantait sur un scrutin à objet unique.
-3. Les chemins `votation_septembre_2022_*` sont devenus des arguments, et `download_data.sh` dérive URL et fichiers de
-   `DATE_SCRUTIN`.
-
-**Bugs latents repérés à la lecture** — **corrigés** (jalon 2, tâche A4)
-4. `Commune.get_last_nb_electeur_slow` triait une liste jetable (tri sans effet)
-    → `order_by('-sujet_vote__date').first()`.
-5. `add_initial_scrutin_en_cours` / `update_scrutin_en_cours` /
-    `create_fake_json_input` : le `except` autour de `get_unique_commune_by_ofs`
-    ne faisait pas `continue` — la boucle réutilisait la `commune` de
-    l'itération précédente.
-6. `ScrutinAPI.getVotationMatrixWithMetaInfo` utilisait `voixs` après la boucle
-    (variable qui fuit) et appelait `Warning(…)` au lieu de `warnings.warn(…)`.
-
-Les `except:` nus ont été remplacés par des exceptions ciblées partout.
-
 ## Tests, lint et CI
 
 ```bash
@@ -251,12 +235,10 @@ ruff check .           # lint
 synthétiques **dont le résultat est connu analytiquement** (le modèle affine
 qui a engendré les données doit être retrouvé par le fit) ; `tests/test_pipeline.py`
 enchaîne `peupler_demo` → ACP → extrapolation et vérifie que la projection
-**corrige** le biais du dépouillement partiel, en plus de garder un œil sur le
-« 55 » codé en dur.
+**corrige** le biais du dépouillement partiel.
 
-La configuration vit dans `pyproject.toml` : sans elle, ruff prenait la
-configuration globale de chaque machine et les deux voies ne voyaient pas les
-mêmes erreurs. Le jeu de règles est volontairement modeste (`E4`, `E7`, `E9`,
+La configuration vit dans `pyproject.toml`, pour que toutes les machines voient
+les mêmes erreurs. Le jeu de règles est volontairement modeste (`E4`, `E7`, `E9`,
 `F`, `I`) — élargir d'un coup noierait les vraies erreurs sous du style.
 
 `election/settings_test.py` active `DEBUG` avant d'importer les réglages : la
@@ -312,24 +294,12 @@ téléchargement, tourne hors-ligne.
 **La base est SQLite partout, dev comme prod** (un seul écrivain, ~120 000 lignes,
 sauvegarde = copie du fichier). Pas de Postgres, pas de `psycopg`.
 
-### Deux agents en parallèle
+### Plan et copies de travail
 
-Les deux voies existent aussi comme **agents Claude**, définis dans
-`.claude/agents/` : `moteur` et `interface` — plus `passeur`, qui fait
-traverser le design de la branche `maquette` (voir plus bas). Chacun a la liste de ses fichiers,
-ses frontières explicites, et l'interdiction de toucher la zone de l'autre.
-
-- **Un agent par voie, un clone (ou un worktree) par agent.** Deux agents dans le
-  même répertoire de travail se marcheraient dessus sur l'index git.
-- L'agent `interface` travaille sur la base fictive : `peupler_demo` puis
-  `runserver`. Ni pile scientifique, ni données réelles, ni réseau.
-- **Le contrat est le seul point de rendez-vous.** Un agent qui a besoin d'un
-  champ absent ne va pas le chercher lui-même : il le demande, et le contrat
-  (plus son test) est mis à jour des deux côtés.
-- Les tâches sont étiquetées **[M]**, **[I]** ou **[2]** dans le plan — un agent
-  ne prend que les siennes, et **[2]** signale ce qui se décide à deux.
-
-Détail complet et découpage des tâches par voie : [`PLAN_MODERNISATION.md`](PLAN_MODERNISATION.md) Partie 0.
+- Une tâche finie est retirée de [`PLAN.md`](PLAN.md) dans la PR qui la
+  termine.
+- **Une session, un clone (ou un worktree).** Deux sessions dans le même
+  répertoire de travail se marcheraient dessus sur l'index git.
 
 ### Refonte graphique : la maquette d'abord, sur sa propre branche
 
@@ -343,9 +313,7 @@ Tout ce chantier vit sur la branche **`maquette`**, qui n'est **jamais
 fusionnée dans `master`** : c'est un travail de conception, utile une fois,
 qui encombrerait la branche principale pour des années. La synchronisation va
 dans un seul sens, `master` → `maquette`. Le passage en production est une
-**réécriture**, confiée à un troisième agent, `passeur`, seul à lire les deux
-branches. Détail : Partie 7 du plan (7.0 pour les branches, 7.4 pour le
-passage).
+**réécriture** depuis la variante retenue, pas une fusion. Détail : `maquette/PASSAGE.md` sur la branche `maquette`.
 
 ## Conventions
 
@@ -354,5 +322,7 @@ Domaine et modèles en **français** (`Commune`, `SujetVote`, `ResultatCommunalH
 pour tout ce qui touche au métier et à l'interface.
 
 Branches : `master`, plus les préfixes `moteur/` et `interface/` (voir ci-dessus).
-Les anciennes branches nominatives `Frederic` et `Laurence` sont abandonnées — le
-sujet compte plus que l'auteur.
+
+Les commentaires et docstrings décrivent le code tel qu'il est, pas son
+histoire : pas de « avant, on faisait… », ni de numéro de tâche ou de PR.
+L'histoire est dans git.

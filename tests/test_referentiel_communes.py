@@ -1,9 +1,8 @@
 """Import du référentiel officiel des communes (API AGVCH de l'OFS).
 
-`populate_commune` et `import_metadata_commune` lisaient deux CSV hors dépôt,
-dans `../data/communes/`, dont personne ne connaissait plus la provenance.
-Elles lisent maintenant le **même** export de l'API AGVCH, versionné dans
-`data/` : une ligne par commune, la hiérarchie déjà jointe.
+`populate_commune` et `import_metadata_commune` lisent le **même** export de
+l'API AGVCH, versionné dans `data/` : une ligne par commune, la hiérarchie
+déjà jointe.
 
 Le CSV réduit ci-dessous est fait de **vraies lignes** du répertoire au
 01.01.2026, choisies pour les cas qui comptent : deux communes d'un même

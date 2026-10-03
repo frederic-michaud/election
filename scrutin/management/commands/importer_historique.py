@@ -12,8 +12,8 @@ doivent refléter le vote d'aujourd'hui, pas celui d'il y a vingt ans. Depuis le
 30 novembre 2014, les douze pseudo-communes « étranger » sont toutes publiées.
 
 API PX-Web JSON, sans clé. Les objets sont demandés par lots de 10 : au-delà,
-le pare-feu de l'OFS répond 403 (constaté le 2026-09-04, bien avant la limite
-documentée de 2,5 M de cellules). Relançable : les résultats d'un objet sont
+le pare-feu de l'OFS répond 403, bien avant la limite documentée de 2,5 M de
+cellules. Relançable : les résultats d'un objet sont
 remplacés.
 
 Les pseudo-communes « Suisses de l'étranger » (numéros OFS 9xxx) n'existent

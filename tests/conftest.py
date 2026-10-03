@@ -21,8 +21,7 @@ def ecrire_scrutin():
 
     ``objets`` est une liste (un élément par objet de votation) de dicts
     ``{numero_ofs: dépouillée ou non}``. Partagé entre les tests d'import et
-    ceux de la répétition générale : c'est le même gabarit qui sert à vérifier
-    la détection des nouvelles communes et l'emboîtement des instantanés.
+    ceux de la répétition générale.
     """
     def ecrire(chemin, objets):
         data = {"schweiz": {"vorlagen": [

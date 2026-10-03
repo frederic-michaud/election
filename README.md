@@ -4,8 +4,10 @@ Projection en direct des résultats des votations fédérales suisses, le dimanc
 de scrutin : à partir des communes déjà dépouillées, le site extrapole les
 communes manquantes et affiche le pourcentage de oui attendu.
 
-- Méthode, architecture et pièges connus : [`CLAUDE.md`](CLAUDE.md)
-- Feuille de route : [`PLAN_MODERNISATION.md`](PLAN_MODERNISATION.md)
+- Méthode et architecture : [`CLAUDE.md`](CLAUDE.md)
+- Ce qui reste à faire : [`PLAN.md`](PLAN.md)
+- Ce qu'on a appris : [`doc/`](doc/) — dépouillement du jour J, erreurs de
+  saisie communales, backtest du modèle
 
 ## Mise en route
 
@@ -46,8 +48,7 @@ par exemple) et qu'on veut le consulter depuis son propre poste.
    distant.
 
 Ce mode reste un serveur de développement (`runserver`), pas un déploiement
-de production — voir [`PLAN_MODERNISATION.md`](PLAN_MODERNISATION.md) pour la
-cible (Docker Compose + proxy HTTPS).
+de production — voir [`DEPLOIEMENT.md`](DEPLOIEMENT.md).
 
 ## Jeux de dépendances
 
@@ -107,7 +108,8 @@ python manage.py update_scrutin_en_cours json_fake.json
 python manage.py run_extrapolation
 ```
 
-À faire avant chaque votation réelle (voir `PLAN_MODERNISATION.md`, C3).
+À faire avant chaque votation réelle : `deploiement/repetition_generale.sh`
+rejoue une soirée entière (voir [`CHECKLIST_JOUR_J.md`](CHECKLIST_JOUR_J.md)).
 
 ## Déploiement en conteneur
 

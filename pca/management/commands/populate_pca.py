@@ -4,11 +4,6 @@ from sklearn.decomposition import PCA
 from pca.models import PCAResult
 from scrutin.models import ScrutinAPI
 
-#import numpy as np
-#import matplotlib.pyplot as plt
-#import scipy.cluster.hierarchy as hier
-#import sys
-#sys.setrecursionlimit(5000)
 
 def compute_pca():
     (sujets, communes), X = ScrutinAPI.getVotationMatrixWithMetaInfo()
@@ -31,17 +26,3 @@ class Command(BaseCommand):
                                      coordinate_5 = x5,
                                      coordinate_6 = x6))
         PCAResult.objects.bulk_create(entries)
-
-
-
-    # df = pd.DataFrame(percentage_oui_all_commune, index = commune_names, columns = sujets)
-    # plot = sns.clustermap(df)
-    # plt.savefig('voir.pdf', bbox_inches='tight')
-    # X = np.array(percentage_oui_all_commune, dtype=float)
-    # Z = hier.linkage(X, method = 'ward')
-    # commune_a_garder = ['Bussigny', 'Lausanne', 'Bern', 'Zürich', 'Basel', 'Altdorf (UR)', 'Romainmôtier-Envy','Lugano', 'Hindelbank', 'Kirchdorf (BE)']
-    # commune_names_main = [commune if commune in commune_a_garder else '.' for commune in commune_names]
-    # hier.dendrogram(Z, labels= commune_names_main, orientation='right')
-
-    # fig = plot.get_figure()
-    # plt.savefig("out.pdf", bbox_inches='tight')
