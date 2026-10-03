@@ -55,7 +55,7 @@ de production — voir [`DEPLOIEMENT.md`](DEPLOIEMENT.md).
 | Fichier | Contenu | Pour |
 |---|---|---|
 | `requirements/web.txt` | Django, Plotly | faire tourner le site |
-| `requirements/calcul.txt` | + numpy, scipy, scikit-learn, pandas | extrapolation et ACP |
+| `requirements/calcul.txt` | + numpy, scipy, pandas | extrapolation et ACP |
 | `requirements/dev.txt` | + pytest, ruff | développer |
 
 Travailler sur l'interface ne demande que `web.txt` : la pile scientifique ne

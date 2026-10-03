@@ -3,7 +3,7 @@
 import numpy as np
 
 from pca.models import PCAResult
-from scrutin.models import ResultatCommunalHistorique, SujetVote
+from scrutin.models import Commune, ResultatCommunalHistorique, SujetVote
 
 NB_COMPOSANTES = 6
 
@@ -27,31 +27,32 @@ def nuage_communes():
         cles.append(commune.numero_ofs)
         survol.append(f"{commune.nom} · {commune.canton.abreviation}{langue}")
         coordonnees.append(profil.get_component(NB_COMPOSANTES))
-    sujets, oui, scores = _historique()
+    sujets, oui, scores, poids = _historique()
     return {"noms": noms, "cles": cles, "survol": survol,
             "axes": [list(a) for a in zip(*coordonnees)],
-            "variance": _variance_expliquee(oui, _correlations(oui, scores)),
+            "variance": _variance_expliquee(oui, _correlations(oui, scores, poids), poids),
             "periode": _periode(sujets)}
 
 
 def nuage_objets():
     """Chaque objet placé par sa corrélation avec les axes : indépendante de
     l'échelle de l'objet, elle fait tenir tous les objets dans le cercle unité."""
-    sujets, oui, scores = _historique()
-    correlations = _correlations(oui, scores)
+    sujets, oui, scores, poids = _historique()
+    correlations = _correlations(oui, scores, poids)
     return {
         "noms": [sujet.nom for sujet in sujets],
         "cles": [sujet.sujet_id for sujet in sujets],
         "survol": [f"{sujet.nom} · {sujet.date.year}" for sujet in sujets],
         "axes": [list(colonne) for colonne in correlations.T],
-        "variance": _variance_expliquee(oui, correlations),
+        "variance": _variance_expliquee(oui, correlations, poids),
         "periode": _periode(sujets),
     }
 
 
 def _historique():
-    """(sujets, oui, scores) sur les communes de l'ACP à l'historique complet :
-    ``oui`` est communes × objets (part de oui), ``scores`` communes × axes."""
+    """(sujets, oui, scores, poids) sur les communes de l'ACP à l'historique
+    complet : ``oui`` est communes × objets (part de oui), ``scores`` communes ×
+    axes, ``poids`` le nombre d'électeurs qui a pondéré l'ACP."""
     profils = {r.commune_id: r.get_component(NB_COMPOSANTES) for r in PCAResult.objects.all()}
 
     # values_list : instancier les ~200 000 résultats prendrait dix secondes.
@@ -68,19 +69,26 @@ def _historique():
 
     oui = np.array([[par_commune[c][s] for s in ids_sujets] for c in retenues])
     scores = np.array([profils[c] for c in retenues])
-    return sujets, oui, scores
+    electeurs = dict(Commune.objects.filter(id__in=retenues).values_list('id', 'nb_voix'))
+    poids = np.array([electeurs[c] for c in retenues], dtype=float)
+    return sujets, oui, scores, poids
 
 
-def _correlations(oui, scores):
+def _correlations(oui, scores, poids=None):
     """objets × axes ; 0 pour un objet voté partout pareil."""
     nb_objets = oui.shape[1]
-    return np.nan_to_num(np.corrcoef(oui, scores, rowvar=False)[:nb_objets, nb_objets:])
+    covariance = np.cov(oui, scores, rowvar=False, aweights=poids)
+    ecarts = np.sqrt(covariance.diagonal())
+    with np.errstate(invalid='ignore', divide='ignore'):
+        return np.nan_to_num((covariance / np.outer(ecarts, ecarts))[:nb_objets, nb_objets:])
 
 
-def _variance_expliquee(oui, correlations):
+def _variance_expliquee(oui, correlations, poids=None):
     """Part de la variance des votes portée par chaque axe : Σ var·corr² / Σ var.
-    Égale à ``explained_variance_ratio_`` de scikit-learn pour une vraie ACP."""
-    variances = oui.var(axis=0)
+    Égale aux valeurs propres rapportées au total pour une vraie ACP, à
+    condition de pondérer comme elle."""
+    variances = np.average((oui - np.average(oui, axis=0, weights=poids)) ** 2,
+                           axis=0, weights=poids)
     return [round(float(v), 4) for v in variances @ correlations ** 2 / variances.sum()]
 
 

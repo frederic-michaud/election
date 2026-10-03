@@ -23,9 +23,8 @@ def profils_de_repli():
     voisine. Leur prêter le profil moyen de leurs voisines vaut mieux que de
     les ignorer, et bien mieux que de faire tomber la projection.
 
-    Les composantes étant centrées, la moyenne nationale vaut à peu près zéro :
-    une commune sans district connu est donc traitée comme une commune
-    moyenne, le pari le moins aventureux.
+    Une commune sans district connu est traitée comme une commune moyenne,
+    le pari le moins aventureux.
     """
     par_district = {}
     tous = []

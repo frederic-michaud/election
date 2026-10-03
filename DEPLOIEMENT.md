@@ -75,7 +75,7 @@ traduit par une erreur 400 au premier essai depuis un navigateur.
 docker compose up -d --build
 ```
 
-Cinq minutes la première fois, le temps d'installer scipy et scikit-learn.
+Cinq minutes la première fois, le temps d'installer scipy.
 Les fois suivantes, quelques secondes.
 
 Vérifier que le conteneur tourne :
