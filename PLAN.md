@@ -5,15 +5,32 @@ termine ; l'histoire reste dans git.
 
 ## Avant le prochain scrutin
 
-- [ ] Sauvegarde quotidienne de la base : copie datée par
-      `VACUUM INTO` (sûr à chaud), déclenchée par un timer. L'historique
-      `ResultatCommunalHistorique` est le bien précieux du projet.
-- [ ] Détecteur d'erreurs de saisie dans le pipeline du jour J : la
-      méthode a fait ses preuves (4 sur 4, voir
-      [`doc/anomalies.md`](doc/anomalies.md)) mais vit encore hors du dépôt.
-- [ ] Mesurer chaque étape d'un tour de la boucle (téléchargement,
-      démarrage des conteneurs, import, extrapolation, rendu), puis rapprocher
-      et optimiser ce qui domine.
+- [ ] **Raccourcir le délai jusqu'au visiteur** : aujourd'hui environ 2 min,
+      jusqu'à 6, et souvent deux rechargements. Par ordre de gain :
+      - rafraîchir le cache nginx à la fin de chaque tour (`proxy_cache_bypass`
+        accepté de la machine seule) : plus de version périmée servie au
+        premier visiteur, plus de rendu à froid ;
+      - import en un seul `executemany`, lignes estimées dans une seule
+        transaction ;
+      - une boucle qui reste en vie et interroge le fichier fédéral toutes les
+        30 s, en sautant les tours où il n'a pas changé ;
+      - moindres carrés en forme close au lieu de `minimize`, après
+        vérification sur tout le backtest.
+- [ ] **Page des erreurs de saisie communales**, publique, mise à jour à
+      chaque tour (méthode : [`doc/anomalies.md`](doc/anomalies.md)). La
+      machine calcule et classe ; le contexte reste le travail d'un humain ou
+      d'un agent, avec une note libre par commune.
+      - **Rouge**, faute probable : une correction simple (oui/non inversés,
+        objets intervertis, chiffre mal saisi) explique l'écart (Verzasca,
+        Wolfhalden, Büttenhardt, Ursins).
+      - **Orange**, à regarder : écart fort ou bulletins incohérents, sans
+        correction qui explique tout (Saint-Saphorin, Marchissy).
+      - **Vert** : le reste, masqué par défaut.
+      - Liste triée par gravité ; au clic, quatre graphiques : observé contre
+        prédit pour tout l'objet (avec la position corrigée), bulletins par
+        objet, mini-carte des voisines, écarts de la commune aux scrutins
+        passés.
+      - Les communes rouges restent dans l'ajustement.
 
 ## Modèle
 
@@ -21,42 +38,27 @@ Les chiffres et les impasses sont dans [`doc/backtest.md`](doc/backtest.md).
 Chaque étape change les valeurs projetées : une à la fois, et jamais dans la
 semaine d'un scrutin.
 
-- [ ] **Pondérer l'ACP par la taille des communes** : centrage pondéré puis
-      SVD de `√w·(X − μ_w)`, dans `populate_pca` seulement. Erreur médiane
-      0,445 → 0,366 point. Le meilleur rapport gain/risque : à faire en premier.
-- [ ] **Nombre de composantes** : ~20 au lieu de 6 (0,445 → 0,337 ; six pires
-      1,385 → 0,749), croissant avec le dépouillement plutôt que fixe. Le
-      garde-fou de `get_extrapolation` (7 communes) doit suivre le nombre de
-      paramètres effectif.
-- [ ] **Taille de la commune comme régresseur** (`log₁₀` des électeurs) :
-      règle la queue (six pires 1,385 → 0,784) mais dégrade les faibles avances
-      et une dizaine d'objets faciles. Préalable : vérifier que le premier
-      dépouillement publié est bien vers 25 % (voir
-      [`doc/depouillement.md`](doc/depouillement.md)). Variante à explorer :
-      une pénalité ridge sur ce seul coefficient, qui s'efface à mesure que
-      l'étendue des tailles observées couvre celle du pays.
-- [ ] **Fourchette calibrée** sur les trajectoires d'erreur du backtest, en
-      fonction de l'avance, pour remplacer le ±2,5 points en dur
-      (`MARGE_PROVISOIRE`). Modulable par objet d'un facteur 1,5 au plus.
-- [ ] **Résultats partiels des villes** : les prendre comme estimation
-      provisoire au-delà de ~90 % des voix, sans les compter comme dépouillés.
-      Bâle serait disponible trois heures plus tôt. À évaluer sur plusieurs
-      scrutins avant de fixer un seuil (voir `doc/depouillement.md`).
+- [ ] **Pondérer l'ACP par la taille des communes**, dans `populate_pca`
+      seulement. Erreur médiane 0,445 → 0,366 point : à faire en premier.
+- [ ] **Nombre de composantes** : ~20 au lieu de 6, croissant avec le
+      dépouillement. Le garde-fou de `get_extrapolation` (7 communes) doit
+      suivre le nombre de paramètres.
+- [ ] **Fourchette calibrée** sur le backtest, en fonction de l'avance, pour
+      remplacer le ±2,5 points en dur.
+- [ ] **Réfléchir à comment gérer les résultats partiels** des grandes
+      communes (voir [`doc/depouillement.md`](doc/depouillement.md)).
 
 ## Produit
 
-- [ ] Cartes qui distinguent réel et estimé (`comptabilise` est déjà
-      dans le contrat).
-- [ ] Courbe de convergence de la soirée : les instantanés
-      `Extrapolation` sont en base, il reste à les servir et à les tracer.
-- [ ] Krigeage des résidus pour les valeurs communales des cartes
-      (r = 0,42 par commune ; inutile pour la projection nationale).
-- [ ] Validation rétrospective publiée : l'erreur de projection en
-      fonction de l'avance, sur les votations passées.
-- [ ] `404.html`, favicon, tableau des valeurs sous les figures.
-- [ ] Élections : généraliser du oui/non au multi-candidats (modèles
-      `Scrutin`/`Candidat`, méthode des reports de voix du dépôt
-      `extrapolation_politique`, sources cantonales, VD d'abord).
+- [ ] Bouton pour montrer ou masquer les communes estimées sur les cartes :
+      masquées, elles passent au gris des communes en attente.
+- [ ] Bloc « Au fil de la journée », un panneau de plus à côté des objets :
+      tous les objets du jour sur un même graphique, projection et fourchette
+      au fil de l'heure, dépouillé en discret ; échelle de 20 à 80 % avec la
+      ligne des 50 %, fond qui dit le verdict, couleur et nom au bout de
+      chaque courbe. Demande l'historique des projections dans le contrat de
+      vue.
+- [ ] `404.html` dans la charte du site, et un favicon.
 
 ## Ménage
 

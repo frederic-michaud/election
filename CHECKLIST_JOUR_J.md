@@ -58,10 +58,10 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
 ## J-1 — amorçage
 
 - [ ] **Sauvegarder la base**, avant que la soirée la réécrive toutes les cinq
-      minutes. L'historique est le bien précieux : il se reconstruit en deux
-      minutes, une soirée de dépouillement non.
+      minutes, puis copier le fichier dans le kDrive :
       ```bash
-      tar czf "sauvegarde-$(date +%F).tar.gz" var/
+      python3 -c "import sqlite3; sqlite3.connect('var/votation.sqlite3').execute(\"VACUUM INTO 'var/base-${DATE}-avant.sqlite3'\")"
+      gzip var/base-${DATE}-avant.sqlite3
       ```
 
 - [ ] **Semer les lignes vides du scrutin.** Cette commande supprime celles du
@@ -95,8 +95,8 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
       ```bash
       rm -f var/repetition.sqlite3 var/scrutins/repetition/*.json
       ```
-      Ne pas toucher à `votation_${DATE}_0.json` : c'est la référence du
-      premier tour.
+      Ne pas toucher à `votation_${DATE}_0.json` : `download_data.sh` le
+      cherche pour savoir que l'amorçage a eu lieu.
 
 ## Le dimanche
 
@@ -112,13 +112,27 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
 - [ ] **Contrôle visuel de la page d'accueil** : projection plausible, avance
       cohérente avec l'heure, cartes remplies, pas de trace d'erreur Django.
 
-- [ ] **Une sauvegarde pendant la soirée**, vers le milieu du dépouillement.
-
 - [ ] **Le lundi**, désarmer le timer. `OnCalendar=` porte une date fixe, donc
       il ne repartira pas tout seul — mais laissé armé, il masque le fait que
       la date devra être changée au prochain scrutin :
       ```bash
       sudo systemctl disable --now politiques-scrutin.timer
+      ```
+
+- [ ] **Une fois le fichier fédéral définitif** (il est corrigé les jours
+      suivants), un dernier tour : `DATE_SCRUTIN=$DATE ./download_data.sh`.
+
+- [ ] **Sauvegarder la base d'après**, puis copier le fichier dans le kDrive :
+      ```bash
+      python3 -c "import sqlite3; sqlite3.connect('var/votation.sqlite3').execute(\"VACUUM INTO 'var/base-${DATE}-apres.sqlite3'\")"
+      gzip var/base-${DATE}-apres.sqlite3
+      ```
+
+- [ ] **Sauvegarder les instantanés de la journée**, puis copier l'archive
+      dans le kDrive. Ils n'existent nulle part ailleurs : le fichier fédéral
+      est écrasé en place, sans historique.
+      ```bash
+      tar czf "var/instantanes-${DATE}.tar.gz" var/scrutins/votation_${DATE}_*.json
       ```
 
 ## Si ça casse
