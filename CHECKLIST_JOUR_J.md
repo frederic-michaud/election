@@ -57,8 +57,8 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
 
 ## J-1 — amorçage
 
-- [ ] **Sauvegarder la base**, avant que la soirée la réécrive toutes les cinq
-      minutes, puis copier le fichier dans le kDrive :
+- [ ] **Sauvegarder la base**, avant que la soirée la réécrive tour après tour,
+      puis copier le fichier dans le kDrive :
       ```bash
       python3 -c "import sqlite3; sqlite3.connect('var/votation.sqlite3').execute(\"VACUUM INTO 'var/base-${DATE}-avant.sqlite3'\")"
       gzip var/base-${DATE}-avant.sqlite3
