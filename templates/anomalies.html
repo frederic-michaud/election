@@ -8,18 +8,26 @@
 {% block content %}
 <article class="page page-anomalies">
   <div class="titre-analyse">
-    <h1>Erreurs de saisie probables</h1>
+    <h1>Résultats atypiques</h1>
     {% if pret %}<p class="perimetre">{{ nb_communes }} communes analysées{% if mise_a_jour %} · {{ mise_a_jour|time:"H:i" }}{% endif %}</p>{% endif %}
   </div>
-  <p class="chapeau">Le profil de vote d'une commune prédit assez bien son résultat pour
-  qu'un écart anormal trahisse souvent une erreur de saisie plutôt qu'un vote
-  surprenant. On regarde deux choses : le vote, comparé au profil de la commune, et
-  ses nombres de bulletins d'un objet à l'autre, comparés à son habitude.
-  <b class="niveau orange">Orange</b> : un écart sur l'une des deux.
-  <b class="niveau rouge">Rouge</b> : un très gros écart, ou un écart sur les deux — par
-  exemple des bulletins incohérents et une correction simple (oui et non inversés,
-  objets intervertis, un chiffre mal tapé) qui ramène le vote dans la norme.
-  Rien n'est corrigé ici : seule la commune peut trancher.</p>
+  <p class="chapeau"><b>Les communes dont le résultat présente une <abbr title="Un résultat que le hasard seul explique mal, au vu des votes passés de la commune.">anomalie statistique</abbr></b></p>
+  <ul class="niveaux">
+    <li><span class="pastille rouge"></span><b>Rouge</b> : erreur de saisie probable.</li>
+    <li><span class="pastille"></span><b>Orange</b> : résultat inhabituel, erreur possible.</li>
+  </ul>
+  <p class="precisions">Deux indices sont examinés :</p>
+  <ul class="precisions">
+    <li><b>Le vote</b> : chaque commune a un <abbr title="Le résumé de ses votes aux votations passées, en quelques axes (analyse en composantes principales).">profil de vote</abbr> stable, qui permet de prédire
+    son résultat à quelques points près.</li>
+    <li><b>Les bulletins</b> : on ne vote qu'une fois, leur nombre doit donc être presque
+    le même pour tous les objets.</li>
+  </ul>
+  <p class="precisions">Une commune passe au rouge quand l'écart est énorme, quand les deux
+  indices concordent, ou quand une faute simple — oui et non inversés, objets
+  intervertis, un chiffre mal tapé — suffit à expliquer l'écart.</p>
+  <p class="precisions"><b>Ce sont des anomalies statistiques, pas des erreurs avérées</b> :
+  une commune peut avoir réellement voté de façon inattendue.</p>
 
   {% if not pret %}
   <p class="attente">L'analyse commence à {{ seuil }} communes dépouillées ; {{ depouillees }} pour l'instant.</p>
@@ -32,28 +40,22 @@
           <span class="pastille" aria-label="{{ f.niveau }}"></span>
           <span class="qui"><b>{{ f.nom }}</b> <span class="canton">{{ f.canton }}</span></span>
           <span class="resume">{{ f.resume }}</span>
-          <span class="chi2">{% if f.chi2_corrige %}χ² {{ f.chi2 }} → {{ f.chi2_corrige }}{% if f.depuis %} · {% endif %}{% endif %}{% if f.depuis %}depuis {{ f.depuis|time:"H:i" }}{% endif %}</span>
+          <span class="chi2">{% if f.chi2_corrige %}<abbr title="Mesure de l'écart de vote, tous objets confondus : plus elle est grande, moins le résultat s'explique par le hasard. Après la flèche, sa valeur une fois la faute corrigée.">χ²</abbr> {{ f.chi2 }} → {{ f.chi2_corrige }}{% if f.depuis %} · {% endif %}{% endif %}{% if f.depuis %}depuis {{ f.depuis|time:"H:i" }}{% endif %}</span>
         </summary>
         {% if f.note %}<p class="note">{{ f.note }}</p>{% endif %}
-        <table class="ecarts">
-          <thead><tr><th>Objet</th><th>Observé</th><th>Prédit</th><th>Écart</th><th>Voisines</th></tr></thead>
-          <tbody>{% for o in f.objets %}
-            <tr><td>{{ o.nom }}</td><td>{{ o.observe }}</td><td>{{ o.predit }}</td><td>{{ o.z }} σ</td><td>{% if o.z_voisines %}{{ o.z_voisines }} σ{% endif %}</td></tr>
-          {% endfor %}</tbody>
-        </table>
         <div class="graphiques">
           <figure class="large">
             <figcaption>Observé contre prédit, toutes les communes{% if f.chi2_corrige %} ; le cercle : la commune corrigée{% endif %}</figcaption>
             <div class="nuages">{% for nom in objets %}<div class="nuage-objet"><span>{{ nom }}</span><div class="figure"></div></div>{% endfor %}</div>
           </figure>
           <figure>
-            <figcaption>Bulletins par objet : oui, non, blancs</figcaption>
+            <figcaption>Bulletins par objet : oui, non, blancs ; en pointillé, le total de chaque objet</figcaption>
             <div class="figure bulletins"></div>
           </figure>
-          {% if f.carte %}
+          {% if f.semblables %}
           <figure>
-            <figcaption>Les voisines, sur l'objet le plus éloigné <span class="degrade" aria-hidden="true">−<i></i>+</span></figcaption>
-            <div class="carte"><div class="figure"></div></div>
+            <figcaption>Le vote des communes semblables : proches sur la carte et par leur profil</figcaption>
+            <div class="figure semblables"></div>
           </figure>
           {% endif %}
           <figure>
@@ -63,7 +65,7 @@
         </div>
         {{ f.points|json_script }}
         <script type="application/json" data-figure="bulletins">{{ f.bulletins|safe }}</script>
-        {% if f.carte %}<script type="application/json" data-figure="carte">{{ f.carte|safe }}</script>{% endif %}
+        {% if f.semblables %}<script type="application/json" data-figure="semblables">{{ f.semblables|safe }}</script>{% endif %}
         <script type="application/json" data-figure="historique">{{ f.historique|safe }}</script>
       </details>
     </li>
@@ -71,37 +73,10 @@
     <li class="aucune">Aucune commune signalée.</li>
     {% endfor %}
   </ul>
-
-  {% if autres %}
-  <details class="autres">
-    <summary>Les autres communes ({{ nb_vertes }}), sans écart notable</summary>
-    <table>
-      <thead><tr><th>Commune</th><th>Le plus grand écart</th><th>χ² du vote</th></tr></thead>
-      <tbody>{% for c in autres %}
-        <tr><td>{{ c.nom }} <span class="canton">{{ c.canton }}</span></td><td>{{ c.resume }}</td><td>{{ c.chi2 }}</td></tr>
-      {% endfor %}</tbody>
-    </table>
-    {% if nb_vertes > autres|length %}<p class="perimetre">Les {{ autres|length }} plus éloignées du modèle.</p>{% endif %}
-  </details>
-  {% endif %}
-
-  <div class="explication">
-    <p>Pour chaque objet, le pourcentage de oui des communes dépouillées est ajusté sur
-    leur profil de vote (les axes de l'<a href="{% url 'nuage_acp' %}">analyse en composantes
-    principales</a>). L'écart d'une commune se compte en σ, en tenant compte de sa taille ;
-    on y ajoute l'écart entre ses nombres de bulletins d'un objet à l'autre, qui devraient
-    être presque égaux puisqu'on vote une seule fois. Si les voisines s'écartent aussi, c'est
-    plutôt un effet régional qu'une erreur. L'écart de bulletins est jugé par rapport
-    à celui de la commune aux votations passées, plus sévèrement pour une grande
-    commune.</p>
-    <p>Le 27 septembre 2026, les quatre communes classées rouges ont toutes confirmé
-    l'erreur.</p>
-  </div>
   {% endif %}
 </article>
 
 {% for nuage in nuages %}<script type="application/json" class="nuage-base">{{ nuage|safe }}</script>{% endfor %}
 {{ config|json_script:"config-nuage" }}
-{{ config_carte|json_script:"config-carte" }}
 <script src="{% static 'scrutin/anomalies.js' %}"></script>
 {% endblock %}

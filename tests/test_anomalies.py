@@ -225,5 +225,5 @@ def test_la_page_des_anomalies(base_demo, client):
     reponse = client.get("/anomalies")
     assert reponse.status_code == 200
     contenu = reponse.content.decode()
-    assert "Erreurs de saisie probables" in contenu
+    assert "Résultats atypiques" in contenu
     assert "saisis pour" in contenu and "intervertis" in contenu and "inversés" in contenu

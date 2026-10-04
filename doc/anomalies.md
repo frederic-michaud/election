@@ -18,7 +18,8 @@ Pour chaque objet du scrutin :
 4. pour les communes les plus anormales, essayer les **corrections simples**
    — oui/non inversés sur un objet, objets intervertis, un chiffre mal saisi
    — et retenir celle qui fait le plus baisser le χ². Comparer aussi aux
-   communes voisines, pour écarter un effet régional réel.
+   communes semblables — parmi les cent plus proches sur la carte, les douze
+   au profil ACP le plus proche —, pour écarter un effet régional réel.
 
 Une correction qui ramène le χ² près de zéro est un signal fort ; un écart
 élevé sans correction simple qui l'explique est le plus souvent un vrai vote

@@ -28,7 +28,10 @@ from scrutin.models import (
 )
 
 SEUIL_COMMUNES = 200
-NB_VOISINES = 8
+# Les communes semblables : parmi les NB_ALENTOUR plus proches sur la carte,
+# les NB_VOISINES au profil ACP le plus proche.
+NB_ALENTOUR = 100
+NB_VOISINES = 12
 # Voix au-delà desquelles l'aléa binomial ne masque plus la dispersion propre à l'objet.
 GRANDES = 500
 # Au-dessus de l'un des deux, on cherche une correction.
@@ -217,19 +220,27 @@ def centres():
     return resultat
 
 
-def voisines(points, k=NB_VOISINES):
-    """Indices des ``k`` plus proches de chaque point ([lon, lat], ou None)."""
+def voisines(points, profils, alentour=NB_ALENTOUR, k=NB_VOISINES):
+    """Indices des communes semblables à chacune : parmi les ``alentour`` plus
+    proches sur la carte, les ``k`` au profil ACP le plus proche.
+
+    ``points`` : [lon, lat] ou None ; ``profils`` : communes × axes. Une commune
+    sans contour est comparée aux profils de tout le pays.
+    """
     xy = np.array([p if p is not None else [np.nan, np.nan] for p in points], float)
     xy[:, 0] *= np.cos(np.radians(46.8))
     resultat = []
     for j in range(len(xy)):
         if np.isnan(xy[j, 0]):
-            resultat.append([])
-            continue
-        distance = np.hypot(*(xy - xy[j]).T)
-        distance[j] = np.inf
-        distance[np.isnan(distance)] = np.inf
-        resultat.append([int(i) for i in np.argsort(distance)[:k]])
+            candidates = np.delete(np.arange(len(xy)), j)
+        else:
+            distance = np.hypot(*(xy - xy[j]).T)
+            distance[j] = np.inf
+            distance[np.isnan(distance)] = np.inf
+            candidates = np.argsort(distance)[:alentour]
+            candidates = candidates[np.isfinite(distance[candidates])]
+        ecart = np.linalg.norm(profils[candidates] - profils[j], axis=1)
+        resultat.append([int(i) for i in candidates[np.argsort(ecart)[:k]]])
     return resultat
 
 
@@ -280,7 +291,8 @@ def detecter():
 
     oui, non, bulletins = (np.array([[lignes[c][s][k] for s in sujets] for c in ids], float)
                            for k in range(3))
-    modele = Ajustement(np.array([profils[c] for c in ids]), oui, non)
+    axes = np.array([profils[c] for c in ids])
+    modele = Ajustement(axes, oui, non)
     habitudes = habitudes_bulletins()
     # Une commune sans passé à plusieurs objets : l'habitude médiane du pays.
     habitude_nationale = float(np.median(list(habitudes.values()))) if habitudes else 0.0
@@ -288,7 +300,7 @@ def detecter():
     numeros = dict(Commune.objects.filter(id__in=ids).values_list('id', 'numero_ofs'))
     tous_centres = centres()
     points = [tous_centres.get(numeros[c]) for c in ids]
-    proches = voisines(points)
+    proches = voisines(points, axes)
 
     anciennes = {a.commune_id: a for a in Anomalie.objects.filter(date=jour)}
     maintenant = timezone.now()

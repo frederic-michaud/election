@@ -202,10 +202,16 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .reglages input:focus-visible, .reglages select:focus-visible { outline: 2px solid var(--oui); outline-offset: 1px; }
 .reglages #compte { font-size: .8rem; color: var(--gris); white-space: nowrap; }
 
-/* ── Erreurs de saisie ── */
+/* ── Résultats atypiques ── */
 .page-anomalies { max-width: 1100px; }
 .chapeau { margin: 12px 0 0; }
-.niveau.rouge { color: var(--non); } .niveau.orange { color: var(--orange); }
+.niveaux { list-style: none; margin: 10px 0 0; padding: 0; }
+.niveaux li { display: flex; align-items: baseline; gap: 8px; }
+.niveaux .pastille { flex: none; align-self: center; }
+.pastille.rouge { background: var(--non); }
+.precisions { margin: 10px 0 0; font-size: .92rem; }
+.page-anomalies abbr { text-decoration: underline dotted var(--fleche); text-underline-offset: 3px; cursor: help; }
+ul.precisions { margin-top: 4px; padding-left: 1.3em; }
 .attente { margin: 20px 0 0; color: var(--gris); }
 .fiches { list-style: none; margin: 20px 0 0; padding: 0; border-top: 1px solid var(--bord); }
 .fiches > li { border-bottom: 1px solid var(--bord); }
@@ -221,22 +227,13 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 .fiche .resume { font-size: .92rem; }
 .fiche .chi2 { font-size: .8rem; color: var(--gris); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .fiche .note { margin: 0 0 12px; padding: 8px 12px; border-left: 3px solid var(--bord); background: var(--fond); font-size: .92rem; }
-.ecarts, .autres table { border-collapse: collapse; font-size: .85rem; font-variant-numeric: tabular-nums; }
-.ecarts th, .ecarts td, .autres th, .autres td { padding: 3px 14px 3px 0; text-align: left; }
-.ecarts td { white-space: nowrap; }
-.ecarts th, .autres th { font-weight: 400; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--gris); }
 .graphiques { display: grid; gap: 16px; margin: 14px 0 18px; container-type: inline-size; }
 .graphiques figure { margin: 0; min-width: 0; }
 .graphiques figcaption { font-size: .82rem; color: var(--gris); }
 .graphiques .figure { height: 230px; }
-.graphiques .carte { margin-top: 4px; aspect-ratio: auto; height: 230px; }
-.graphiques .carte .figure { height: 100%; }
 .nuages { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
 .nuage-objet span { display: block; font-size: .8rem; font-weight: 600; }
 .nuage-objet .figure { height: auto; aspect-ratio: 1; }
-.autres { margin-top: 18px; }
-.autres summary { cursor: pointer; color: var(--gris); font-size: .9rem; }
-.autres table { margin-top: 8px; }
 @media (min-width: 800px) {
   .graphiques { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .graphiques .large { grid-column: 1 / -1; }

@@ -1,11 +1,10 @@
 // Page des anomalies : les graphiques d'une fiche sont tracés à son ouverture
-// et libérés à sa fermeture (chaque carte est un contexte WebGL, le navigateur
+// et libérés à sa fermeture (chaque nuage est un contexte WebGL, le navigateur
 // en limite le nombre).
 (function () {
   "use strict";
 
   var config = JSON.parse(document.getElementById("config-nuage").textContent);
-  var configCarte = JSON.parse(document.getElementById("config-carte").textContent);
   var nuages = Array.prototype.map.call(document.querySelectorAll(".nuage-base"), function (s) {
     return s.textContent;
   });
@@ -42,12 +41,10 @@
       var figure = poser(JSON.parse(nuages[i]), points[i]);
       Plotly.newPlot(div, figure.data, figure.layout, config);
     });
-    ["bulletins", "historique"].forEach(function (nom) {
+    ["bulletins", "semblables", "historique"].forEach(function (nom) {
       var figure = lire(fiche, nom);
-      Plotly.newPlot(fiche.querySelector(".figure." + nom), figure.data, figure.layout, config);
+      if (figure) Plotly.newPlot(fiche.querySelector(".figure." + nom), figure.data, figure.layout, config);
     });
-    var carte = lire(fiche, "carte");
-    if (carte) window.tracerCarte(fiche.querySelector(".carte"), configCarte, carte);
   }
 
   function fermer(fiche) {
