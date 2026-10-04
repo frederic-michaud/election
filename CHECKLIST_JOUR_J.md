@@ -78,9 +78,9 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
 - [ ] **La date est à jour aux deux endroits** — c'est le piège de cette
       checklist, les deux fichiers ne la portent pas au même titre :
       `DATE_SCRUTIN=` dans `politiques-scrutin.service` (l'URL téléchargée) et
-      `OnCalendar=` dans `politiques-scrutin.timer` (le jour où les tours ont
-      lieu). Une seule des deux corrigée, et le timer tourne dans le vide ou ne
-      part jamais.
+      `OnCalendar=` dans `politiques-scrutin.timer` (le matin où la boucle
+      démarre). Une seule des deux corrigée, et la boucle tourne dans le vide
+      ou ne part jamais.
       ```bash
       sudo sed -i "s/20260927/$DATE/" /etc/systemd/system/politiques-scrutin.{service,timer}
       sudo systemctl daemon-reload
@@ -88,7 +88,7 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
       systemctl list-timers politiques-scrutin.timer    # doit annoncer le dimanche
       ```
       **Armer le timer après l'amorçage**, jamais avant : sans instantané de
-      départ, chaque tour échoue en rappelant les commandes d'amorçage.
+      départ, la boucle échoue en rappelant les commandes d'amorçage.
 
 - [ ] **Effacer les traces de la répétition**, pour ne pas les confondre avec
       les vrais instantanés du dimanche :
@@ -100,21 +100,24 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
 
 ## Le dimanche
 
-- [ ] **Vers 12 h 10**, après le premier tour du timer, vérifier qu'il a tourné :
+- [ ] **Vers 10 h 05**, vérifier que la boucle a démarré :
       ```bash
+      systemctl status politiques-scrutin.service      # active (running)
       journalctl -u politiques-scrutin.service --since "1 hour ago"
       ```
-      Attendu : un instantané téléchargé, le nombre de communes dépouillées par objet, puis
-      la projection. Tant qu'il y a moins de sept communes dépouillées,
-      `run_extrapolation` note « pas de projection » et n'écrit rien — c'est
-      normal en début de soirée.
+      Elle interroge le fichier fédéral toutes les 15 s, sans rien écrire tant
+      qu'il ne change pas. À chaque nouvelle version, au plus toutes les
+      2 min : un instantané téléchargé, le nombre de communes dépouillées par
+      objet, puis la projection. Tant qu'il y a moins de 50 communes
+      dépouillées, `run_extrapolation` note « pas de projection » et n'écrit
+      rien — c'est normal en début de soirée.
 
 - [ ] **Contrôle visuel de la page d'accueil** : projection plausible, avance
       cohérente avec l'heure, cartes remplies, pas de trace d'erreur Django.
 
-- [ ] **Le lundi**, désarmer le timer. `OnCalendar=` porte une date fixe, donc
-      il ne repartira pas tout seul — mais laissé armé, il masque le fait que
-      la date devra être changée au prochain scrutin :
+- [ ] **Le lundi**, désarmer le timer. La boucle s'est arrêtée seule après
+      14 h, et `OnCalendar=` porte une date fixe — mais laissé armé, le timer
+      masque le fait que la date devra être changée au prochain scrutin :
       ```bash
       sudo systemctl disable --now politiques-scrutin.timer
       ```
@@ -139,15 +142,21 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
 
 | symptôme | cause la plus probable |
 |---|---|
-| le service échoue toutes les cinq minutes | pas d'instantané de départ sous `var/scrutins` — rejouer l'amorçage du J-1 |
-| le timer n'annonce aucun prochain tour | `OnCalendar=` est resté sur la date du scrutin précédent |
+| le service redémarre toutes les deux minutes | pas d'instantané de départ sous `var/scrutins` — rejouer l'amorçage du J-1 |
+| le timer n'annonce aucun démarrage | `OnCalendar=` est resté sur la date du scrutin précédent |
+| « tour raté » toutes les deux minutes | l'import ou la projection plante : le message d'erreur est juste au-dessus dans le journal ; la boucle retente la même version |
 | 404 au téléchargement | `DATE_SCRUTIN=` dans le `.service` ne correspond pas au fichier publié |
 | la projection ne bouge pas d'un tour à l'autre | aucune commune nouvellement dépouillée : une ville qui publie des voix partielles (`gebietAusgezaehlt` faux) n'est reprise qu'une fois son dépouillement terminé |
 | le site répond mais sans CSS ni logo | `collectstatic` ou whitenoise — reconstruire l'image |
 | page lente au premier appel | `--preload` absent de la commande gunicorn |
 
-Un tour à la main, sans attendre le timer :
+Un tour à la main, boucle arrêtée (deux imports ne doivent pas écrire en même
+temps dans la base) :
 
 ```bash
+sudo systemctl stop politiques-scrutin.service
 DATE_SCRUTIN=$DATE ./download_data.sh
 ```
+
+Le tour ne fait rien si le fichier n'a pas changé depuis le dernier import.
+Pour forcer un réimport, effacer `var/scrutins/etag_${DATE}.txt`.

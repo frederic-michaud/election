@@ -312,11 +312,18 @@ pendant la répétition.
 ## 9. Le dimanche de scrutin
 
 Le déroulé complet, à cocher, est dans
-[`CHECKLIST_JOUR_J.md`](CHECKLIST_JOUR_J.md) : ce paragraphe n'explique que le
-timer.
+[`CHECKLIST_JOUR_J.md`](CHECKLIST_JOUR_J.md) : ce paragraphe n'explique que la
+boucle.
 
-Un timer systemd rappelle le script toutes les cinq minutes : il télécharge le
-nouveau fichier, met à jour la base et recalcule la projection.
+Le matin du scrutin, un timer systemd lance `download_data.sh --suivre`, une
+boucle qui tourne jusqu'en fin de soirée (14 h au plus). Toutes les 15 s, elle
+demande le fichier fédéral *s'il a changé* : tant que ce n'est pas le cas, le
+serveur répond 304, sans contenu (en-tête `If-None-Match`, curl
+`--etag-compare`). À chaque nouvelle version, elle met à jour la base, recalcule
+la projection et rafraîchit l'accueil, puis attend 2 min avant d'interroger à
+nouveau : au plus un téléchargement et un import toutes les deux minutes. Les
+commandes tournent dans le conteneur du site, déjà lancé (`docker compose
+exec`) : 2 s chacune, contre 12 s pour démarrer un conteneur.
 
 ```bash
 sudo cp deploiement/politiques-scrutin.service deploiement/politiques-scrutin.timer \
@@ -330,22 +337,25 @@ Adapter aussi `User` et `WorkingDirectory` dans le fichier `.service` si le
 dépôt n'est pas dans `/home/ubuntu/election`.
 
 **Armer le timer après l'amorçage du § 7**, pas avant : sans instantané de
-départ sous `var/scrutins`, chaque tour s'arrête en rappelant les deux commandes
-d'amorçage, et l'unité est en échec toutes les cinq minutes.
+départ sous `var/scrutins`, la boucle s'arrête en rappelant les deux commandes
+d'amorçage, et systemd la relance en vain toutes les deux minutes.
 
 Surveiller la soirée :
 
 ```bash
-systemctl list-timers politiques-scrutin.timer     # le prochain tour
-journalctl -u politiques-scrutin.service -f        # ce qu'il fait
+systemctl list-timers politiques-scrutin.timer     # quand la boucle démarre
+journalctl -u politiques-scrutin.service -f        # ce qu'elle fait
 ```
 
 Chaque instantané téléchargé est conservé sous `var/scrutins`, ce qui garde la
 trace de la soirée et permet de tout rejouer. Chaque tour réimporte toutes les
 communes dépouillées : une correction publiée après coup est reprise au tour
-suivant.
+suivant. L'empreinte de la dernière version importée est dans
+`var/scrutins/etag_${DATE}.txt` ; elle n'est retenue qu'après un import
+réussi, donc une version dont l'import plante est retentée.
 
-Pour lancer un tour à la main, sans attendre le timer :
+Pour lancer un tour à la main, boucle arrêtée (`systemctl stop
+politiques-scrutin.service`) :
 
 ```bash
 DATE_SCRUTIN=20260927 ./download_data.sh

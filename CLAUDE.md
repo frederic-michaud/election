@@ -129,8 +129,9 @@ rafraîchissement est dans leurs docstrings.
 
 Puis, en boucle le jour du scrutin :
 `update_scrutin_en_cours <json_courant>` →
-`run_extrapolation`. C'est ce que fait `download_data.sh`, qui dérive URL et noms
-de fichiers de `DATE_SCRUTIN`.
+`run_extrapolation`. C'est ce que fait `download_data.sh --suivre`, qui dérive
+URL et noms de fichiers de `DATE_SCRUTIN`, et n'importe que les nouvelles
+versions du fichier fédéral (ETag), au plus toutes les 2 min.
 
 `update_scrutin_en_cours` réimporte à chaque tour **toutes** les communes
 dépouillées, objet par objet (2,5 s pour tout un scrutin) : une correction

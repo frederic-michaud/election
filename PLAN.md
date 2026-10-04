@@ -9,8 +9,6 @@ termine ; l'histoire reste dans git.
       jusqu'à 6, et souvent deux rechargements. Par ordre de gain :
       - import en un seul `executemany`, lignes estimées dans une seule
         transaction ;
-      - une boucle qui reste en vie et interroge le fichier fédéral toutes les
-        30 s, en sautant les tours où il n'a pas changé ;
       - moindres carrés en forme close au lieu de `minimize`, après
         vérification sur tout le backtest.
 - [ ] **Page des erreurs de saisie communales**, publique, mise à jour à
