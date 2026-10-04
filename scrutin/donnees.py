@@ -7,7 +7,14 @@ voie Interface (qui le consomme). Sa forme est figée par
 
 import numpy as np
 
-from scrutin.models import Extrapolation, Fourchette, ResultatCommunalEnCours, SujetVote
+from scrutin.anomalies import SEUIL_COMMUNES
+from scrutin.models import (
+    Anomalie,
+    Extrapolation,
+    Fourchette,
+    ResultatCommunalEnCours,
+    SujetVote,
+)
 
 
 def resultats_par_commune(sujet):
@@ -57,3 +64,41 @@ def construire_vue_accueil():
     if instants:
         vue["mise_a_jour"] = max(instants).isoformat()
     return vue
+
+
+def construire_vue_anomalies():
+    """Les communes du dernier scrutin jugées par ``detecter_anomalies``, de la
+    plus grave à la moins grave. ``communes`` est vide tant que le seuil de
+    communes dépouillées n'est pas atteint."""
+    jour = SujetVote.objects.latest('date').date
+    rang = {niveau: i for i, niveau in enumerate(Anomalie.NIVEAUX)}
+    anomalies = sorted(Anomalie.objects.filter(date=jour).select_related('commune__canton'),
+                       key=lambda a: (-rang[a.niveau], -a.chi2))
+    depouillees = (ResultatCommunalEnCours.objects.filter(sujet_vote__date=jour, comptabilise=True)
+                   .values('commune').distinct().count())
+    return {
+        "date": jour.isoformat(),
+        "seuil": SEUIL_COMMUNES,
+        "depouillees": depouillees,
+        "mise_a_jour": max(a.mise_a_jour for a in anomalies).isoformat() if anomalies else None,
+        "objets": [{"id": s.id, "nom": s.nom}
+                   for s in SujetVote.objects.filter(date=jour).order_by('sujet_id')],
+        "communes": [{
+            "ofs": a.commune.numero_ofs,
+            "nom": a.commune.nom,
+            "canton": a.commune.canton.abreviation,
+            "niveau": a.niveau,
+            "chi2": a.chi2,
+            "chi2_corrige": a.chi2_corrige,
+            "motifs": a.motifs,
+            "correction": a.correction,
+            "ecart_bulletins": a.ecart_bulletins,
+            "bulletins_habituel": a.bulletins_habituel,
+            "signalee_depuis": a.signalee_depuis.isoformat() if a.signalee_depuis else None,
+            "note": a.note,
+            "centre": a.centre,
+            "voisines": a.voisines,
+            "historique": a.historique,
+            "objets": a.objets,
+        } for a in anomalies],
+    }

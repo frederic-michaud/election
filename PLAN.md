@@ -3,24 +3,6 @@
 Ce qui reste à faire. Une tâche finie est retirée de la liste dans la PR qui la
 termine ; l'histoire reste dans git.
 
-## Avant le prochain scrutin
-
-- [ ] **Page des erreurs de saisie communales**, publique, mise à jour à
-      chaque tour (méthode : [`doc/anomalies.md`](doc/anomalies.md)). La
-      machine calcule et classe ; le contexte reste le travail d'un humain ou
-      d'un agent, avec une note libre par commune.
-      - **Rouge**, faute probable : une correction simple (oui/non inversés,
-        objets intervertis, chiffre mal saisi) explique l'écart (Verzasca,
-        Wolfhalden, Büttenhardt, Ursins).
-      - **Orange**, à regarder : écart fort ou bulletins incohérents, sans
-        correction qui explique tout (Saint-Saphorin, Marchissy).
-      - **Vert** : le reste, masqué par défaut.
-      - Liste triée par gravité ; au clic, quatre graphiques : observé contre
-        prédit pour tout l'objet (avec la position corrigée), bulletins par
-        objet, mini-carte des voisines, écarts de la commune aux scrutins
-        passés.
-      - Les communes rouges restent dans l'ajustement.
-
 ## Modèle
 
 Les chiffres et les impasses sont dans [`doc/backtest.md`](doc/backtest.md).

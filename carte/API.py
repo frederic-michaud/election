@@ -17,7 +17,7 @@ def _couche(locations, **traits):
                             locations=locations, showlegend=False, **traits)
 
 
-def _carte(locations, valeurs, survol, echelle=None, attente=()):
+def _carte(locations, valeurs, survol, echelle=None, attente=(), emprise=EMPRISE):
     """Une choroplèthe communale, posée sur les communes encore en attente.
 
     ``attente`` est dessinée en dessous, d'un gris uni : sans elle, le pays
@@ -32,7 +32,7 @@ def _carte(locations, valeurs, survol, echelle=None, attente=()):
     couches.append(_couche(
         locations, z=valeurs, text=survol, coloraxis="coloraxis",
         hovertemplate="<b>%{properties.vogeName}</b><br>%{text}<extra></extra>"))
-    return charte.habiller_carte(go.Figure(couches), EMPRISE, echelle=echelle)
+    return charte.habiller_carte(go.Figure(couches), emprise, echelle=echelle)
 
 
 def figure_carte(communes):
@@ -67,4 +67,18 @@ def figure_carte_acp(profils):
     figure = _carte(communes, premier["valeurs"], premier["survol"],
                     echelle=(-premier["etendue"], 0, premier["etendue"]))
     figure.update_layout(meta={**figure.layout.meta, "axes": axes})
+    return figure
+
+
+def figure_carte_voisines(ofs, ecarts, survol, emprise):
+    """Une commune et ses voisines, colorées par leur écart au modèle (en σ).
+
+    ``ecarts`` et ``survol`` : {numéro OFS: valeur}, la commune comprise ; elle
+    est cernée d'un trait plus épais.
+    """
+    figure = _carte(list(ecarts), list(ecarts.values()), list(survol.values()),
+                    echelle=(-5, 0, 5), emprise=emprise)
+    figure.add_trace(_couche([ofs], z=[0], showscale=False, hoverinfo="skip",
+                             colorscale=[[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0)"]],
+                             marker={"line": {"width": 2.5, "color": charte.ENCRE}}))
     return figure
