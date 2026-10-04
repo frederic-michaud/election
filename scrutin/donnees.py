@@ -5,6 +5,7 @@ voie Interface (qui le consomme). Sa forme est figée par
 ``tests/test_contrat.py`` : on ne la change pas sans mettre le test à jour.
 """
 
+from scrutin.extrapolation import demi_fourchette
 from scrutin.models import Extrapolation, ResultatCommunalEnCours, SujetVote
 
 
@@ -30,7 +31,7 @@ def construire_vue_accueil():
     instants = []
     for sujet in SujetVote.objects.filter(date=jour).order_by('sujet_id'):
         extra = Extrapolation.objects.filter(sujet_vote=sujet).order_by('-moment_creation').first()
-        if extra is not None:  # vrai à partir de sept communes dépouillées
+        if extra is not None:  # vrai à partir de SEUIL_COMMUNES communes dépouillées
             vue["avance"] = extra.avance
             instants.append(extra.moment_creation)
         vue["sujets"].append({
@@ -38,6 +39,8 @@ def construire_vue_accueil():
             "nom": sujet.nom,
             "oui_connu": extra.pourcentage_oui_connu if extra else None,
             "oui_extrapole": extra.pourcentage_oui_extrapole if extra else None,
+            # Demi-largeur de la fourchette autour de oui_extrapole, même unité.
+            "marge": demi_fourchette(extra.avance) if extra else None,
             "communes": resultats_par_commune(sujet),
         })
     if instants:

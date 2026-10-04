@@ -13,6 +13,22 @@ nb_component = NB_AXES
 # En dessous, la projection fait pire que le dépouillement brut (doc/backtest.md).
 SEUIL_COMMUNES = 50
 
+# Demi-largeur de la fourchette selon l'avance, en points : 95 % des
+# projections du backtest tombent à moins de cet écart du résultat final
+# (doc/backtest.md). À recalculer quand le modèle change.
+FOURCHETTE = (
+    (0.003, 5.5), (0.005, 4.3), (0.0075, 3.9), (0.01, 3.4), (0.02, 2.9),
+    (0.03, 2.6), (0.05, 2.2), (0.10, 1.7), (0.15, 1.5), (0.20, 1.3),
+    (0.25, 1.2), (0.30, 1.0), (0.40, 0.9), (0.50, 0.7), (0.60, 0.6),
+    (0.70, 0.5), (0.80, 0.4), (0.90, 0.3), (0.95, 0.2), (1.00, 0.0),
+)
+
+
+def demi_fourchette(avance):
+    """Demi-largeur de la fourchette, en part de oui (0.012 pour 1,2 point)."""
+    avances, points = zip(*FOURCHETTE)
+    return float(np.interp(avance, avances, points)) / 100
+
 
 def profils_de_repli():
     """Profil moyen par district, et profil moyen national.

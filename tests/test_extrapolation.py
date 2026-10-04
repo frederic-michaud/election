@@ -19,6 +19,7 @@ from scrutin.extrapolation import (
     SEUIL_COMMUNES,
     Delta,
     Delta_fast,
+    demi_fourchette,
     get_extrapolated_value,
     get_extrapolation,
     get_linear_parameter,
@@ -285,3 +286,11 @@ def test_le_profil_de_repli_est_la_moyenne_du_district():
     # Les quatre communes du premier district sont réparties de -1,5 à 1,5.
     assert par_district[district.id][0] == pytest.approx(0.0)
     assert national[0] == pytest.approx(10.0 / 5)
+
+
+def test_la_fourchette_se_resserre_avec_le_depouillement():
+    """Large au premier dépouillement, nulle quand tout est compté."""
+    largeurs = [demi_fourchette(avance) for avance in (0.0, 0.05, 0.25, 0.5, 0.9, 1.0)]
+    assert largeurs == sorted(largeurs, reverse=True)
+    assert demi_fourchette(0.25) == pytest.approx(0.012)
+    assert demi_fourchette(1.0) == 0.0

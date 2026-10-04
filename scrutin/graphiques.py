@@ -6,10 +6,6 @@ import plotly.io as pio
 
 from scrutin import charte
 
-# Demi-largeur de la fourchette, en points : provisoire et identique pour tous
-# les objets, faute d'intervalle de confiance dans le contrat.
-MARGE_PROVISOIRE = 2.5
-
 
 def en_json(figure):
     """JSON d'une figure, sûr dans un ``<script>`` (échappé comme ``json_script``)."""
@@ -32,8 +28,8 @@ def _intervalle(oui_extrapole, marge):
     return max(0.0, extrapole - marge), min(100.0, extrapole + marge)
 
 
-def barre(oui_connu, oui_extrapole, marge=MARGE_PROVISOIRE):
-    """Positions de la barre, en % de sa largeur. Le dépouillé n'est dessiné que hors de l'intervalle."""
+def barre(oui_connu, oui_extrapole, marge):
+    """Positions de la barre, en % de sa largeur ; ``marge`` en points. Le dépouillé n'est dessiné que hors de l'intervalle."""
     connu, extrapole = 100 * oui_connu, 100 * oui_extrapole
     bas, haut = _intervalle(oui_extrapole, marge)
     forme = {"bas": _css(bas), "largeur": _css(haut - bas), "depouille": None}
@@ -50,9 +46,10 @@ def barre(oui_connu, oui_extrapole, marge=MARGE_PROVISOIRE):
     return forme
 
 
-def panneau(sujet, marge=MARGE_PROVISOIRE):
+def panneau(sujet):
     if sujet["oui_extrapole"] is None:
         return {"nom": sujet["nom"], "attente": True}
+    marge = 100 * sujet["marge"]
     bas, haut = _intervalle(sujet["oui_extrapole"], marge)
     bornes = (f"{bas:.1f} – {haut:.1f} %").replace(".", ",")
     return {

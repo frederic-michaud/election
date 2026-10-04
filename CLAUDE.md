@@ -41,6 +41,9 @@ le sont déjà.
    estime son nombre de votants via `electeur_election_precedente`. On somme, on
    ajoute au dépouillement confirmé, et on obtient le % de oui final projeté plus
    l'`avance` (part du dépouillement déjà couverte).
+   La fourchette affichée autour du % projeté dépend de l'avance
+   (`FOURCHETTE` dans `extrapolation.py`) : 95 % des projections du backtest
+   tombent dedans, de ±5,5 points au premier dépouillement à ±1,2 à 25 %.
 
 Garde-fou : sous **50 communes dépouillées** (`SEUIL_COMMUNES`), `get_extrapolation`
 ne projette pas : en dessous, la projection fait pire que le dépouillement brut.

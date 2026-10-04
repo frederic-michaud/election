@@ -27,8 +27,6 @@ Les chiffres et les impasses sont dans [`doc/backtest.md`](doc/backtest.md).
 Chaque étape change les valeurs projetées : une à la fois, et jamais dans la
 semaine d'un scrutin.
 
-- [ ] **Fourchette calibrée** sur le backtest, en fonction de l'avance, pour
-      remplacer le ±2,5 points en dur.
 - [ ] **Réfléchir à comment gérer les résultats partiels** des grandes
       communes (voir [`doc/depouillement.md`](doc/depouillement.md)).
 

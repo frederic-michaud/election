@@ -48,3 +48,36 @@ six objets les plus ratés.
   communes plutôt qu'un nombre d'axes croissant.
 - `scipy.optimize.minimize` converge toujours à 17 paramètres : écart nul
   avec la solution exacte des moindres carrés.
+
+## Octobre 2026 : la fourchette
+
+Même campagne (63 objets × 50 tirages, ACP pondérée à 16 axes). La fourchette
+affichée est l'écart que 95 % des projections ne dépassent pas, en ordre
+réaliste (`FOURCHETTE` dans `scrutin/extrapolation.py`, arrondie au dixième
+supérieur). Un bootstrap sur les communes aurait été bien trop étroit :
+l'erreur vient d'un décalage commun aux communes dépouillées, qu'il ne
+reproduit pas.
+
+En points de % de oui :
+
+| avance | fourchette (95 %, réaliste) | 95 %, cantons par blocs | brut, médiane (90ᵉ c.) réaliste | brut, cantons |
+|---|---|---|---|---|
+| 1 % | ±3,4 | — | — | — |
+| 5 % | ±2,2 | ±5,6 | 4,2 (8,5) | 3,8 (9,6) |
+| 10 % | ±1,7 | ±3,8 | 4,1 (8,0) | 3,1 (7,7) |
+| 25 % | ±1,2 | ±2,1 | 3,7 (6,9) | 1,8 (4,7) |
+| 50 % | ±0,7 | ±1,2 | 3,1 (5,3) | 1,1 (2,7) |
+| 80 % | ±0,4 | ±0,6 | 1,7 (3,1) | 0,5 (1,3) |
+| 95 % | ±0,2 | ±0,2 | 0,3 (0,8) | 0,2 (0,6) |
+
+- **Deux ordres d'arrivée, deux difficultés.** Dans l'ordre réaliste (petites
+  communes d'abord), le brut sous-estime le oui (−1,3 point en médiane à
+  25 %) et la projection corrige ce biais. Quand des cantons entiers arrivent
+  d'un bloc, le brut est moins biaisé mais la projection doit extrapoler des
+  cantons qu'elle n'a pas vus : sa fourchette double.
+- **Choix : l'ordre réaliste.** Si une vraie soirée arrive par blocs
+  cantonaux, la fourchette est trop étroite. À vérifier sur les instantanés
+  du 27.09.2026.
+- Aucun objet n'est systématiquement hors fourchette : 2 à 5 sur 63 sortent
+  de la fourchette à 90 % dans plus de la moitié de leurs tirages.
+

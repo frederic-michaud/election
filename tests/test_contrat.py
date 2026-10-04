@@ -31,12 +31,14 @@ def test_forme_du_contrat(vue):
     assert 0 <= vue["avance"] <= 1
     assert len(vue["sujets"]) >= 1
     for sujet in vue["sujets"]:
-        assert set(sujet) == {"id", "nom", "oui_connu", "oui_extrapole", "communes"}
+        assert set(sujet) == {"id", "nom", "oui_connu", "oui_extrapole", "marge", "communes"}
         assert isinstance(sujet["id"], int)
         assert isinstance(sujet["nom"], str) and sujet["nom"]
         # None tant qu'aucune projection n'existe (voir le test plus bas).
         assert sujet["oui_connu"] is None or 0 <= sujet["oui_connu"] <= 1
         assert sujet["oui_extrapole"] is None or 0 <= sujet["oui_extrapole"] <= 1
+        assert (sujet["marge"] is None) == (sujet["oui_extrapole"] is None)
+        assert sujet["marge"] is None or 0 <= sujet["marge"] < 0.1
 
 
 def test_communes_par_numero_ofs_avec_drapeau_comptabilise(vue):
@@ -90,6 +92,7 @@ def test_sans_projection_la_vue_ne_donne_pas_de_chiffre(base_demo):
     for sujet in vue["sujets"]:
         assert sujet["oui_connu"] is None
         assert sujet["oui_extrapole"] is None
+        assert sujet["marge"] is None
 
 
 @pytest.mark.django_db
