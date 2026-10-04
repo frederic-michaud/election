@@ -7,9 +7,6 @@ termine ; l'histoire reste dans git.
 
 - [ ] **Raccourcir le délai jusqu'au visiteur** : aujourd'hui environ 2 min,
       jusqu'à 6, et souvent deux rechargements. Par ordre de gain :
-      - rafraîchir le cache nginx à la fin de chaque tour (`proxy_cache_bypass`
-        accepté de la machine seule) : plus de version périmée servie au
-        premier visiteur, plus de rendu à froid ;
       - import en un seul `executemany`, lignes estimées dans une seule
         transaction ;
       - une boucle qui reste en vie et interroge le fichier fédéral toutes les
