@@ -285,3 +285,4 @@ def test_le_profil_de_repli_est_la_moyenne_du_district():
     # Les quatre communes du premier district sont réparties de -1,5 à 1,5.
     assert par_district[district.id][0] == pytest.approx(0.0)
     assert national[0] == pytest.approx(10.0 / 5)
+

@@ -124,6 +124,17 @@ class ResultatCommunalEnCours(models.Model):
 
 
 
+class Fourchette(models.Model):
+    """Demi-largeur de la fourchette selon l'avance, en part de oui.
+
+    Écrite par ``manage.py calibrer_fourchette``, qui rejoue les votations
+    passées : 95 % des projections tombent à moins de cet écart du résultat
+    final.
+    """
+    avance = models.FloatField(unique=True)
+    demi_largeur = models.FloatField()
+
+
 class Extrapolation(models.Model):
     sujet_vote = models.ForeignKey(SujetVote, on_delete=models.CASCADE)
     pourcentage_oui_connu = models.FloatField()

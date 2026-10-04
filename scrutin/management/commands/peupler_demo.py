@@ -31,6 +31,7 @@ from scrutin.models import (
     Commune,
     District,
     Extrapolation,
+    Fourchette,
     ResultatCommunalEnCours,
     ResultatCommunalHistorique,
     SujetVote,
@@ -117,6 +118,7 @@ class Command(BaseCommand):
         self._creer_historique(alea, communes, profils)
         self._creer_jour_j(alea, communes, profils, part_depouillee)
         self._creer_pca(alea, communes, profils)
+        self._creer_fourchette()
         self._creer_pages_statiques()
 
         self.stdout.write(self.style.SUCCESS(
@@ -130,7 +132,7 @@ class Command(BaseCommand):
 
     def _vider(self):
         """Idempotence : on repart d'une base propre à chaque exécution."""
-        for modele in (Extrapolation, ResultatCommunalEnCours, ResultatCommunalHistorique, PCAResult,
+        for modele in (Extrapolation, Fourchette, ResultatCommunalEnCours, ResultatCommunalHistorique, PCAResult,
                        SujetVote, Commune, District, Canton, PageStatique):
             modele.objects.all().delete()
 
@@ -332,6 +334,16 @@ class Command(BaseCommand):
         """
         peupler_pages()
         self.stdout.write(f"  {len(PAGES)} page(s) du menu")
+
+    def _creer_fourchette(self):
+        """Une fourchette qui se resserre avec l'avance, de la forme de la vraie.
+
+        Fabriquée comme les profils ACP : la calibrer (``calibrer_fourchette``)
+        demande numpy.
+        """
+        Fourchette.objects.bulk_create(
+            Fourchette(avance=avance, demi_largeur=0.04 * (1 - avance) ** 2)
+            for avance in (0.0, 0.05, 0.1, 0.25, 0.5, 0.75, 1.0))
 
     def _creer_pca(self, alea, communes, profils):
         """Coordonnées ACP cohérentes avec le profil latent.

@@ -48,3 +48,4 @@ six objets les plus ratés.
   communes plutôt qu'un nombre d'axes croissant.
 - `scipy.optimize.minimize` converge toujours à 17 paramètres : écart nul
   avec la solution exacte des moindres carrés.
+

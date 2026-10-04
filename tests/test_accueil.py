@@ -38,7 +38,7 @@ def test_l_intervalle_est_rogne_a_0_et_100():
 
 
 def test_le_panneau_d_un_objet():
-    p = panneau({"nom": "Loi", "oui_connu": 0.544, "oui_extrapole": 0.5})
+    p = panneau({"nom": "Loi", "oui_connu": 0.544, "oui_extrapole": 0.5, "marge": 0.025})
     assert p["verdict"] == "oui"
     assert (p["extrapole"], p["connu"]) == ("50,0\u00a0%", "54,4\u00a0%")
     assert p["bornes"] == "47,5\u00a0–\u00a052,5\u00a0%"
