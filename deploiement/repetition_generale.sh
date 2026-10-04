@@ -11,7 +11,7 @@
 # le %oui final n'a aucun sens politique : ce qui compte est que la suite
 # converge sans planter et sans trou.
 #
-# Compter une dizaine de minutes : chaque commande démarre son conteneur.
+# Compter deux minutes : les commandes tournent dans le conteneur du site.
 
 set -eu
 
@@ -25,9 +25,9 @@ FRACTIONS="${FRACTIONS:-0.05 0.15 0.25 0.50 0.80 1.00}"
 BASE="${BASE:-var/votation.sqlite3}"
 COPIE="var/repetition.sqlite3"
 # Tout tourne sur la copie : la base réelle n'est jamais ouverte en écriture.
-# Comme download_data.sh, par défaut dans le conteneur ; pour tourner sans
-# Docker, activer un venv puis MANAGE="python manage.py".
-MANAGE="${MANAGE:-docker compose run --rm -e DB_PATH=/app/${COPIE} web python manage.py}"
+# Comme download_data.sh, par défaut dans le conteneur du site, déjà lancé ;
+# pour tourner sans Docker, activer un venv puis MANAGE="python manage.py".
+MANAGE="${MANAGE:-docker compose exec -T -e DB_PATH=/app/${COPIE} web python manage.py}"
 export DB_PATH="${DB_PATH:-${COPIE}}"
 
 GRAINE="${DOSSIER_DATA}/votation_${DATE_SCRUTIN}_0.json"
@@ -38,7 +38,7 @@ if [ ! -f "${GRAINE}" ]; then
   exit 1
 fi
 
-# VACUUM INTO et non `cp` : sûr même si un tour du timer écrit au même moment.
+# VACUUM INTO et non `cp` : sûr même si la boucle du jour J écrit au même moment.
 echo "== copie de la base vers ${COPIE}"
 rm -f "${COPIE}"
 python3 - "${BASE}" "${COPIE}" <<'PY'

@@ -100,6 +100,14 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
 
 ## Le dimanche
 
+- [ ] **Le matin, libérer la mémoire de la machine** : fermer les sessions
+      Claude Code et VS Code ouvertes dessus. Elles occupent à elles seules
+      plus de 500 Mo sur 2 Go ; gunicorn part alors en swap, et l'accueil
+      met plus de 10 s à se rendre au lieu de 0,1 s.
+      ```bash
+      free -m          # « Swap used » doit rester bas
+      ```
+
 - [ ] **Vers 10 h 05**, vérifier que la boucle a démarré :
       ```bash
       systemctl status politiques-scrutin.service      # active (running)
