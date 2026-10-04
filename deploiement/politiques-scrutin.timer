@@ -9,7 +9,8 @@
 Description=Politiques.ch — lance le suivi du dépouillement
 
 [Timer]
-OnCalendar=2026-09-27 10:00
+# En heure suisse : la machine est en UTC.
+OnCalendar=2026-09-27 10:00 Europe/Zurich
 AccuracySec=1min
 
 [Install]
