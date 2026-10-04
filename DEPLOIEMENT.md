@@ -331,7 +331,8 @@ exec`) : 2 s chacune, contre 12 s pour démarrer un conteneur.
 ```bash
 sudo cp deploiement/politiques-scrutin.service deploiement/politiques-scrutin.timer \
         /etc/systemd/system/
-sudo sed -i "s/20260927/$DATE/" /etc/systemd/system/politiques-scrutin.{service,timer}
+sudo sed -i "s/^Environment=DATE_SCRUTIN=.*/Environment=DATE_SCRUTIN=$DATE/" /etc/systemd/system/politiques-scrutin.service
+sudo sed -i "s/^OnCalendar=[0-9-]*/OnCalendar=${DATE:0:4}-${DATE:4:2}-${DATE:6:2}/" /etc/systemd/system/politiques-scrutin.timer
 sudo systemctl daemon-reload
 sudo systemctl enable --now politiques-scrutin.timer
 ```
