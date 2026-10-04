@@ -57,8 +57,8 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
 
 ## J-1 — amorçage
 
-- [ ] **Sauvegarder la base**, avant que la soirée la réécrive toutes les cinq
-      minutes, puis copier le fichier dans le kDrive :
+- [ ] **Sauvegarder la base**, avant que la soirée la réécrive tour après tour,
+      puis copier le fichier dans le kDrive :
       ```bash
       python3 -c "import sqlite3; sqlite3.connect('var/votation.sqlite3').execute(\"VACUUM INTO 'var/base-${DATE}-avant.sqlite3'\")"
       gzip var/base-${DATE}-avant.sqlite3
@@ -99,6 +99,14 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
       cherche pour savoir que l'amorçage a eu lieu.
 
 ## Le dimanche
+
+- [ ] **Le matin, libérer la mémoire de la machine** : fermer les sessions
+      Claude Code et VS Code ouvertes dessus. Elles occupent à elles seules
+      plus de 500 Mo sur 2 Go ; gunicorn part alors en swap, et l'accueil
+      met plus de 10 s à se rendre au lieu de 0,1 s.
+      ```bash
+      free -m          # « Swap used » doit rester bas
+      ```
 
 - [ ] **Vers 10 h 05**, vérifier que la boucle a démarré :
       ```bash
