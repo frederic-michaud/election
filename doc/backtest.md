@@ -53,8 +53,8 @@ six objets les plus ratés.
 
 Même campagne (63 objets × 50 tirages, ACP pondérée à 16 axes). La fourchette
 affichée est l'écart que 95 % des projections ne dépassent pas, en ordre
-réaliste (`FOURCHETTE` dans `scrutin/extrapolation.py`, arrondie au dixième
-supérieur). Un bootstrap sur les communes aurait été bien trop étroit :
+réaliste ; `manage.py calibrer_fourchette` refait ce calcul et l'écrit dans la
+table `Fourchette`. Un bootstrap sur les communes aurait été bien trop étroit :
 l'erreur vient d'un décalage commun aux communes dépouillées, qu'il ne
 reproduit pas.
 

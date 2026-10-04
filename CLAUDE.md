@@ -42,8 +42,9 @@ le sont déjà.
    ajoute au dépouillement confirmé, et on obtient le % de oui final projeté plus
    l'`avance` (part du dépouillement déjà couverte).
    La fourchette affichée autour du % projeté dépend de l'avance
-   (`FOURCHETTE` dans `extrapolation.py`) : 95 % des projections du backtest
-   tombent dedans, de ±5,5 points au premier dépouillement à ±1,2 à 25 %.
+   (table `Fourchette`, écrite par `manage.py calibrer_fourchette`, qui rejoue
+   les votations passées) : 95 % des projections tombent dedans, de ±5,5 points
+   au premier dépouillement à ±1,1 à 25 %. Sans table, pas de fourchette.
 
 Garde-fou : sous **50 communes dépouillées** (`SEUIL_COMMUNES`), `get_extrapolation`
 ne projette pas : en dessous, la projection fait pire que le dépouillement brut.
@@ -120,6 +121,7 @@ import_metadata_commune   # langue, degré d'urbanisation
 importer_historique       # votations passées depuis STAT-TAB (réseau, ⚠ crée les pseudo-communes 9xxx)
 set_nb_voix_commune       # Commune.nb_voix = électeurs de la dernière votation
 populate_pca              # ACP → PCAResult          (⚠ remplace tous les PCAResult)
+calibrer_fourchette       # rejoue le passé → Fourchette (à relancer après populate_pca)
 add_initial_scrutin_en_cours <json_du_scrutin>   # lignes vides du jour J
 ```
 

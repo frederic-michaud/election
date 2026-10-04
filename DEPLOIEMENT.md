@@ -117,13 +117,16 @@ docker compose run --rm web python manage.py import_metadata_commune    # 30 s
 docker compose run --rm web python manage.py importer_historique        #  2 min
 docker compose run --rm web python manage.py set_nb_voix_commune        #  7 s
 docker compose run --rm web python manage.py populate_pca               #  1 min 20
+docker compose run --rm web python manage.py calibrer_fourchette        # 40 s
 ```
 
 Ce que fait chacune : les deux premières créent les 26 cantons, 144 districts et
 2 110 communes depuis le répertoire officiel, avec leur langue et leur degré
 d'urbanisation. La troisième télécharge une centaine de votations passées.
-La quatrième note le nombre d'électeurs de chaque commune. La dernière calcule
-le profil de vote de chaque commune, qui sert à extrapoler le jour J.
+La quatrième note le nombre d'électeurs de chaque commune. La cinquième calcule
+le profil de vote de chaque commune, qui sert à extrapoler le jour J. La
+dernière rejoue les votations passées pour calibrer la fourchette affichée
+autour de la projection ; elle est à relancer après chaque `populate_pca`.
 
 Quelques avertissements sur des communes bernoises sans dépouillement propre
 sont normaux : elles votent à l'urne d'une commune voisine.

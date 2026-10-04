@@ -11,7 +11,7 @@ import pytest
 
 from carte.API import figure_carte
 from scrutin.donnees import construire_vue_accueil
-from scrutin.models import Commune, Extrapolation
+from scrutin.models import Commune, Extrapolation, Fourchette
 
 pytestmark = [pytest.mark.lent, pytest.mark.django_db]
 
@@ -93,6 +93,14 @@ def test_sans_projection_la_vue_ne_donne_pas_de_chiffre(base_demo):
         assert sujet["oui_connu"] is None
         assert sujet["oui_extrapole"] is None
         assert sujet["marge"] is None
+
+
+@pytest.mark.django_db
+def test_la_page_d_accueil_tient_sans_fourchette_calibree(base_demo, client):
+    Fourchette.objects.all().delete()
+
+    assert all(sujet["marge"] is None for sujet in construire_vue_accueil()["sujets"])
+    assert client.get("/").status_code == 200
 
 
 @pytest.mark.django_db

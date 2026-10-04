@@ -5,8 +5,9 @@ voie Interface (qui le consomme). Sa forme est figée par
 ``tests/test_contrat.py`` : on ne la change pas sans mettre le test à jour.
 """
 
-from scrutin.extrapolation import demi_fourchette
-from scrutin.models import Extrapolation, ResultatCommunalEnCours, SujetVote
+import numpy as np
+
+from scrutin.models import Extrapolation, Fourchette, ResultatCommunalEnCours, SujetVote
 
 
 def resultats_par_commune(sujet):
@@ -25,8 +26,18 @@ def resultats_par_commune(sujet):
     return resultats
 
 
+def demi_fourchette(avance, table):
+    """Demi-largeur interpolée dans la table de ``Fourchette`` ; None si elle est
+    vide : mieux vaut pas de fourchette qu'une fourchette inventée."""
+    if not table:
+        return None
+    avances, largeurs = zip(*table)
+    return float(np.interp(avance, avances, largeurs))
+
+
 def construire_vue_accueil():
     jour = SujetVote.objects.latest('date').date
+    table = list(Fourchette.objects.order_by('avance').values_list('avance', 'demi_largeur'))
     vue = {"date": jour.isoformat(), "avance": 0.0, "mise_a_jour": None, "sujets": []}
     instants = []
     for sujet in SujetVote.objects.filter(date=jour).order_by('sujet_id'):
@@ -40,7 +51,7 @@ def construire_vue_accueil():
             "oui_connu": extra.pourcentage_oui_connu if extra else None,
             "oui_extrapole": extra.pourcentage_oui_extrapole if extra else None,
             # Demi-largeur de la fourchette autour de oui_extrapole, même unité.
-            "marge": demi_fourchette(extra.avance) if extra else None,
+            "marge": demi_fourchette(extra.avance, table) if extra else None,
             "communes": resultats_par_commune(sujet),
         })
     if instants:

@@ -49,7 +49,8 @@ def barre(oui_connu, oui_extrapole, marge):
 def panneau(sujet):
     if sujet["oui_extrapole"] is None:
         return {"nom": sujet["nom"], "attente": True}
-    marge = 100 * sujet["marge"]
+    # Sans calibration (calibrer_fourchette pas encore lancé), pas de fourchette.
+    marge = 100 * (sujet["marge"] or 0)
     bas, haut = _intervalle(sujet["oui_extrapole"], marge)
     bornes = (f"{bas:.1f} – {haut:.1f} %").replace(".", ",")
     return {
