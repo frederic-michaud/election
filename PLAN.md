@@ -5,12 +5,6 @@ termine ; l'histoire reste dans git.
 
 ## Avant le prochain scrutin
 
-- [ ] **Raccourcir le délai jusqu'au visiteur** : aujourd'hui environ 2 min,
-      jusqu'à 6, et souvent deux rechargements. Par ordre de gain :
-      - import en un seul `executemany`, lignes estimées dans une seule
-        transaction ;
-      - moindres carrés en forme close au lieu de `minimize`, après
-        vérification sur tout le backtest.
 - [ ] **Page des erreurs de saisie communales**, publique, mise à jour à
       chaque tour (méthode : [`doc/anomalies.md`](doc/anomalies.md)). La
       machine calcule et classe ; le contexte reste le travail d'un humain ou
@@ -48,6 +42,12 @@ semaine d'un scrutin.
       ligne des 50 %, fond qui dit le verdict, couleur et nom au bout de
       chaque courbe. Demande l'historique des projections dans le contrat de
       vue.
+- [ ] **Dire au visiteur quand arrivent les prochains résultats** : heure de
+      la dernière mise à jour et de la prochaine possible (le fichier fédéral
+      est interrogé toutes les 15 s, importé au plus toutes les 2 min), et un
+      petit bouton pour recharger les résultats. La page doit rester la même
+      pour tous, donc cachable : l'heure se calcule dans le navigateur. Demande
+      l'heure du dernier import dans le contrat de vue.
 - [ ] `404.html` dans la charte du site, et un favicon.
 
 ## Ménage
