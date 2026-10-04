@@ -1,24 +1,16 @@
-# Rappelle le service toutes les cinq minutes, le jour du scrutin seulement.
+# Lance la boucle du jour de scrutin, une fois, le matin du dimanche.
 #
-#   systemctl list-timers politiques-scrutin.timer   # quand le prochain tour
-#   journalctl -u politiques-scrutin.service -f      # ce qu'il a fait
+#   systemctl list-timers politiques-scrutin.timer   # quand elle démarre
+#   journalctl -u politiques-scrutin.service -f      # ce qu'elle fait
 #
-# Pourquoi une date et pas `OnUnitActiveSec=5min` en permanence : chaque tour
-# conserve son instantané sous var/scrutins (2 Mo) : armé en permanence, le
-# timer remplirait le disque, alors que le fichier fédéral ne change pas avant
-# le dimanche. La date est à changer à
-# chaque scrutin, comme DATE_SCRUTIN dans le service.
+# La date est à changer à chaque scrutin, comme DATE_SCRUTIN dans le service.
 
 [Unit]
-Description=Politiques.ch — relance la projection toutes les cinq minutes
+Description=Politiques.ch — lance le suivi du dépouillement
 
 [Timer]
-# Si un tour dure plus de cinq minutes — possible quand la machine essouffle —
-# systemd ne lance pas de second exemplaire de l'unité : le déclenchement est
-# simplement sauté. Deux imports n'écrivent donc jamais en parallèle dans la
-# base, ce qu'un unique écrivain SQLite ne pardonnerait pas.
-OnCalendar=2026-09-27 *:0/5
-AccuracySec=30s
+OnCalendar=2026-09-27 10:00
+AccuracySec=1min
 
 [Install]
 WantedBy=timers.target
