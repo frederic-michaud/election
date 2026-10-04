@@ -9,8 +9,8 @@ set -eu
 DATE_SCRUTIN="${DATE_SCRUTIN:?à définir, ex. DATE_SCRUTIN=20260927}"
 # Sous ./var, donc visible à l'identique dans le conteneur (voir compose.yaml).
 DOSSIER_DATA="${DOSSIER_DATA:-var/scrutins}"
-# Domaine du site : en fin de tour, on y redemande les pages qui changent, pour
-# que nginx les remette en cache tout de suite. Vide : pas de rafraîchissement.
+# Domaine du site : en fin de tour, on y redemande l'accueil, pour que nginx
+# le remette en cache tout de suite. Vide : pas de rafraîchissement.
 DOMAINE="${DOMAINE:-}"
 # Comment exécuter les commandes Django. Par défaut dans le conteneur ; pour
 # tourner sans Docker, activer un venv puis MANAGE="python manage.py".
@@ -48,9 +48,7 @@ ${MANAGE} update_scrutin_en_cours "${COURANT}"
 ${MANAGE} run_extrapolation
 
 if [ -n "${DOMAINE}" ]; then
-  for page in / /cartes; do
-    curl -fsS -o /dev/null --max-time 120 -H "X-Rafraichir: 1" \
-      --resolve "${DOMAINE}:443:127.0.0.1" "https://${DOMAINE}${page}" \
-      || echo "rafraîchissement de ${page} raté : le cache se renouvellera seul" >&2
-  done
+  curl -fsS -o /dev/null --max-time 120 -H "X-Rafraichir: 1" \
+    --resolve "${DOMAINE}:443:127.0.0.1" "https://${DOMAINE}/" \
+    || echo "rafraîchissement de l'accueil raté : le cache se renouvellera seul" >&2
 fi

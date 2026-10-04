@@ -262,8 +262,8 @@ arrière-plan. Un seul visiteur à la fois atteint Django. Si Django redémarre 
 tombe, la dernière version connue continue d'être servie.
 
 Le jour J, ce mécanisme servirait la projection précédente au premier visiteur
-après chaque tour. `download_data.sh` redemande donc lui-même `/` et `/cartes`
-en fin de tour, avec l'en-tête `X-Rafraichir: 1` : venant de la machine, cette
+après chaque tour. `download_data.sh` redemande donc lui-même l'accueil en fin
+de tour, avec l'en-tête `X-Rafraichir: 1` : venant de la machine, cette
 requête contourne le cache et y dépose la version fraîche. Il le fait quand
 `DOMAINE` est défini, ce que fait `politiques-scrutin.service`.
 
