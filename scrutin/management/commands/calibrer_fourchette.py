@@ -4,7 +4,11 @@ Pour chaque objet précédé d'au moins ``--min-anterieurs`` votations, on refai
 l'ACP sur les seuls objets antérieurs, on simule des soirées de dépouillement
 et on note, à chaque avance, l'écart entre la projection et le résultat final.
 La demi-largeur retenue est l'écart que 95 % des projections ne dépassent pas
-(doc/backtest.md).
+(doc/backtest.md). Un bootstrap sur les communes serait bien trop étroit :
+l'erreur vient d'un décalage commun aux communes dépouillées.
+
+Réserve : l'ordre simulé ignore les cantons qui publient d'un bloc. Dans ce
+cas, la fourchette à couverture égale serait environ deux fois plus large.
 
 À relancer après chaque ``populate_pca`` : la fourchette suit le modèle et
 l'historique.
