@@ -266,7 +266,7 @@ l'évolution est commune ; la réalisation est répartie en deux voies :
 |---|---|---|
 | Domaine | maths, backend, infra | design, frontend, données |
 | Branches | `moteur/…` | `interface/…` |
-| Fichiers | `extrapolation.py`, `donnees.py`, `models.py`, `pca/`, migrations, management commands, `settings.py`, Docker, CI | `templates/`, `*/static/`, `charte.py`, `graphiques.py`, `carte/figure.py`, `maquette/` |
+| Fichiers | `extrapolation.py`, `donnees.py`, `models.py`, `pca/`, migrations, management commands, `settings.py`, Docker, CI | `templates/`, `*/static/`, `charte.py`, `graphiques.py`, `carte/figure.py` |
 
 **Règle : on ne modifie pas la zone de l'autre sans la lui demander.** Si la voie I
 a besoin d'une donnée supplémentaire, elle la demande — elle ne va pas la chercher
@@ -290,7 +290,7 @@ qu'on édite à deux.
 
 ### Deux jeux de données, un seul chemin de code
 
-Pas de mode maquette et pas de branche `if` dans les vues : le site tourne toujours
+Pas de mode démo et pas de branche `if` dans les vues : le site tourne toujours
 de la même façon, **seule la base change**.
 
 | Jeu | Comment | Pour qui |
@@ -312,20 +312,6 @@ sauvegarde = copie du fichier). Pas de Postgres, pas de `psycopg`.
   termine.
 - **Une session, un clone (ou un worktree).** Deux sessions dans le même
   répertoire de travail se marcheraient dessus sur l'index git.
-
-### Refonte graphique : la maquette d'abord, sur sa propre branche
-
-Le design ne part pas d'une charte abstraite : on itère sur des **pages HTML
-statiques** qui embarquent les **vraies figures Plotly en JSON** — produites
-par les mêmes fonctions que le site, jamais dessinées à la main — et un bloc
-de réglages `charte.js`. Une fois une variante retenue, la charte CSS et
-`charte.py` en sont *extraites*, puis transposées dans les gabarits Django.
-
-Tout ce chantier vit sur la branche **`maquette`**, qui n'est **jamais
-fusionnée dans `master`** : c'est un travail de conception, utile une fois,
-qui encombrerait la branche principale pour des années. La synchronisation va
-dans un seul sens, `master` → `maquette`. Le passage en production est une
-**réécriture** depuis la variante retenue, pas une fusion. Détail : `maquette/PASSAGE.md` sur la branche `maquette`.
 
 ## Conventions
 

@@ -34,5 +34,3 @@ Rien d'ouvert pour l'instant.
 - [ ] `ruff format` sur tout le dépôt, dans une PR à part.
 - [ ] `ScrutinAPI.get_nb_inscrit` n'a plus d'appelant : la supprimer
       avec son test.
-- [ ] Trier les branches distantes : la plupart sont fusionnées ou
-      abandonnées.
