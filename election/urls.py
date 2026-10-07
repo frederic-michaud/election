@@ -5,12 +5,13 @@ from django.views.generic import RedirectView
 from carte.views import carte_view
 from page_statique.views import envoyer_contact, static_view
 from pca.views import nuage_communes_view, nuage_objets_view
-from scrutin.views import home_view
+from scrutin.views import anomalies_view, home_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", home_view, name="home"),
     path("cartes", carte_view, name="cartes"),
+    path("anomalies", anomalies_view, name="anomalies"),
     path("nuage-acp", nuage_communes_view, name="nuage_acp"),
     path("objets-acp", nuage_objets_view, name="objets_acp"),
     path("pca", RedirectView.as_view(pattern_name="nuage_acp")),

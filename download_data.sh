@@ -60,6 +60,8 @@ tour() {
   echo "instantané ${courant}"
   ${MANAGE} update_scrutin_en_cours "${courant}" || return 2
   ${MANAGE} run_extrapolation || return 2
+  # La page des erreurs de saisie ne doit pas bloquer la projection.
+  ${MANAGE} detecter_anomalies || echo "détection des anomalies ratée" >&2
   mv "${ETAG}.nouveau" "${ETAG}"
 
   if [ -n "${DOMAINE}" ]; then

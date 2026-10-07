@@ -76,6 +76,8 @@ mais les cartes **ne distinguent donc pas visuellement réel et estimé**.
 **`ResultatCommunalHistorique`** = résultat *historique définitif* commune × objet ; **`ResultatCommunalEnCours`** =
 résultat *du jour*, avec `comptabilise` et `electeur_election_precedente` ;
 `Extrapolation` = un instantané horodaté de la projection (la vue affiche le dernier).
+`Anomalie` = le jugement d'une commune dépouillée (rouge, orange, vert), recalculé
+à chaque tour ; seule sa `note` s'écrit à la main.
 
 La distinction `ResultatCommunalHistorique` / `ResultatCommunalEnCours` est structurante : `ResultatCommunalHistorique` alimente l'ACP,
 `ResultatCommunalEnCours` est réécrit toutes les quelques minutes le jour du scrutin.
@@ -134,7 +136,8 @@ rafraîchissement est dans leurs docstrings.
 
 Puis, en boucle le jour du scrutin :
 `update_scrutin_en_cours <json_courant>` →
-`run_extrapolation`. C'est ce que fait `download_data.sh --suivre`, qui dérive
+`run_extrapolation` → `detecter_anomalies` (erreurs de saisie communales,
+page `/anomalies`, méthode dans `doc/anomalies.md`). C'est ce que fait `download_data.sh --suivre`, qui dérive
 URL et noms de fichiers de `DATE_SCRUTIN`, et n'importe que les nouvelles
 versions du fichier fédéral (ETag), au plus toutes les 2 min.
 

@@ -26,7 +26,9 @@ from django.db import transaction
 from page_statique.models import PageStatique
 from page_statique.pages import PAGES, peupler_pages
 from pca.models import NB_AXES, PCAResult
+from scrutin.anomalies import detecter
 from scrutin.models import (
+    Anomalie,
     Canton,
     Commune,
     District,
@@ -120,6 +122,7 @@ class Command(BaseCommand):
         self._creer_pca(alea, communes, profils)
         self._creer_fourchette()
         self._creer_pages_statiques()
+        detecter()
 
         self.stdout.write(self.style.SUCCESS(
             f"\nBase de démonstration prête : {len(communes)} communes, "
@@ -132,7 +135,7 @@ class Command(BaseCommand):
 
     def _vider(self):
         """Idempotence : on repart d'une base propre à chaque exécution."""
-        for modele in (Extrapolation, Fourchette, ResultatCommunalEnCours, ResultatCommunalHistorique, PCAResult,
+        for modele in (Anomalie, Extrapolation, Fourchette, ResultatCommunalEnCours, ResultatCommunalHistorique, PCAResult,
                        SujetVote, Commune, District, Canton, PageStatique):
             modele.objects.all().delete()
 
@@ -210,13 +213,13 @@ class Command(BaseCommand):
         self.stdout.write(f"  {len(communes)} communes")
         return communes, profils
 
-    def _tirer_resultat(self, alea, profil, sensibilites):
+    def _tirer_resultat(self, alea, profil, sensibilites, bruit=0.25):
         """Un résultat de commune pour un objet donné, via le profil latent."""
         urbanite, latin, electeurs = profil
         base, a_urbain, a_latin, base_part = sensibilites
 
         p_oui = sigmoide(base + a_urbain * urbanite + a_latin * latin
-                         + alea.gauss(0, 0.25))
+                         + alea.gauss(0, bruit))
         # Les petites communes participent davantage — c'est le cas en Suisse.
         participation = sigmoide(base_part - 0.12 * urbanite + alea.gauss(0, 0.2))
 
@@ -283,6 +286,13 @@ class Command(BaseCommand):
         nb_comptees = int(len(ordre) * part_depouillee)
         comptees = {c.numero_ofs for c in ordre[:nb_comptees]}
 
+        # Une commune vote une fois : mêmes bulletins pour tous les objets, seuls
+        # les blancs varient. C'est ce que vérifie le détecteur d'anomalies.
+        bulletins = {}
+        # Des communes qui votent exactement selon leur profil : on y sème les
+        # erreurs, qui sont alors seules à expliquer l'écart.
+        exemplaires = [c for c in ordre[100:nb_comptees:20]]
+        sans_bruit = {c.numero_ofs for c in exemplaires}
         lignes, extrapolations = [], []
         for sujet in sujets:
             sensibilites = self._sensibilites(alea)
@@ -290,7 +300,13 @@ class Command(BaseCommand):
 
             for commune in communes:
                 oui, non, votants = self._tirer_resultat(
-                    alea, profils[commune.numero_ofs], sensibilites)
+                    alea, profils[commune.numero_ofs], sensibilites,
+                    bruit=0 if commune.numero_ofs in sans_bruit else 0.25)
+                votants = bulletins.setdefault(commune.numero_ofs, votants)
+                exprimes = votants - round(votants * alea.uniform(0, 0.03))
+                oui = round(exprimes * oui / (oui + non))
+                non = exprimes - oui
+                rentres = votants - alea.randint(0, max(1, votants // 200))
                 est_comptee = commune.numero_ofs in comptees
 
                 oui_total += oui
@@ -306,7 +322,7 @@ class Command(BaseCommand):
                     commune=commune, sujet_vote=sujet,
                     nombre_oui=oui, nombre_non=non,
                     electeurs_inscrits=profils[commune.numero_ofs][2],
-                    bulletins_rentres=votants,
+                    bulletins_rentres=rentres,
                     electeur_election_precedente=profils[commune.numero_ofs][2],
                     comptabilise=est_comptee,
                 ))
@@ -321,11 +337,52 @@ class Command(BaseCommand):
                 avance=(oui_compte + non_compte) / max(1, oui_total + non_total),
             ))
 
+        if len(exemplaires) >= 20:
+            self._semer_erreurs(exemplaires, lignes, len(sujets))
         ResultatCommunalEnCours.objects.bulk_create(lignes, batch_size=5000)
         Extrapolation.objects.bulk_create(extrapolations)
         self.stdout.write(
             f"  {len(lignes)} lignes de scrutin en cours "
             f"({nb_comptees}/{len(communes)} communes dépouillées)")
+
+    def _semer_erreurs(self, exemplaires, lignes, nb_objets):
+        """Les erreurs de saisie du 27 septembre 2026, pour que la page des
+        anomalies ait de quoi montrer : oui et non inversés, objets
+        intervertis, un chiffre mal saisi, et un écart sans correction simple."""
+        par_commune = {}
+        for ligne in lignes:
+            par_commune.setdefault(ligne.commune.numero_ofs, []).append(ligne)
+
+        prises = set()
+
+        def candidate(debut, critere):
+            for commune in exemplaires[debut:] + exemplaires[:debut]:
+                objets = par_commune[commune.numero_ofs]
+                if commune.numero_ofs not in prises and critere(objets):
+                    prises.add(commune.numero_ofs)
+                    return objets
+            return None
+
+        def part(ligne):
+            return ligne.nombre_oui / (ligne.nombre_oui + ligne.nombre_non)
+
+        inversee = candidate(0, lambda o: abs(part(o[0]) - 0.5) > 0.2)
+        inversee[0].nombre_oui, inversee[0].nombre_non = inversee[0].nombre_non, inversee[0].nombre_oui
+        if nb_objets > 1:
+            echangee = candidate(5, lambda o: abs(part(o[0]) - part(o[-1])) > 0.2)
+            a, b = echangee[0], echangee[-1]
+            for champ in ("nombre_oui", "nombre_non", "bulletins_rentres"):
+                valeur = getattr(a, champ)
+                setattr(a, champ, getattr(b, champ))
+                setattr(b, champ, valeur)
+            frappe = candidate(-5, lambda o: 100 <= o[-1].nombre_oui < 900)
+            frappe[-1].nombre_oui += 100
+            frappe[-1].bulletins_rentres += 100
+        singuliere = candidate(10, lambda o: part(o[-1]) < 0.6 and o[-1].bulletins_rentres > 150)
+        ligne = singuliere[-1]
+        exprimes = ligne.nombre_oui + ligne.nombre_non
+        ligne.nombre_oui = round(exprimes * (part(ligne) + 0.3))
+        ligne.nombre_non = exprimes - ligne.nombre_oui
 
     def _creer_pages_statiques(self):
         """Les pages du menu, sinon les onglets tombent en 404 sur un clone frais.

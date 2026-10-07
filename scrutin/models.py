@@ -135,6 +135,46 @@ class Fourchette(models.Model):
     demi_largeur = models.FloatField()
 
 
+class Anomalie(models.Model):
+    """Écart d'une commune dépouillée à son profil ACP, recalculé à chaque tour
+    par ``manage.py detecter_anomalies`` (doc/anomalies.md).
+
+    ``objets`` : par objet du jour, dans l'ordre de ``sujet_id`` — oui, non,
+    bulletins, part de oui prédite, écart en σ, écart médian des voisines.
+    ``motifs`` : ce qui cloche, parmi "vote", "bulletins", "correction".
+    ``chi2`` : l'écart de vote ; ``ecart_bulletins`` : celui des bulletins, en σ
+    de ``bulletins_habituel`` (part de ses bulletins). ``correction`` : la
+    meilleure correction simple, ou None. ``note`` est écrite à la main
+    (admin) et n'est jamais touchée par le calcul.
+    """
+    NIVEAUX = ["vert", "orange", "rouge"]
+
+    date = models.DateField()
+    commune = models.ForeignKey(Commune, on_delete=models.CASCADE)
+    niveau = models.CharField(max_length=6, choices=[(n, n) for n in NIVEAUX])
+    motifs = models.JSONField(default=list)
+    chi2 = models.FloatField()
+    chi2_corrige = models.FloatField(null=True)
+    correction = models.JSONField(null=True)
+    ecart_bulletins = models.FloatField(default=0)
+    bulletins_habituel = models.FloatField(null=True)
+    objets = models.JSONField()
+    voisines = models.JSONField(default=list)
+    centre = models.JSONField(null=True)
+    historique = models.JSONField(null=True)
+    signalee_depuis = models.DateTimeField(null=True)
+    note = models.TextField(blank=True)
+    mise_a_jour = models.DateTimeField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["date", "commune"], name="une_anomalie_par_commune"),
+        ]
+
+    def __str__(self):
+        return f"{self.commune} {self.date} {self.niveau}"
+
+
 class Extrapolation(models.Model):
     sujet_vote = models.ForeignKey(SujetVote, on_delete=models.CASCADE)
     pourcentage_oui_connu = models.FloatField()

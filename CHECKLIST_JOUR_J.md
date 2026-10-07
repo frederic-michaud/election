@@ -119,10 +119,13 @@ DATE=20260927        # la date du scrutin, partout ci-dessous
       2 min : un instantané téléchargé, le nombre de communes dépouillées par
       objet, puis la projection. Tant qu'il y a moins de 50 communes
       dépouillées, `run_extrapolation` note « pas de projection » et n'écrit
-      rien — c'est normal en début de soirée.
+      rien — c'est normal en début de soirée. De même, `detecter_anomalies`
+      ne juge rien sous 200 communes.
 
 - [ ] **Contrôle visuel de la page d'accueil** : projection plausible, avance
       cohérente avec l'heure, cartes remplies, pas de trace d'erreur Django.
+      Puis `/anomalies` : chaque commune rouge mérite un coup d'œil, et une
+      note (admin Django) dès qu'on en sait plus.
 
 - [ ] **Le lundi**, désarmer le timer. La boucle s'est arrêtée seule après
       14 h, et `OnCalendar=` porte une date fixe — mais laissé armé, le timer

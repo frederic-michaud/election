@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block contexte %}
+<h1 class="contexte">Votations fédérales <span class="quand">du {{ date|date:"j F Y" }}</span></h1>
+{% endblock %}
+
+{% block content %}
+<article class="page page-anomalies">
+  <div class="titre-analyse">
+    <h1>Résultats atypiques</h1>
+    {% if pret %}<p class="perimetre">{{ nb_communes }} communes analysées{% if mise_a_jour %} · {{ mise_a_jour|time:"H:i" }}{% endif %}</p>{% endif %}
+  </div>
+  <p class="chapeau"><b>Les communes dont le résultat présente une <abbr title="Un résultat que le hasard seul explique mal, au vu des votes passés de la commune.">anomalie statistique</abbr></b></p>
+  <ul class="niveaux">
+    <li><span class="pastille rouge"></span><b>Rouge</b> : erreur de saisie probable.</li>
+    <li><span class="pastille"></span><b>Orange</b> : résultat inhabituel, erreur possible.</li>
+  </ul>
+  <p class="precisions">Deux indices sont examinés :</p>
+  <ul class="precisions">
+    <li><b>Le vote</b> : chaque commune a un <abbr title="Le résumé de ses votes aux votations passées, en quelques axes (analyse en composantes principales).">profil de vote</abbr> stable, qui permet de prédire
+    son résultat à quelques points près.</li>
+    <li><b>Les bulletins</b> : on ne vote qu'une fois, leur nombre doit donc être presque
+    le même pour tous les objets.</li>
+  </ul>
+  <p class="precisions">Une commune passe au rouge quand l'écart est énorme, quand les deux
+  indices concordent, ou quand une faute simple — oui et non inversés, objets
+  intervertis, un chiffre mal tapé — suffit à expliquer l'écart.</p>
+  <p class="precisions"><b>Ce sont des anomalies statistiques, pas des erreurs avérées</b> :
+  une commune peut avoir réellement voté de façon inattendue.</p>
+
+  {% if not pret %}
+  <p class="attente">L'analyse commence à {{ seuil }} communes dépouillées ; {{ depouillees }} pour l'instant.</p>
+  {% else %}
+  <ul class="fiches">
+    {% for f in signalees %}
+    <li>
+      <details class="fiche {{ f.niveau }}" data-ofs="{{ f.ofs }}">
+        <summary>
+          <span class="pastille" aria-label="{{ f.niveau }}"></span>
+          <span class="qui"><b>{{ f.nom }}</b> <span class="canton">{{ f.canton }}</span></span>
+          <span class="resume">{{ f.resume }}</span>
+          <span class="chi2">{% if f.chi2_corrige %}<abbr title="Mesure de l'écart de vote, tous objets confondus : plus elle est grande, moins le résultat s'explique par le hasard. Après la flèche, sa valeur une fois la faute corrigée.">χ²</abbr> {{ f.chi2 }} → {{ f.chi2_corrige }}{% if f.depuis %} · {% endif %}{% endif %}{% if f.depuis %}depuis {{ f.depuis|time:"H:i" }}{% endif %}</span>
+        </summary>
+        {% if f.note %}<p class="note">{{ f.note }}</p>{% endif %}
+        <div class="graphiques">
+          <figure class="large">
+            <figcaption>Observé contre prédit, toutes les communes{% if f.chi2_corrige %} ; le cercle : la commune corrigée{% endif %}</figcaption>
+            <div class="nuages">{% for nom in objets %}<div class="nuage-objet"><span>{{ nom }}</span><div class="figure"></div></div>{% endfor %}</div>
+          </figure>
+          <figure>
+            <figcaption>Bulletins par objet : oui, non, blancs ; en pointillé, le total de chaque objet</figcaption>
+            <div class="figure bulletins"></div>
+          </figure>
+          {% if f.semblables %}
+          <figure>
+            <figcaption>Le vote des communes semblables : proches sur la carte et par leur profil</figcaption>
+            <div class="figure semblables"></div>
+          </figure>
+          {% endif %}
+          <figure>
+            <figcaption>Ses écarts aux votations passées ; en rouge, aujourd'hui</figcaption>
+            <div class="figure historique"></div>
+          </figure>
+        </div>
+        {{ f.points|json_script }}
+        <script type="application/json" data-figure="bulletins">{{ f.bulletins|safe }}</script>
+        {% if f.semblables %}<script type="application/json" data-figure="semblables">{{ f.semblables|safe }}</script>{% endif %}
+        <script type="application/json" data-figure="historique">{{ f.historique|safe }}</script>
+      </details>
+    </li>
+    {% empty %}
+    <li class="aucune">Aucune commune signalée.</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</article>
+
+{% for nuage in nuages %}<script type="application/json" class="nuage-base">{{ nuage|safe }}</script>{% endfor %}
+{{ config|json_script:"config-nuage" }}
+<script src="{% static 'scrutin/anomalies.js' %}"></script>
+{% endblock %}

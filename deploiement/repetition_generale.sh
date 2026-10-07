@@ -63,6 +63,7 @@ for fraction in ${FRACTIONS}; do
   ${MANAGE} create_fake_json_input "${GRAINE}" "${COURANT}" --fraction "${fraction}"
   ${MANAGE} update_scrutin_en_cours "${COURANT}"
   ${MANAGE} run_extrapolation
+  ${MANAGE} detecter_anomalies
   ${MANAGE} shell -c "
 from scrutin.models import Extrapolation, SujetVote
 for sujet in SujetVote.objects.filter(date=SujetVote.objects.latest('date').date):
