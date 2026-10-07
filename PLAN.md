@@ -34,3 +34,14 @@ Rien d'ouvert pour l'instant.
 - [ ] `ruff format` sur tout le dépôt, dans une PR à part.
 - [ ] `ScrutinAPI.get_nb_inscrit` n'a plus d'appelant : la supprimer
       avec son test.
+- [ ] Supprimer les branches distantes, triées le 07.10.2026 : à garder
+      seulement `master` et `moteur/analyse-axes-acp`. Le mode auto de
+      Claude refuse `git push --delete` : à lancer depuis un terminal (ou
+      à la main sur la page *Branches* de GitHub), une fois fusionnées les
+      PR encore ouvertes.
+
+      ```bash
+      git fetch --prune origin
+      git push origin --delete $(git for-each-ref --format='%(refname:lstrip=3)' refs/remotes/origin \
+        | grep -vx -e HEAD -e master -e moteur/analyse-axes-acp)
+      ```
