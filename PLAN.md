@@ -9,8 +9,7 @@ Les chiffres et les impasses sont dans [`doc/backtest.md`](doc/backtest.md).
 Chaque étape change les valeurs projetées : une à la fois, et jamais dans la
 semaine d'un scrutin.
 
-- [ ] **Réfléchir à comment gérer les résultats partiels** des grandes
-      communes (voir [`doc/depouillement.md`](doc/depouillement.md)).
+Rien d'ouvert pour l'instant.
 
 ## Produit
 

@@ -33,7 +33,14 @@ Comparaison de chaque publication partielle au résultat final, le 27.09.2026
 - **Bâle-Ville publie d'abord le vote par correspondance**, vers 12 h 10 : 96 à
   99 % des voix, à moins d'un point du final. Ces communes ne passent
   pourtant `gebietAusgezaehlt` qu'à 15 h 35. Le critère strict s'en prive
-  pendant plus de trois heures — piste ouverte dans `PLAN.md`.
+  pendant plus de trois heures.
+
+**Décision : les résultats partiels sont masqués.** Tant qu'on ne sait pas
+s'ils sont fiables, les prendre en compte risque de biaiser la projection ; la
+commune reste projetée comme si elle n'avait rien publié. On y reviendra avec
+quelques scrutins d'instantanés archivés (`var/scrutins/`), pour voir si les
+tranches zurichoises ou le vote par correspondance bâlois apportent quelque
+chose.
 
 ## Des communes corrigées après coup
 
