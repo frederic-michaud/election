@@ -84,6 +84,11 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 /* Proportions de la Suisse ; Plotly prend la hauteur du conteneur. */
 .carte { margin-top: 12px; aspect-ratio: 1.55; }
 .carte .figure { height: 100%; }
+.carte { position: relative; }
+.bascule-estimees { position: absolute; left: 6px; top: 6px; font: inherit; font-size: .78rem;
+  color: var(--encre); background: rgba(255, 255, 255, .85); border: 1px solid var(--gris);
+  border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+.bascule-estimees:focus-visible { outline: 2px solid var(--oui); outline-offset: 2px; }
 
 /* ── Pages de texte et de carte ── */
 .page { background: var(--panneau); border: 1px solid var(--bord); border-radius: 14px;
