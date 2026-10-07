@@ -11,18 +11,18 @@ import pytest
 
 from scrutin.management.commands.create_fake_json_input import fabriquer
 from scrutin.management.commands.update_scrutin_en_cours import communes_depouillees
-from scrutin.models import Commune
+from scrutin.models import Commune, ResultatCommunalHistorique, SujetVote
 
 
-def scrutin_vierge(ecrire_scrutin, chemin):
+def scrutin_vierge(ecrire_scrutin, chemin, nb_objets=1):
     """Un JSON d'avant-scrutin : toutes les communes de la base, aucun résultat."""
     communes = dict.fromkeys(Commune.objects.values_list("numero_ofs", flat=True), False)
-    return str(ecrire_scrutin(chemin, [communes]))
+    return str(ecrire_scrutin(chemin, [communes] * nb_objets))
 
 
-def depouillees(chemin):
+def depouillees(chemin, objet=0):
     with open(chemin) as f:
-        return communes_depouillees(json.load(f)["schweiz"]["vorlagen"][0])
+        return communes_depouillees(json.load(f)["schweiz"]["vorlagen"][objet])
 
 
 @pytest.mark.lent
@@ -49,3 +49,20 @@ def test_la_fraction_est_a_peu_pres_respectee(base_demo, tmp_path, ecrire_scruti
     fabriquer(graine, str(tmp_path / "moitie.json"), fraction=0.5)
 
     assert 0.4 * total < len(depouillees(tmp_path / "moitie.json")) < 0.6 * total
+
+
+@pytest.mark.lent
+@pytest.mark.django_db
+def test_les_objets_retiennent_les_memes_communes(base_demo, tmp_path, ecrire_scrutin):
+    """Une commune sans historique pour un objet ne décale pas le tirage."""
+    premier_sujet = SujetVote.objects.order_by("date").first()
+    sans_historique = ResultatCommunalHistorique.objects.filter(
+        sujet_vote=premier_sujet).order_by("commune__numero_ofs").first()
+    sans_historique.delete()
+    graine = scrutin_vierge(ecrire_scrutin, tmp_path / "graine.json", nb_objets=3)
+
+    fabriquer(graine, str(tmp_path / "soiree.json"), fraction=0.25)
+
+    objets = [depouillees(tmp_path / "soiree.json", objet) for objet in range(3)]
+    ofs_retire = sans_historique.commune.numero_ofs
+    assert objets[0] - {ofs_retire} == objets[1] - {ofs_retire} == objets[2] - {ofs_retire}
