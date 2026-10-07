@@ -17,11 +17,13 @@ def _couche(locations, **traits):
                             locations=locations, showlegend=False, **traits)
 
 
-def _carte(locations, valeurs, survol, echelle=None, attente=()):
+def _carte(locations, valeurs, survol, echelle=None, attente=(), estimees=None):
     """Une choroplèthe communale, posée sur les communes encore en attente.
 
     ``attente`` est dessinée en dessous, d'un gris uni : sans elle, le pays
     disparaîtrait tant que rien n'est dépouillé — il ne resterait que les lacs.
+    ``estimees`` (locations, valeurs, survol) est une couche à part, que
+    ``cartes.js`` peut masquer : le gris réapparaît alors dessous.
     """
     couches = []
     if attente:
@@ -29,23 +31,41 @@ def _carte(locations, valeurs, survol, echelle=None, attente=()):
             list(attente), z=[0] * len(attente), showscale=False,
             colorscale=[[0, charte.ATTENTE], [1, charte.ATTENTE]],
             hovertemplate="<b>%{properties.vogeName}</b><br>pas encore dépouillée<extra></extra>"))
-    couches.append(_couche(
-        locations, z=valeurs, text=survol, coloraxis="coloraxis",
-        hovertemplate="<b>%{properties.vogeName}</b><br>%{text}<extra></extra>"))
-    return charte.habiller_carte(go.Figure(couches), EMPRISE, echelle=echelle)
+    if estimees and estimees[0]:
+        couches.append(_couche(
+            estimees[0], z=estimees[1], text=estimees[2], coloraxis="coloraxis",
+            hovertemplate="<b>%{properties.vogeName}</b><br>%{text}<extra></extra>"))
+    if locations:
+        couches.append(_couche(
+            locations, z=valeurs, text=survol, coloraxis="coloraxis",
+            hovertemplate="<b>%{properties.vogeName}</b><br>%{text}<extra></extra>"))
+    figure = charte.habiller_carte(go.Figure(couches), EMPRISE, echelle=echelle)
+    if estimees and estimees[0]:
+        figure.update_layout(meta={**figure.layout.meta, "estimees": 1 if attente else 0})
+    return figure
+
+
+def _pourcent(oui):
+    return f"{oui:.1f} %".replace(".", ",")
 
 
 def figure_carte(communes):
     """Carte WebGL des résultats par commune, tracée par ``carte/static/carte/cartes.js``.
 
-    ``communes`` : le dict ``sujet["communes"]`` du contrat de vue.
+    ``communes`` : le dict ``sujet["communes"]`` du contrat de vue. Les communes
+    estimées par ``run_extrapolation`` ont leur propre couche, au-dessus du gris.
     """
-    resultats = {ofs: round(r["oui"] * 100, 2) for ofs, r in communes.items()
-                 if r["oui"] is not None}
-    return _carte(list(resultats),
-                  list(resultats.values()),
-                  [f"{oui:.1f} %".replace(".", ",") for oui in resultats.values()],
-                  attente=[ofs for ofs in communes if ofs not in resultats])
+    oui = {ofs: round(r["oui"] * 100, 2) for ofs, r in communes.items() if r["oui"] is not None}
+    reelles = [ofs for ofs in oui if communes[ofs]["comptabilise"]]
+    estimees = [ofs for ofs in oui if not communes[ofs]["comptabilise"]]
+    reelles_set = set(reelles)
+    return _carte(reelles,
+                  [oui[ofs] for ofs in reelles],
+                  [_pourcent(oui[ofs]) for ofs in reelles],
+                  attente=[ofs for ofs in communes if ofs not in reelles_set],
+                  estimees=(estimees,
+                            [oui[ofs] for ofs in estimees],
+                            [f"{_pourcent(oui[ofs])} (estimé)" for ofs in estimees]))
 
 
 def _axe(numero, valeurs):

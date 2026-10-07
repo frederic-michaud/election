@@ -42,7 +42,10 @@
     figure.layout.map.zoom = vue["map.zoom"];
     var deplacee = false;
 
+    var estimees = figure.layout.meta.estimees;
+
     return Plotly.newPlot(div, figure.data, figure.layout, config).then(function () {
+      if (estimees !== undefined) basculeEstimees(cadre, div, estimees);
       var map = div._fullLayout.map && div._fullLayout.map._subplot && div._fullLayout.map._subplot.map;
       if (!map) return;
       if (map._locale) Object.assign(map._locale, TEXTES);
@@ -58,6 +61,24 @@
         }, 150);
       }).observe(div);
     });
+  }
+
+  // Bouton qui masque la couche des communes estimées : le gris des
+  // communes en attente réapparaît dessous.
+  function basculeEstimees(cadre, div, couche) {
+    if (cadre.querySelector(".bascule-estimees")) return;
+    var bouton = document.createElement("button");
+    bouton.type = "button";
+    bouton.className = "bascule-estimees";
+    bouton.textContent = "Masquer les estimations";
+    bouton.setAttribute("aria-pressed", "false");
+    bouton.addEventListener("click", function () {
+      var masquees = bouton.getAttribute("aria-pressed") !== "true";
+      Plotly.restyle(div, { visible: !masquees }, [couche]);
+      bouton.setAttribute("aria-pressed", String(masquees));
+      bouton.textContent = masquees ? "Montrer les estimations" : "Masquer les estimations";
+    });
+    cadre.appendChild(bouton);
   }
 
   window.tracerCarte = tracer;

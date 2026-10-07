@@ -13,8 +13,6 @@ Rien d'ouvert pour l'instant.
 
 ## Produit
 
-- [ ] Bouton pour montrer ou masquer les communes estimées sur les cartes :
-      masquées, elles passent au gris des communes en attente.
 - [ ] Bloc « Au fil de la journée », un panneau de plus à côté des objets :
       tous les objets du jour sur un même graphique, projection et fourchette
       au fil de l'heure, dépouillé en discret ; échelle de 20 à 80 % avec la

@@ -46,6 +46,25 @@ def test_tout_depouille_ne_coute_pas_de_couche_en_plus():
     assert len(figure.data) == 1
 
 
+def test_les_communes_estimees_ont_leur_couche_au_dessus_du_gris():
+    """Masquer la couche des estimées (cartes.js) laisse voir le gris dessous."""
+    figure = figure_carte({1: {"oui": 0.55, "comptabilise": True},
+                           2: {"oui": 0.40, "comptabilise": False},
+                           3: {"oui": None, "comptabilise": False}})
+    attente, estimees, reelles = figure.data
+    assert attente.locations == (2, 3)
+    assert estimees.locations == (2,)
+    assert reelles.locations == (1,)
+    assert "estimé" in estimees.text[0]
+    assert figure.data[figure.layout.meta["estimees"]] is estimees
+
+
+def test_sans_estimation_pas_de_bouton():
+    figure = figure_carte({1: {"oui": 0.55, "comptabilise": True},
+                           2: {"oui": None, "comptabilise": False}})
+    assert "estimees" not in figure.layout.meta
+
+
 @pytest.mark.lent
 def test_toutes_les_communes_du_referentiel_ont_un_contour(contours):
     with open(REFERENTIEL) as fichier:

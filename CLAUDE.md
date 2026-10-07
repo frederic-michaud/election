@@ -57,8 +57,9 @@ pas d'historique, donc pas de profil.
 
 À noter : `manage.py run_extrapolation` **écrit les valeurs extrapolées dans les
 lignes `ResultatCommunalEnCours`** des communes non dépouillées (tout en laissant
-`comptabilise=False`). C'est ce qui permet aux cartes d'afficher toute la Suisse —
-mais les cartes **ne distinguent donc pas visuellement réel et estimé**.
+`comptabilise=False`). C'est ce qui permet aux cartes d'afficher toute la Suisse.
+Les communes estimées y forment une couche à part, qu'un bouton sur chaque
+carte masque : elles repassent alors au gris des communes en attente.
 
 ---
 
